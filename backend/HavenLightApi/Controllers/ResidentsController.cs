@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HavenLightApi.Auth;
 using HavenLightApi.Data;
 using HavenLightApi.Models;
 
@@ -63,7 +64,7 @@ public class ResidentsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<ActionResult<Resident>> Create([FromBody] Resident resident)
     {
         _context.Residents.Add(resident);
@@ -72,7 +73,7 @@ public class ResidentsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Update(int id, [FromBody] Resident resident)
     {
         if (id != resident.ResidentId)
@@ -84,7 +85,7 @@ public class ResidentsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Delete(int id)
     {
         var resident = await _context.Residents.FindAsync(id);

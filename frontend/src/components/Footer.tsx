@@ -10,9 +10,14 @@ export default function Footer() {
       fontSize: '0.875rem',
     }}>
       <p>&copy; {new Date().getFullYear()} Haven Light Philippines. All rights reserved.</p>
-      <Link to="/privacy" style={{ color: '#cbd5e0', textDecoration: 'underline' }}>
-        Privacy Policy
-      </Link>
+      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <Link to="/privacy" style={{ color: '#cbd5e0', textDecoration: 'underline' }}>
+          Privacy Policy
+        </Link>
+        <Link to="/cookies" style={{ color: '#cbd5e0', textDecoration: 'underline' }}>
+          Cookie Policy
+        </Link>
+      </div>
     </footer>
   );
 }

@@ -1,26 +1,9 @@
-import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useCookieConsent } from '../context/CookieConsentContext';
 
 export default function CookieConsent() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const consent = localStorage.getItem('cookieConsent');
-    if (!consent) setVisible(true);
-  }, []);
-
-  const handleAccept = () => {
-    localStorage.setItem('cookieConsent', 'accepted');
-    document.cookie = 'cookieConsent=accepted; path=/; max-age=31536000; SameSite=Lax';
-    setVisible(false);
-  };
-
-  const handleDecline = () => {
-    localStorage.setItem('cookieConsent', 'declined');
-    document.cookie = 'cookieConsent=declined; path=/; max-age=31536000; SameSite=Lax';
-    setVisible(false);
-  };
-
-  if (!visible) return null;
+  const { hasConsented, acknowledgeConsent } = useCookieConsent();
+  if (hasConsented) return null;
 
   return (
     <div style={{
@@ -39,25 +22,13 @@ export default function CookieConsent() {
       gap: '1rem',
     }}>
       <p style={{ margin: 0, fontSize: '0.9rem', maxWidth: '700px', lineHeight: 1.5 }}>
-        We use cookies to enhance your experience. By continuing to visit this site you agree to our
-        use of cookies. See our <a href="/privacy" style={{ color: '#90cdf4', textDecoration: 'underline' }}>Privacy Policy</a> for details.
+        We use essential cookies for security and sign-in functionality. See our{' '}
+        <Link to="/cookies" style={{ color: '#90cdf4', textDecoration: 'underline' }}>Cookie Policy</Link>{' '}
+        and <Link to="/privacy" style={{ color: '#90cdf4', textDecoration: 'underline' }}>Privacy Policy</Link>.
       </p>
       <div style={{ display: 'flex', gap: '0.75rem' }}>
         <button
-          onClick={handleDecline}
-          style={{
-            padding: '0.5rem 1.25rem',
-            border: '1px solid #a0aec0',
-            backgroundColor: 'transparent',
-            color: '#a0aec0',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          Decline
-        </button>
-        <button
-          onClick={handleAccept}
+          onClick={acknowledgeConsent}
           style={{
             padding: '0.5rem 1.25rem',
             border: 'none',
@@ -68,7 +39,7 @@ export default function CookieConsent() {
             fontWeight: 600,
           }}
         >
-          Accept
+          Acknowledge
         </button>
       </div>
     </div>

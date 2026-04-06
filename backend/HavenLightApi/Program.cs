@@ -1,10 +1,10 @@
 using System.Text;
 using DotNetEnv;
 using Npgsql;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using HavenLightApi.Auth;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using HavenLightApi;
 using HavenLightApi.Data;
 
@@ -50,46 +50,55 @@ builder.Services.AddDbContext<HavenLightContext>(options =>
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
+// Separate identity context (auth data isolated from domain data).
+builder.Services.AddDbContext<AuthIdentityDbContext>(options =>
+{
+    var identityConn = builder.Configuration.GetConnectionString("IdentityConnection")
+        ?? builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseNpgsql(identityConn);
+});
+
 // --- ASP.NET Identity ---
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
-    {
-        // Strengthened password policy (per IS 414 requirement)
-        options.Password.RequireDigit = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireNonAlphanumeric = true;
-        options.Password.RequiredLength = 12;
-        options.Password.RequiredUniqueChars = 3;
-    })
-    .AddEntityFrameworkStores<HavenLightContext>()
+builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AuthIdentityDbContext>()
     .AddDefaultTokenProviders();
 
-// --- JWT Authentication ---
-var jwtKey = builder.Configuration["Jwt:Key"]!;
-builder.Services.AddAuthentication(options =>
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // IS 413 lab-standard hardening configuration.
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 12;
+    options.Password.RequiredUniqueChars = 3;
+    options.User.RequireUniqueEmail = true;
+});
+
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        };
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? string.Empty;
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? string.Empty;
+        options.SignInScheme = IdentityConstants.ExternalScheme;
     });
+
+// Identity configures cookie authentication for sign-in.
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("DonorOrAdmin", policy => policy.RequireRole("Admin", "Donor"));
+    options.AddPolicy(AuthPolicies.ManageCatalog, policy => policy.RequireRole(AuthRoles.Admin));
+    options.AddPolicy(AuthPolicies.DonorOrAdmin, policy => policy.RequireRole(AuthRoles.Admin, AuthRoles.Customer, AuthRoles.Donor));
 });
+builder.Services.Configure<AdminSeedOptions>(builder.Configuration.GetSection("AdminSeed"));
+builder.Services.AddScoped<AuthIdentityGenerator>();
 
 // --- CORS ---
 builder.Services.AddCors(options =>
@@ -112,6 +121,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<HavenLightContext>();
+    var identityContext = scope.ServiceProvider.GetRequiredService<AuthIdentityDbContext>();
+    await identityContext.Database.MigrateAsync();
     await context.Database.MigrateAsync();
 
     var csvFolder = PathResolver.FindLighthouseCsvFolder()
@@ -124,25 +135,8 @@ using (var scope = app.Services.CreateScope())
             "No rows in safehouses after seed. CSV folder used: {CsvPath}. See SEEDING.md — set ConnectionStrings__DefaultConnection and ensure lighthouse_csv_v7 exists.",
             csvFolder);
 
-    // Seed default roles and admin user
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-
-    string[] roles = ["Admin", "Donor"];
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
-
-    const string adminEmail = "admin@havenlight.ph";
-    if (await userManager.FindByEmailAsync(adminEmail) == null)
-    {
-        var admin = new IdentityUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
-        var result = await userManager.CreateAsync(admin, "Admin@Haven2026!");
-        if (result.Succeeded)
-            await userManager.AddToRoleAsync(admin, "Admin");
-    }
+    var identityGenerator = scope.ServiceProvider.GetRequiredService<AuthIdentityGenerator>();
+    await identityGenerator.SeedAsync();
 }
 
 // --- Middleware Pipeline ---
@@ -175,5 +169,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGroup("/api/identity").MapIdentityApi<ApplicationUser>();
 
 app.Run();

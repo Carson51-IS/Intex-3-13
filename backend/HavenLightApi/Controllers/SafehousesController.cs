@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HavenLightApi.Auth;
 using HavenLightApi.Data;
 using HavenLightApi.Models;
 
@@ -33,7 +34,7 @@ public class SafehousesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<ActionResult<Safehouse>> Create([FromBody] Safehouse safehouse)
     {
         _context.Safehouses.Add(safehouse);
@@ -42,7 +43,7 @@ public class SafehousesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Update(int id, [FromBody] Safehouse safehouse)
     {
         if (id != safehouse.SafehouseId) return BadRequest();
@@ -52,7 +53,7 @@ public class SafehousesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Delete(int id)
     {
         var safehouse = await _context.Safehouses.FindAsync(id);

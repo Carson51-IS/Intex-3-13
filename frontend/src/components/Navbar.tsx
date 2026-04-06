@@ -1,14 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const { user, logout, isAdmin } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+  const { authSession, isAuthenticated, isAdmin } = useAuth();
 
   return (
     <nav style={{
@@ -24,31 +18,27 @@ export default function Navbar() {
       </Link>
 
       <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-        <Link to="/impact" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Impact</Link>
-        <Link to="/privacy" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Privacy</Link>
+        <NavLink to="/impact" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Impact</NavLink>
+        <NavLink to="/privacy" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Privacy</NavLink>
+        {!isAuthenticated && <NavLink to="/register" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Register</NavLink>}
 
-        {user ? (
+        <span
+          className={`badge ${isAuthenticated ? 'bg-success' : 'bg-warning text-dark'}`}
+          style={{ fontSize: '0.8rem' }}
+        >
+          {isAuthenticated ? `Signed in as ${authSession.email}` : 'Not signed in'}
+        </span>
+
+        {isAuthenticated ? (
           <>
+            <NavLink to="/mfa" style={{ color: '#e2e8f0', textDecoration: 'none' }}>MFA</NavLink>
             {isAdmin && (
-              <Link to="/admin" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Admin</Link>
+              <NavLink to="/admin" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Admin</NavLink>
             )}
-            <span style={{ color: '#cbd5e0', fontSize: '0.875rem' }}>{user.email}</span>
-            <button
-              onClick={handleLogout}
-              style={{
-                background: 'transparent',
-                border: '1px solid #e2e8f0',
-                color: '#e2e8f0',
-                padding: '0.35rem 0.75rem',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Logout
-            </button>
+            <NavLink to="/logout" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Logout</NavLink>
           </>
         ) : (
-          <Link
+          <NavLink
             to="/login"
             style={{
               color: '#1a365d',
@@ -60,7 +50,7 @@ export default function Navbar() {
             }}
           >
             Login
-          </Link>
+          </NavLink>
         )}
       </div>
     </nav>

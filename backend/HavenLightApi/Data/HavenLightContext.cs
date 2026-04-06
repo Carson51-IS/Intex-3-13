@@ -1,10 +1,9 @@
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using HavenLightApi.Models;
 
 namespace HavenLightApi.Data;
 
-public class HavenLightContext : IdentityDbContext
+public class HavenLightContext : DbContext
 {
     public HavenLightContext(DbContextOptions<HavenLightContext> options) : base(options) { }
 
