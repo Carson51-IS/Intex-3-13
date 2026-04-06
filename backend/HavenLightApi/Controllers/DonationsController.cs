@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HavenLightApi.Auth;
 using HavenLightApi.Data;
 using HavenLightApi.Models;
 
@@ -56,7 +57,7 @@ public class DonationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<ActionResult<Donation>> Create([FromBody] Donation donation)
     {
         _context.Donations.Add(donation);
@@ -65,7 +66,7 @@ public class DonationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Update(int id, [FromBody] Donation donation)
     {
         if (id != donation.DonationId) return BadRequest();
@@ -75,7 +76,7 @@ public class DonationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Delete(int id)
     {
         var donation = await _context.Donations.FindAsync(id);

@@ -1,34 +1,51 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { api } from '../api/client';
-
-interface User {
-  email: string;
-  roles: string[];
-}
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { AuthSession } from '../types/authSession';
+import { getCurrentUser } from '../lib/AuthAPI';
 
 interface AuthContextValue {
-  user: User | null;
-  token: string | null;
+  authSession: AuthSession;
+  isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  refreshAuthSession: () => Promise<void>;
   isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const AnonymousSession: AuthSession = {
+  isAuthenticated: false,
+  userName: null,
+  email: null,
+  roles: [],
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [authSession, setAuthSession] = useState<AuthSession>(AnonymousSession);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refreshAuthSession = useCallback(async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setAuthSession({
+        isAuthenticated: true,
+        userName: currentUser.email,
+        email: currentUser.email,
+        roles: currentUser.roles,
+      });
+    } catch {
+      // Session may be expired or unauthenticated; default to anonymous view state.
+      setAuthSession(AnonymousSession);
+    } finally {
   useEffect(() => {
     if (!token) {
       setUser(null);
       setIsLoading(false);
-      return;
     }
+  }, []);
 
+  useEffect(() => {
+    refreshAuthSession();
+  }, [refreshAuthSession]);
     setIsLoading(true);
     api.get<User>('/auth/me')
       .then(setUser)
@@ -56,10 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const isAdmin = user?.roles.includes('Admin') ?? false;
+  const isAuthenticated = authSession.isAuthenticated;
+  const isAdmin = authSession.roles.includes('Admin');
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{ authSession, isAuthenticated, isLoading, refreshAuthSession, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

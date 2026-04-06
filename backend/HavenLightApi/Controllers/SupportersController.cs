@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HavenLightApi.Auth;
 using HavenLightApi.Data;
 using HavenLightApi.Models;
 
@@ -55,7 +56,7 @@ public class SupportersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<ActionResult<Supporter>> Create([FromBody] Supporter supporter)
     {
         _context.Supporters.Add(supporter);
@@ -64,7 +65,7 @@ public class SupportersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Update(int id, [FromBody] Supporter supporter)
     {
         if (id != supporter.SupporterId) return BadRequest();
@@ -74,7 +75,7 @@ public class SupportersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> Delete(int id)
     {
         var supporter = await _context.Supporters.FindAsync(id);

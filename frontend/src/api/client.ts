@@ -7,6 +7,14 @@ function getApiBase(): string {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
   const API_BASE = getApiBase();
   if (!API_BASE) {
     throw new Error(

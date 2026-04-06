@@ -1,14 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const { user, logout, isAdmin } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+  const { authSession, isAuthenticated, isAdmin } = useAuth();
 
   return (
     <nav style={{
@@ -24,14 +18,29 @@ export default function Navbar() {
         Haven Light Philippines
       </Link>
 
+      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+        <NavLink to="/impact" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Impact</NavLink>
+        <NavLink to="/privacy" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Privacy</NavLink>
+        {!isAuthenticated && <NavLink to="/register" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Register</NavLink>}
+
+        <span
+          className={`badge ${isAuthenticated ? 'bg-success' : 'bg-warning text-dark'}`}
+          style={{ fontSize: '0.8rem' }}
+        >
+          {isAuthenticated ? `Signed in as ${authSession.email}` : 'Not signed in'}
+        </span>
       <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
         <NavLink to="/impact">Impact</NavLink>
         <NavLink to="/insights">Insights</NavLink>
         <NavLink to="/privacy">Privacy</NavLink>
 
-        {user ? (
+        {isAuthenticated ? (
           <>
+            <NavLink to="/mfa" style={{ color: '#e2e8f0', textDecoration: 'none' }}>MFA</NavLink>
             {isAdmin && (
+              <NavLink to="/admin" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Admin</NavLink>
+            )}
+            <NavLink to="/logout" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Logout</NavLink>
               <>
                 <span style={{ color: '#4a5568', fontSize: '0.8rem' }}>|</span>
                 <NavLink to="/admin">Dashboard</NavLink>
@@ -59,7 +68,7 @@ export default function Navbar() {
             </button>
           </>
         ) : (
-          <Link
+          <NavLink
             to="/login"
             style={{
               color: '#1a365d',
@@ -73,7 +82,7 @@ export default function Navbar() {
             }}
           >
             Login
-          </Link>
+          </NavLink>
         )}
       </div>
     </nav>

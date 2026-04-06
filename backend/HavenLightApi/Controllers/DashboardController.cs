@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HavenLightApi.Auth;
 using HavenLightApi.Data;
 
 namespace HavenLightApi.Controllers;
@@ -40,7 +41,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Admin overview metrics (auth required)</summary>
     [HttpGet("admin-summary")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = AuthPolicies.ManageCatalog)]
     public async Task<IActionResult> GetAdminSummary()
     {
         var activeResidents = await _context.Residents.CountAsync(r => r.CaseStatus == "Active");

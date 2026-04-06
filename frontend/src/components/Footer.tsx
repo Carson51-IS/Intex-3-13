@@ -9,6 +9,15 @@ export default function Footer() {
       color: '#a0aec0',
       fontSize: '0.875rem',
     }}>
+      <p>&copy; {new Date().getFullYear()} Haven Light Philippines. All rights reserved.</p>
+      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <Link to="/privacy" style={{ color: '#cbd5e0', textDecoration: 'underline' }}>
+          Privacy Policy
+        </Link>
+        <Link to="/cookies" style={{ color: '#cbd5e0', textDecoration: 'underline' }}>
+          Cookie Policy
+        </Link>
+      </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <FooterLink to="/impact">Impact</FooterLink>
         <FooterLink to="/insights">Insights</FooterLink>
