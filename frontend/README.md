@@ -1,5 +1,18 @@
 # React + TypeScript + Vite
 
+## Staff login (seeded admin)
+
+The .NET API creates this admin on first startup if it does not already exist (`backend/HavenLightApi/Program.cs`):
+
+| | |
+|---|---|
+| **Email** | `admin@havenlight.ph` |
+| **Password** | `Admin@Haven2026!` |
+
+If login fails, the account may already exist with a different password, or the API/DB may not be reachable. For INTEX submission, also set up the grader accounts required in the case (admin without MFA, donor without MFA, one account with MFA).
+
+---
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
