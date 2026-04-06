@@ -24,15 +24,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!token) {
+      setUser(null);
       setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
     api.get<User>('/auth/me')
       .then(setUser)
       .catch(() => {
         localStorage.removeItem('token');
         setToken(null);
+        setUser(null);
       })
       .finally(() => setIsLoading(false));
   }, [token]);
@@ -41,6 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token: newToken } = await api.post<{ token: string }>('/auth/login', { email, password });
     localStorage.setItem('token', newToken);
     setToken(newToken);
+    // Load user before LoginPage navigates — otherwise ProtectedRoute sees token but no user
+    // and redirects back to /login (isLoading was false during the /me gap).
+    const me = await api.get<User>('/auth/me');
+    setUser(me);
   };
 
   const logout = () => {

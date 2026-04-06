@@ -92,11 +92,17 @@ builder.Services.AddAuthorization(options =>
 });
 
 // --- CORS ---
+// Local dev: localhost. Production: set Cors__AllowedOrigins in Azure (comma-separated), e.g.
+//   https://your-app.vercel.app,https://your-app-git-main-team.vercel.app
+var corsRaw = builder.Configuration["Cors:AllowedOrigins"];
+string[] corsOrigins = string.IsNullOrWhiteSpace(corsRaw)
+    ? ["http://localhost:3000", "http://localhost:5173"]
+    : corsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
