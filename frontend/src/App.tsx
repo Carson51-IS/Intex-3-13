@@ -8,6 +8,9 @@ import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import ImpactPage from './pages/ImpactPage';
 import PrivacyPage from './pages/PrivacyPage';
+import InsightsPage from './pages/InsightsPage';
+import DonorInsightsPage from './pages/DonorInsightsPage';
+import ResidentInsightsPage from './pages/ResidentInsightsPage';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: string }) {
@@ -29,12 +32,29 @@ function AppRoutes() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/impact" element={<ImpactPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route
             path="/admin"
             element={
               <ProtectedRoute requiredRole="Admin">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/donor-insights"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <DonorInsightsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/resident-insights"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <ResidentInsightsPage />
               </ProtectedRoute>
             }
           />
