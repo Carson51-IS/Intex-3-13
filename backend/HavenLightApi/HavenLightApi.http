@@ -1,0 +1,6 @@
+@HavenLightApi_HostAddress = http://localhost:5055
+
+GET {{HavenLightApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
