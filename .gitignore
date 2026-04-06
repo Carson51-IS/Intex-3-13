@@ -13,7 +13,6 @@ frontend/dist/
 .env
 .env.local
 .env.production
-appsettings.Development.json
 
 # IDE
 .vs/

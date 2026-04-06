@@ -1,0 +1,52 @@
+﻿Section,Title,Content
+INTEX Monday (IS 401),Organization,Haven Light Philippines — safe homes and rehabilitation for girls who are survivors of abuse or trafficking in the Philippines.
+1. Roles,Scrum Master,"[Add teammate name] — facilitates standups, removes blockers, protects the sprint scope."
+1. Roles,Product Owner,"[Add teammate name] — owns backlog priority, accepts stories, represents the client."
+1. Roles,Developer,[Add teammate name] — implements features per sprint (backend/frontend split as team decides).
+1. Roles,Developer,[Add teammate name] — implements features per sprint.
+2. Personas,Maria Santos — Staff,"Safehouse Program Director, 38, Quezon City. Manages 3+ safehouses and about 20 active cases.
+Goals: See who is progressing vs struggling; keep counseling and visitation documentation current; no resident falls through the cracks.
+Frustrations: Fragmented Excel files; no early-warning system; manual reporting for conferences.
+Quote: ""I lose sleep wondering if I missed something in a girl's file that could have prevented a crisis.""
+Why she matters: Core operational user — the product must work for daily case management."
+2. Personas,David Chen — Donor,"Recurring international donor, 45, San Francisco. Monthly donor; discovered the org via Facebook.
+Goals: See how donations are used; read anonymized impact stories; trust the organization.
+Frustrations: Generic thank-you emails; no impact metrics; considering other nonprofits.
+Quote: ""I want to know my money is actually changing a girl's life — not just disappearing into overhead.""
+Why he matters: Donor retention — the org depends on donations."
+2. Personas,Why these two,Staff persona = operations and survivor outcomes. Donor persona = funding and sustainability. These match the case priorities: retention and growth + girls not falling through the cracks.
+"3. Journey Map (Maria, today)",Stages,Intake and referral → Case assessment → Daily operations → Counseling and home visits → Reintegration planning
+3. Journey Map,Cross-cutting pains,No single system; hard to see who is struggling; reporting is manual; no early-warning indicators.
+3. Journey Map,Intake,"Actions: Referral by phone/email from agencies. Touchpoints: phone, paper. Pain: Non-standard intake; information lost or duplicated. Emotion: Anxious."
+3. Journey Map,Assessment,"Actions: Initial assessment; assign risk. Touchpoints: paper forms, Excel. Pain: Subjective risk; no consistent criteria. Emotion: Overwhelmed."
+3. Journey Map,Daily operations,"Actions: Update spreadsheets; coordinate safehouses. Touchpoints: Excel, WhatsApp. Pain: No unified view of who needs attention. Emotion: Stressed."
+3. Journey Map,Counseling / visits,"Actions: Session notes; schedule visits. Touchpoints: Word, paper, messages. Pain: Notes scattered; no full chronological history per resident. Emotion: Frustrated."
+3. Journey Map,Reintegration,"Actions: Case study; case conferences. Touchpoints: paper, in-person meetings. Pain: Hard to measure progress against intervention goals. Emotion: Uncertain."
+4. Problem Statement,Statement,"Staff managing multiple locations lack one system for resident cases, counseling progress, and donor contributions — leading to girls falling through the cracks, donors lapsing without re-engagement, and unclear social-media ROI. Haven Light Philippines needs a secure, role-based web application that unifies case management, donor tracking, and impact reporting."
+5. MoSCoW,Must Have (M),M1 Landing/home. M2 Login (ASP.NET Identity). M3 RBAC Admin and Donor. M4 Admin dashboard. M5 Caseload CRUD with filters. M6 Process recording CRUD. M7 Donors and contributions. M8 Privacy policy. M9 GDPR cookie consent (functional). M10 HTTPS. M11 HTTP to HTTPS redirect. M12 CSP header. M13 At least one ML pipeline deployed. M14 Cloud deployment. M15 Database seeded from CSVs. M16 Strong password policy. M17 API authentication/authorization. M18 Delete confirmation. M19 Credentials not in public repo.
+5. MoSCoW,Should Have (S),S1 Public impact dashboard. S2 Home visitation and case conferences. S3 Reports and analytics. S4 Donation allocations. S5 Password policy enforced. S6 API auth on endpoints. S7 Second ML pipeline. S8 Delete confirmations. S9 Responsive design. S10 Lighthouse accessibility 90% plus. S11 Donors see own history where applicable.
+5. MoSCoW,Could Have (C),C1 Social media analytics. C2 Third ML pipeline. C3 Third-party auth (e.g. Google). C4 MFA. C5 HSTS. C6 Non-httpOnly preference cookie for React. C7 Docker. C8 Sanitization or encoding.
+5. MoSCoW,Won't Have (W),W1 Real-time staff chat — adds WebSocket complexity and notification work for limited benefit this week; team already uses Slack/WhatsApp.
+5. MoSCoW,Five nice-to-haves,1) Alerts when resident risk level changes. 2) Donor recognition wall (opt-in). 3) Social posting time recommender. 4) Resident journey timeline. 5) PDF annual accomplishment export.
+6. Product Backlog,Product goal,"Deliver a secure, cloud-deployed web application that lets Haven Light Philippines staff manage resident cases and donor relationships while giving donors visibility into impact."
+6. Product Backlog,Stories 1-9,1 Scaffold .NET API and React/Vite — 5. 2 PostgreSQL schema and seed CSVs — 5. 3 Authentication and login — 8. 4 RBAC — 5. 5 Admin dashboard — 5. 6 Caseload inventory — 8. 7 Process recording — 5. 8 Donors page — 5. 9 Public landing — 3.
+6. Product Backlog,Stories 10-18,"10 Impact dashboard — 5. 11 Privacy and cookie consent — 3. 12 HTTPS, CSP, redirect — 3. 13 Home visits page — 5. 14 Reports and analytics — 5. 15 ML pipeline 1 donor churn — 8. 16 ML pipeline 2 reintegration — 8. 17 Azure and Supabase deploy — 5. 18 Lighthouse a11y 90% — 3."
+7. Sprint Monday,Sprint goal,"Establish scaffold, database schema, seeded data, and authentication so the team can build features starting Tuesday."
+7. Sprint Monday,Backlog (32 pts) — screenshot BEFORE starting,".NET 10 API plus EF Core (3) — Person A
+React/Vite and Router (3) — Person B
+PostgreSQL schema and migrations (5) — Person C
+CSV seed script (3) — Person C
+Supabase connection (2) — Person A
+Identity register and login (5) — Person A
+Login UI in React (3) — Person B
+GitHub repo and basic CI (2) — Person D
+Landing layout header hero footer (3) — Person D
+ML exploration and notebook start (3) — Person D"
+8. Burndown,How to track,Week total about 96 story points. Monday sprint uses 32 points. Update remaining points each night Mon through Thu. Draw ideal line from 96 down to 0 by end of Thursday.
+9. Wireframes (desktop),Admin Dashboard,"Top nav with logo and user menu. KPI row: active residents, donations this month, upcoming case conferences, incidents this month. Below: two columns — chart of residents by risk level; recent activity feed. Footer with Privacy Policy link."
+9. Wireframes (desktop),Caseload Inventory,"Search bar; filter chips for status, safehouse, category, risk. Data table: Case number, internal code, safehouse, status, risk, admission date, social worker. Row opens detail. Add New button top-right. Pagination."
+9. Wireframes (desktop),Public Impact Dashboard,"Hero with headline and three headline stats (girls served, safehouses, supporters). Three cards with charts: education progress, health outcomes, donation impact. Optional impact snapshot paragraph. Footer with Privacy Policy."
+Submit checklist,Before you turn in Monday,"Duplicate the official class FigJam board via File then Save a copy — do not rely on uploading a local .jam file (often shows up empty).
+Paste stickies from figjam-monday-complete.csv or arrange on the duplicated board.
+Replace [Add teammate name] with real names.
+Take the required screenshot of the Sprint Monday backlog before you start working."

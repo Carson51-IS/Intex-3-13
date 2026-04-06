@@ -9,9 +9,6 @@ public static class SeedData
 {
     public static async Task InitializeAsync(HavenLightContext context, string csvFolder)
     {
-        if (context.Safehouses.Any())
-            return;
-
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
             HeaderValidated = null,
@@ -19,23 +16,23 @@ public static class SeedData
             BadDataFound = null,
         };
 
-        await SeedSafehouses(context, csvFolder, config);
-        await SeedPartners(context, csvFolder, config);
-        await SeedPartnerAssignments(context, csvFolder, config);
-        await SeedSupporters(context, csvFolder, config);
-        await SeedSocialMediaPosts(context, csvFolder, config);
-        await SeedDonations(context, csvFolder, config);
-        await SeedInKindDonationItems(context, csvFolder, config);
-        await SeedDonationAllocations(context, csvFolder, config);
-        await SeedResidents(context, csvFolder, config);
-        await SeedProcessRecordings(context, csvFolder, config);
-        await SeedHomeVisitations(context, csvFolder, config);
-        await SeedEducationRecords(context, csvFolder, config);
-        await SeedHealthWellbeingRecords(context, csvFolder, config);
-        await SeedInterventionPlans(context, csvFolder, config);
-        await SeedIncidentReports(context, csvFolder, config);
-        await SeedSafehouseMonthlyMetrics(context, csvFolder, config);
-        await SeedPublicImpactSnapshots(context, csvFolder, config);
+        if (!context.Safehouses.Any()) await SeedSafehouses(context, csvFolder, config);
+        if (!context.Partners.Any()) await SeedPartners(context, csvFolder, config);
+        if (!context.PartnerAssignments.Any()) await SeedPartnerAssignments(context, csvFolder, config);
+        if (!context.Supporters.Any()) await SeedSupporters(context, csvFolder, config);
+        if (!context.SocialMediaPosts.Any()) await SeedSocialMediaPosts(context, csvFolder, config);
+        if (!context.Donations.Any()) await SeedDonations(context, csvFolder, config);
+        if (!context.InKindDonationItems.Any()) await SeedInKindDonationItems(context, csvFolder, config);
+        if (!context.DonationAllocations.Any()) await SeedDonationAllocations(context, csvFolder, config);
+        if (!context.Residents.Any()) await SeedResidents(context, csvFolder, config);
+        if (!context.ProcessRecordings.Any()) await SeedProcessRecordings(context, csvFolder, config);
+        if (!context.HomeVisitations.Any()) await SeedHomeVisitations(context, csvFolder, config);
+        if (!context.EducationRecords.Any()) await SeedEducationRecords(context, csvFolder, config);
+        if (!context.HealthWellbeingRecords.Any()) await SeedHealthWellbeingRecords(context, csvFolder, config);
+        if (!context.InterventionPlans.Any()) await SeedInterventionPlans(context, csvFolder, config);
+        if (!context.IncidentReports.Any()) await SeedIncidentReports(context, csvFolder, config);
+        if (!context.SafehouseMonthlyMetrics.Any()) await SeedSafehouseMonthlyMetrics(context, csvFolder, config);
+        if (!context.PublicImpactSnapshots.Any()) await SeedPublicImpactSnapshots(context, csvFolder, config);
     }
 
     private static async Task SeedCsv<T>(HavenLightContext context, string csvFolder, string fileName, CsvConfiguration config) where T : class

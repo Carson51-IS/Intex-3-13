@@ -1,15 +1,54 @@
 using System.Text;
+using DotNetEnv;
+using Npgsql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using HavenLightApi;
 using HavenLightApi.Data;
+
+// Npgsql 10.x requires DateTime.Kind == Utc for timestamptz columns; CSV seed data has Kind=Unspecified.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+// Repo-root .env — must load before config. Clobber so .env wins over stale machine/user env (e.g. old localhost).
+if (PathResolver.FindEnvFile() is { } envFile)
+    Env.Load(envFile, new LoadOptions(setEnvVars: true, clobberExistingVars: true));
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Log which DB host we’re using (helps debug wrong connection string / DNS issues)
+var cs = builder.Configuration.GetConnectionString("DefaultConnection");
+if (!string.IsNullOrEmpty(cs))
+{
+    try
+    {
+        var nb = new NpgsqlConnectionStringBuilder(cs);
+        Console.WriteLine($"[HavenLightApi] Database host: {nb.Host}; Port: {nb.Port}; Database: {nb.Database}");
+    }
+    catch
+    {
+        Console.WriteLine("[HavenLightApi] Could not parse ConnectionStrings:DefaultConnection.");
+    }
+}
+else
+    Console.WriteLine("[HavenLightApi] WARNING: ConnectionStrings:DefaultConnection is missing.");
+
 // --- Database ---
 builder.Services.AddDbContext<HavenLightContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (string.IsNullOrEmpty(conn))
+    {
+        options.UseNpgsql(conn);
+        return;
+    }
+    var nb = new NpgsqlConnectionStringBuilder(conn);
+    if (nb.Port == 6543)
+        nb.MaxAutoPrepare = 0;
+    options.UseNpgsql(nb.ConnectionString);
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 
 // --- ASP.NET Identity ---
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -75,8 +114,15 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<HavenLightContext>();
     await context.Database.MigrateAsync();
 
-    var csvFolder = Path.Combine(app.Environment.ContentRootPath, "..", "..", "lighthouse_csv_v7");
+    var csvFolder = PathResolver.FindLighthouseCsvFolder()
+        ?? Path.Combine(app.Environment.ContentRootPath, "..", "..", "lighthouse_csv_v7");
     await SeedData.InitializeAsync(context, csvFolder);
+
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("HavenLightApi");
+    if (!await context.Safehouses.AnyAsync())
+        logger.LogWarning(
+            "No rows in safehouses after seed. CSV folder used: {CsvPath}. See SEEDING.md — set ConnectionStrings__DefaultConnection and ensure lighthouse_csv_v7 exists.",
+            csvFolder);
 
     // Seed default roles and admin user
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
