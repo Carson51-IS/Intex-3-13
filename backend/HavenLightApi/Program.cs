@@ -101,14 +101,21 @@ builder.Services.Configure<AdminSeedOptions>(builder.Configuration.GetSection("A
 builder.Services.AddScoped<AuthIdentityGenerator>();
 
 // --- CORS ---
+// Local dev: localhost. Production: set Cors__AllowedOrigins in Azure (comma-separated), e.g.
+//   https://your-app.vercel.app,https://your-app-git-main-team.vercel.app
+var corsRaw = builder.Configuration["Cors:AllowedOrigins"];
+string[] corsOrigins = string.IsNullOrWhiteSpace(corsRaw)
+    ? ["http://localhost:3000", "http://localhost:5173"]
+    : corsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+// No AllowCredentials: frontend uses Bearer tokens in headers only (no cookie auth). That avoids
+// stricter CORS + preflight behavior that can stall or fail cross-origin (e.g. Vercel → Azure).
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
@@ -147,6 +154,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
+// CORS must run early (after routing, before auth) so OPTIONS preflight gets correct headers.
+app.UseCors("AllowFrontend");
+
 // Content-Security-Policy header (IS 414 requirement)
 app.Use(async (context, next) =>
 {
@@ -162,8 +174,6 @@ app.Use(async (context, next) =>
     );
     await next();
 });
-
-app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

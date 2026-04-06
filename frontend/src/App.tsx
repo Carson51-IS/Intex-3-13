@@ -13,6 +13,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import ImpactPage from './pages/ImpactPage';
 import PrivacyPage from './pages/PrivacyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
+import InsightsPage from './pages/InsightsPage';
+import DonorInsightsPage from './pages/DonorInsightsPage';
+import ResidentInsightsPage from './pages/ResidentInsightsPage';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: string }) {
@@ -44,6 +47,7 @@ function AppRoutes() {
             }
           />
           <Route path="/impact" element={<ImpactPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/cookies" element={<CookiePolicyPage />} />
           <Route
@@ -51,6 +55,22 @@ function AppRoutes() {
             element={
               <ProtectedRoute requiredRole="Admin">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/donor-insights"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <DonorInsightsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/resident-insights"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <ResidentInsightsPage />
               </ProtectedRoute>
             }
           />
