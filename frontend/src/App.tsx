@@ -13,6 +13,9 @@ import ResidentsPage from './pages/admin/ResidentsPage';
 import ResidentDetailPage from './pages/admin/ResidentDetailPage';
 import DonorsPage from './pages/admin/DonorsPage';
 import ReportsPage from './pages/admin/ReportsPage';
+import InsightsPage from './pages/InsightsPage';
+import DonorInsightsPage from './pages/DonorInsightsPage';
+import ResidentInsightsPage from './pages/ResidentInsightsPage';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: string }) {
@@ -48,6 +51,7 @@ function AppRoutes() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/impact" element={<ImpactPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
 
           {/* Donor routes */}
@@ -74,6 +78,10 @@ function AppRoutes() {
             element={
               <ProtectedRoute requiredRole="Admin">
                 <ResidentsPage />
+            path="/admin/donor-insights"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <DonorInsightsPage />
               </ProtectedRoute>
             }
           />
@@ -104,6 +112,13 @@ function AppRoutes() {
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
+            path="/admin/resident-insights"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <ResidentInsightsPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
       <Footer />
