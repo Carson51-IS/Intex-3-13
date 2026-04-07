@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="mt-auto space-y-3 border-t border-sidebar-border/70 px-4 py-4">
+        <div className="mt-auto border-t border-sidebar-border/70 px-4 py-4">
           <div className="flex items-center gap-3 rounded-md bg-sidebar-accent/60 p-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
               {(displayName[0] ?? 'A').toUpperCase()}
@@ -104,23 +104,25 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <div className="truncate text-xs text-sidebar-foreground/75">{email}</div>
             </div>
           </div>
-          <Link
-            to="/"
-            className="block rounded-md px-3 py-2 text-center text-xs font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/40 hover:text-white"
-          >
-            View public site
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full rounded-md border border-sidebar-border/80 bg-transparent px-3 py-2 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-white"
-          >
-            Log out
-          </button>
         </div>
       </aside>
 
       <div className="flex min-h-0 flex-1 flex-col bg-background">
+        <header className="flex h-16 shrink-0 items-center justify-end border-b border-border bg-background/90 px-6 backdrop-blur-sm md:px-8">
+          <div className="flex items-center gap-4">
+            <div className="text-right leading-tight">
+              <div className="text-sm font-semibold text-foreground">{displayName}</div>
+              <div className="text-xs text-muted-foreground">{email}</div>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Logout
+            </button>
+          </div>
+        </header>
         <div className="flex-1 overflow-y-auto p-6 md:p-8">{children}</div>
       </div>
     </div>
