@@ -1,72 +1,116 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { api } from '../api/client';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import type { ReactNode } from 'react';
+import { getAuthSession, loginUser } from '../lib/AuthAPI';
+import type { AuthSession } from '../types/AuthSession';
 
-interface User {
+export interface AuthUser {
   email: string;
   roles: string[];
 }
 
 interface AuthContextValue {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  authSession: AuthSession | null;
+  user: AuthUser | null;
+  isAuthenticated: boolean;
   isAdmin: boolean;
+  isLoading: boolean;
+  login: (
+    email: string,
+    password: string,
+    twoFactorCode?: string,
+    recoveryCode?: string,
+  ) => Promise<AuthSession>;
+  logout: () => void;
+  refreshAuthSession: () => Promise<AuthSession>;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const anonymousAuthSession: AuthSession = {
+  isAuthenticated: false,
+  userName: null,
+  email: null,
+  roles: [],
+};
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!token) {
-      setUser(null);
+  const refreshAuthSession = useCallback(async (): Promise<AuthSession> => {
+    try {
+      const session = await getAuthSession();
+      setAuthSession(session);
+      return session;
+    } catch {
+      setAuthSession(anonymousAuthSession);
+      return anonymousAuthSession;
+    } finally {
       setIsLoading(false);
-      return;
     }
+  }, []);
 
-    setIsLoading(true);
-    api.get<User>('/auth/me')
-      .then(setUser)
-      .catch(() => {
-        localStorage.removeItem('token');
-        setToken(null);
-        setUser(null);
-      })
-      .finally(() => setIsLoading(false));
-  }, [token]);
+  const login = useCallback(
+    async (
+      email: string,
+      password: string,
+      twoFactorCode?: string,
+      recoveryCode?: string,
+    ): Promise<AuthSession> => {
+      await loginUser(email, password, false, twoFactorCode, recoveryCode);
+      return refreshAuthSession();
+    },
+    [refreshAuthSession],
+  );
 
-  const login = async (email: string, password: string) => {
-    const { token: newToken } = await api.post<{ token: string }>('/auth/login', { email, password });
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-    // Load user before LoginPage navigates — otherwise ProtectedRoute sees token but no user
-    // and redirects back to /login (isLoading was false during the /me gap).
-    const me = await api.get<User>('/auth/me');
-    setUser(me);
-  };
+  const logout = useCallback(() => {
+    setAuthSession(anonymousAuthSession);
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-  };
+  useEffect(() => {
+    void refreshAuthSession();
+  }, [refreshAuthSession]);
+
+  const user = useMemo((): AuthUser | null => {
+    if (!authSession?.isAuthenticated) return null;
+    const email = authSession.email ?? authSession.userName ?? '';
+    if (!email) return null;
+    return { email, roles: authSession.roles };
+  }, [authSession]);
 
   const isAdmin = user?.roles.includes('Admin') ?? false;
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAdmin }}>
+    <AuthContext.Provider
+      value={{
+        authSession,
+        user,
+        isAuthenticated: authSession?.isAuthenticated ?? false,
+        isAdmin,
+        isLoading,
+        login,
+        logout,
+        refreshAuthSession,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
+/** Hook lives next to provider; Fast Refresh keeps both in sync. */
+// eslint-disable-next-line react-refresh/only-export-components -- useAuth is the public API for this module
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }

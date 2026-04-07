@@ -5,13 +5,20 @@ import Footer from './components/Footer';
 import CookieConsent from './components/CookieConsent';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminPage from './pages/AdminPage';
 import ImpactPage from './pages/ImpactPage';
 import PrivacyPage from './pages/PrivacyPage';
 import InsightsPage from './pages/InsightsPage';
 import DonorInsightsPage from './pages/DonorInsightsPage';
 import ResidentInsightsPage from './pages/ResidentInsightsPage';
 import type { ReactNode } from 'react';
+import ManageMFA from './pages/ManageMFAPage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
+import CookieConsentBannerView from './components/CookieConsentBannerView';
+import { CookieConsentProvider } from './context/CookieConsentContext';
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: string }) {
   const { user, isLoading } = useAuth();
@@ -23,6 +30,15 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
   return <>{children}</>;
 }
 
+function GuestOnlyRoute({ children }: { children: ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+  if (user) return <Navigate to="/" replace />;
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -30,15 +46,34 @@ function AppRoutes() {
       <main style={{ flex: 1, backgroundColor: '#f7fafc' }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/login"
+            element={
+              <GuestOnlyRoute>
+                <LoginPage />
+              </GuestOnlyRoute>
+            }
+          />
           <Route path="/impact" element={<ImpactPage />} />
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
+          <Route path="/manage-mfa" element={<ManageMFA />} />
+          <Route path="/cookies" element={<CookiePolicyPage />} />
           <Route
             path="/admin"
             element={
               <ProtectedRoute requiredRole="Admin">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <AdminPage />
               </ProtectedRoute>
             }
           />
@@ -61,6 +96,7 @@ function AppRoutes() {
         </Routes>
       </main>
       <Footer />
+      <CookieConsentBannerView />
       <CookieConsent />
     </div>
   );
@@ -68,10 +104,13 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <CookieConsentProvider>
       <AuthProvider>
+      <BrowserRouter>
         <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
+    </CookieConsentProvider>
+    
   );
 }

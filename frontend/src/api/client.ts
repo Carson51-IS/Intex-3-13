@@ -1,8 +1,12 @@
-/** Base URL including `/api` (e.g. https://your-api.azurewebsites.net/api). Required on Vercel build. */
-function getApiBase(): string {
+/**
+ * Base URL including `/api` (e.g. https://your-api.azurewebsites.net/api).
+ * In dev, defaults to same-origin `/api` so Vite proxies to the backend (see vite.config.ts) — avoids wrong ports and HTTPS cert issues.
+ * Set `VITE_API_URL` to override (e.g. point at Azure while running the Vite dev server).
+ */
+export function getApiBase(): string {
   const raw = import.meta.env.VITE_API_URL?.trim();
   if (raw) return raw.replace(/\/$/, '');
-  if (import.meta.env.DEV) return 'https://localhost:5001/api';
+  if (import.meta.env.DEV) return '/api';
   return '';
 }
 

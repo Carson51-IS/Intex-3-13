@@ -1,7 +1,7 @@
+using HavenLightApi.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HavenLightApi.Data;
 
 namespace HavenLightApi.Controllers;
 
