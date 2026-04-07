@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 
 namespace HavenLightApi.Controllers;
 
@@ -51,6 +52,43 @@ public class AuthController(
             email = user.Email,
             roles
         });
+    }
+
+    [HttpGet("users")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await userManager.Users
+            .OrderBy(u => u.Email ?? u.UserName)
+            .Select(u => new
+            {
+                id = u.Id,
+                userName = u.UserName,
+                email = u.Email,
+                lockoutEnabled = u.LockoutEnabled,
+                lockoutEnd = u.LockoutEnd
+            })
+            .ToListAsync();
+
+        var result = new List<object>(users.Count);
+        foreach (var user in users)
+        {
+            var userEntity = await userManager.FindByIdAsync(user.id);
+            var roles = userEntity is null
+                ? Array.Empty<string>()
+                : (await userManager.GetRolesAsync(userEntity)).OrderBy(r => r).ToArray();
+
+            result.Add(new
+            {
+                user.id,
+                user.userName,
+                user.email,
+                roles,
+                status = user.lockoutEnd is not null && user.lockoutEnd > DateTimeOffset.UtcNow ? "Locked" : "Active"
+            });
+        }
+
+        return Ok(result);
     }
 
     [HttpGet("providers")]

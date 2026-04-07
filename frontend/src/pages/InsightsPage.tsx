@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { engagementWindows, platformColors } from '../data/ml/socialEngagement';
 import { donationLiftWindows } from '../data/ml/socialDonationLift';
 
@@ -37,119 +38,76 @@ export default function InsightsPage() {
   });
 
   return (
-    <div>
-      {/* Hero */}
-      <section style={{
-        textAlign: 'center',
-        padding: '3.5rem 2rem',
-        background: 'linear-gradient(135deg, #1a365d 0%, #2b6cb0 50%, #4299e1 100%)',
-        color: 'white',
-      }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.75rem', fontWeight: 700 }}>
-          Social Media Insights
-        </h1>
-        <p style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: '600px', margin: '0 auto' }}>
-          Data-driven recommendations for maximizing engagement and donation impact across platforms
+    <div className="min-h-screen bg-background">
+      <section className="hero-gradient px-6 py-16 text-center text-primary-foreground">
+        <h1 className="font-heading text-4xl font-bold md:text-5xl">Social Media Insights</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-base text-primary-foreground/85 md:text-lg">
+          Data-driven recommendations for maximizing engagement and donation impact across platforms.
         </p>
       </section>
 
-      {/* Tab Switcher */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        padding: '1.5rem 2rem 0',
-        maxWidth: '1200px',
-        margin: '0 auto',
-      }}>
-        {[
-          { key: 'engagement' as Tab, label: 'Engagement Strategy' },
-          { key: 'donations' as Tab, label: 'Donation Impact' },
-        ].map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            style={{
-              padding: '0.75rem 1.5rem',
-              border: 'none',
-              borderRadius: '8px 8px 0 0',
-              backgroundColor: activeTab === tab.key ? 'white' : '#e2e8f0',
-              color: activeTab === tab.key ? '#1a365d' : '#718096',
-              fontWeight: activeTab === tab.key ? 700 : 500,
-              fontSize: '0.95rem',
-              cursor: 'pointer',
-              borderBottom: activeTab === tab.key ? '3px solid #2b6cb0' : '3px solid transparent',
-            }}
+      <div className="mx-auto w-full max-w-6xl px-6 pb-12 pt-6">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Link
+            to="/admin/insights"
+            className="shrink-0 text-sm font-semibold text-primary no-underline hover:underline"
           >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            ← Back to ML-Powered Insights
+          </Link>
+          <div className="inline-flex shrink-0 self-end rounded-lg border border-border bg-card p-1 card-shadow sm:self-auto">
+          {[
+            { key: 'engagement' as Tab, label: 'Engagement Strategy' },
+            { key: 'donations' as Tab, label: 'Donation Impact' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+          </div>
+        </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem 3rem' }}>
         {activeTab === 'engagement' ? (
           <>
-            {/* Platform Best Times */}
-            <section style={{ marginTop: '2rem' }}>
-              <h2 style={{
-                fontSize: '1.4rem',
-                color: '#1a365d',
-                marginBottom: '1.25rem',
-                paddingLeft: '1rem',
-                borderLeft: '4px solid #2b6cb0',
-              }}>
+            <section className="mt-4">
+              <h2 className="mb-4 border-l-4 border-primary pl-3 font-heading text-2xl font-semibold text-foreground">
                 Best Posting Windows by Platform
               </h2>
-              <p style={{ color: '#4a5568', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              <p className="mb-6 text-sm text-muted-foreground md:text-base">
                 Our ML model analyzed historical post performance to identify the optimal times for high engagement on each platform.
               </p>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                gap: '1.25rem',
-              }}>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {topEngagementByPlatform.map(({ platform, best, count }) => (
-                  <div key={platform} style={{
-                    backgroundColor: 'white',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                    border: '1px solid #e2e8f0',
-                    borderTop: `4px solid ${platformColors[platform] ?? '#718096'}`,
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <h3 style={{ fontSize: '1.15rem', color: '#2d3748', margin: 0 }}>{platform}</h3>
-                      <span style={{
-                        fontSize: '0.75rem',
-                        backgroundColor: '#ebf8ff',
-                        color: '#2b6cb0',
-                        padding: '0.2rem 0.6rem',
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                      }}>
+                  <div key={platform} className="rounded-xl border bg-card p-5 card-shadow" style={{ borderTop: `4px solid ${platformColors[platform] ?? '#718096'}` }}>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <h3 className="font-heading text-xl font-semibold text-card-foreground">{platform}</h3>
+                      <span className="rounded-full bg-info/15 px-2 py-1 text-xs font-semibold text-info">
                         {count} windows
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '0.5rem' }}>Best Time</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#2d3748' }}>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Best Time</div>
+                    <div className="mt-1 text-base font-semibold text-foreground">
                       {best.dayOfWeek} at {formatHour(best.postHour)}
                     </div>
-                    <div style={{ marginTop: '0.75rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#718096', marginBottom: '0.25rem' }}>
+                    <div className="mt-3">
+                      <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                         <span>Engagement Probability</span>
-                        <span style={{ fontWeight: 600, color: '#2d3748' }}>{(best.pHighEngagement * 100).toFixed(0)}%</span>
+                        <span className="font-semibold text-foreground">{(best.pHighEngagement * 100).toFixed(0)}%</span>
                       </div>
-                      <div style={{
-                        height: '8px',
-                        backgroundColor: '#e2e8f0',
-                        borderRadius: '4px',
-                        overflow: 'hidden',
-                      }}>
+                      <div className="h-2 overflow-hidden rounded bg-muted">
                         <div style={{
                           height: '100%',
                           width: `${best.pHighEngagement * 100}%`,
                           backgroundColor: platformColors[platform] ?? '#718096',
-                          borderRadius: '4px',
+                          borderRadius: '999px',
                         }} />
                       </div>
                     </div>
@@ -159,38 +117,26 @@ export default function InsightsPage() {
             </section>
 
             {/* Full Table */}
-            <section style={{ marginTop: '2.5rem' }}>
-              <h2 style={{
-                fontSize: '1.4rem',
-                color: '#1a365d',
-                marginBottom: '1.25rem',
-                paddingLeft: '1rem',
-                borderLeft: '4px solid #2b6cb0',
-              }}>
+            <section className="mt-10">
+              <h2 className="mb-4 border-l-4 border-primary pl-3 font-heading text-2xl font-semibold text-foreground">
                 All Recommended Posting Windows
               </h2>
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden',
-              }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <div className="overflow-hidden rounded-xl border bg-card card-shadow">
+                <table className="w-full border-collapse text-sm">
                   <thead>
-                    <tr style={{ backgroundColor: '#f7fafc' }}>
-                      <th style={thStyle}>Rank</th>
-                      <th style={thStyle}>Platform</th>
-                      <th style={thStyle}>Day</th>
-                      <th style={thStyle}>Time</th>
-                      <th style={thStyle}>Engagement Probability</th>
+                    <tr className="border-b bg-muted/40">
+                      <th className={thCn}>Rank</th>
+                      <th className={thCn}>Platform</th>
+                      <th className={thCn}>Day</th>
+                      <th className={thCn}>Time</th>
+                      <th className={thCn}>Engagement Probability</th>
                     </tr>
                   </thead>
                   <tbody>
                     {engagementWindows.map((w, i) => (
-                      <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f7fafc' }}>
-                        <td style={tdStyle}>#{i + 1}</td>
-                        <td style={tdStyle}>
+                      <tr key={i} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                        <td className={tdCn}>#{i + 1}</td>
+                        <td className={tdCn}>
                           <span style={{
                             display: 'inline-block',
                             width: '8px',
@@ -201,26 +147,19 @@ export default function InsightsPage() {
                           }} />
                           {w.platform}
                         </td>
-                        <td style={tdStyle}>{w.dayOfWeek}</td>
-                        <td style={tdStyle}>{formatHour(w.postHour)}</td>
-                        <td style={tdStyle}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{
-                              flex: 1,
-                              height: '6px',
-                              backgroundColor: '#e2e8f0',
-                              borderRadius: '3px',
-                              overflow: 'hidden',
-                              maxWidth: '120px',
-                            }}>
+                        <td className={tdCn}>{w.dayOfWeek}</td>
+                        <td className={tdCn}>{formatHour(w.postHour)}</td>
+                        <td className={tdCn}>
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-28 overflow-hidden rounded bg-muted">
                               <div style={{
                                 height: '100%',
                                 width: `${w.pHighEngagement * 100}%`,
                                 backgroundColor: w.pHighEngagement > 0.6 ? '#38a169' : w.pHighEngagement > 0.55 ? '#d69e2e' : '#4299e1',
-                                borderRadius: '3px',
+                                borderRadius: '999px',
                               }} />
                             </div>
-                            <span style={{ fontWeight: 600, minWidth: '40px' }}>{(w.pHighEngagement * 100).toFixed(0)}%</span>
+                            <span className="min-w-10 font-semibold">{(w.pHighEngagement * 100).toFixed(0)}%</span>
                           </div>
                         </td>
                       </tr>
@@ -231,44 +170,27 @@ export default function InsightsPage() {
             </section>
 
             {/* Day of Week Summary */}
-            <section style={{ marginTop: '2.5rem' }}>
-              <h2 style={{
-                fontSize: '1.4rem',
-                color: '#1a365d',
-                marginBottom: '1.25rem',
-                paddingLeft: '1rem',
-                borderLeft: '4px solid #2b6cb0',
-              }}>
+            <section className="mt-10">
+              <h2 className="mb-4 border-l-4 border-primary pl-3 font-heading text-2xl font-semibold text-foreground">
                 Engagement by Day of Week
               </h2>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(7, 1fr)',
-                gap: '0.75rem',
-              }}>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
                 {dayOrder.map(day => {
                   const dayWindows = engagementWindows.filter(w => w.dayOfWeek === day);
                   const avgProb = dayWindows.length > 0
                     ? dayWindows.reduce((s, w) => s + w.pHighEngagement, 0) / dayWindows.length
                     : 0;
                   return (
-                    <div key={day} style={{
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      textAlign: 'center',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                      border: '1px solid #e2e8f0',
-                    }}>
-                      <div style={{ fontSize: '0.75rem', color: '#718096', marginBottom: '0.5rem' }}>
+                    <div key={day} className="rounded-xl border bg-card p-4 text-center card-shadow">
+                      <div className="mb-1 text-xs text-muted-foreground">
                         {day.slice(0, 3)}
                       </div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: avgProb > 0.58 ? '#38a169' : '#2b6cb0' }}>
+                      <div className="text-2xl font-bold" style={{ color: avgProb > 0.58 ? '#38a169' : '#2b6cb0' }}>
                         {dayWindows.length}
                       </div>
-                      <div style={{ fontSize: '0.7rem', color: '#a0aec0' }}>windows</div>
+                      <div className="text-xs text-muted-foreground">windows</div>
                       {dayWindows.length > 0 && (
-                        <div style={{ fontSize: '0.8rem', color: '#4a5568', marginTop: '0.35rem', fontWeight: 600 }}>
+                        <div className="mt-1 text-sm font-semibold text-foreground">
                           {(avgProb * 100).toFixed(0)}% avg
                         </div>
                       )}
@@ -280,54 +202,29 @@ export default function InsightsPage() {
           </>
         ) : (
           <>
-            {/* Donation Impact Platform Cards */}
-            <section style={{ marginTop: '2rem' }}>
-              <h2 style={{
-                fontSize: '1.4rem',
-                color: '#1a365d',
-                marginBottom: '1.25rem',
-                paddingLeft: '1rem',
-                borderLeft: '4px solid #38a169',
-              }}>
+            <section className="mt-4">
+              <h2 className="mb-4 border-l-4 border-success pl-3 font-heading text-2xl font-semibold text-foreground">
                 Highest Donation Impact by Platform
               </h2>
-              <p style={{ color: '#4a5568', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              <p className="mb-6 text-sm text-muted-foreground md:text-base">
                 Our ML model predicts expected donation value attributable to social media posts, helping optimize posting strategy for fundraising.
               </p>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                gap: '1.25rem',
-              }}>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {topDonationByPlatform.map(({ platform, best, count }) => (
-                  <div key={platform} style={{
-                    backgroundColor: 'white',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                    border: '1px solid #e2e8f0',
-                    borderTop: `4px solid ${platformColors[platform] ?? '#718096'}`,
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <h3 style={{ fontSize: '1.15rem', color: '#2d3748', margin: 0 }}>{platform}</h3>
-                      <span style={{
-                        fontSize: '0.75rem',
-                        backgroundColor: '#f0fff4',
-                        color: '#38a169',
-                        padding: '0.2rem 0.6rem',
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                      }}>
+                  <div key={platform} className="rounded-xl border bg-card p-5 card-shadow" style={{ borderTop: `4px solid ${platformColors[platform] ?? '#718096'}` }}>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <h3 className="font-heading text-xl font-semibold text-card-foreground">{platform}</h3>
+                      <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-semibold text-success">
                         {count} windows
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '0.25rem' }}>Best Time</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#2d3748' }}>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Best Time</div>
+                    <div className="mt-1 text-base font-semibold text-foreground">
                       {best.dayOfWeek} at {formatHour(best.postHour)}
                     </div>
-                    <div style={{ marginTop: '0.75rem' }}>
-                      <div style={{ fontSize: '0.85rem', color: '#718096' }}>Predicted Donation Value</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#38a169', marginTop: '0.25rem' }}>
+                    <div className="mt-3">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Predicted Donation Value</div>
+                      <div className="mt-1 text-3xl font-bold text-success">
                         {formatPhp(best.predictedDonationValue)}
                       </div>
                     </div>
@@ -336,39 +233,26 @@ export default function InsightsPage() {
               </div>
             </section>
 
-            {/* Full Donation Table */}
-            <section style={{ marginTop: '2.5rem' }}>
-              <h2 style={{
-                fontSize: '1.4rem',
-                color: '#1a365d',
-                marginBottom: '1.25rem',
-                paddingLeft: '1rem',
-                borderLeft: '4px solid #38a169',
-              }}>
+            <section className="mt-10">
+              <h2 className="mb-4 border-l-4 border-success pl-3 font-heading text-2xl font-semibold text-foreground">
                 All Recommended Posting Windows for Donations
               </h2>
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden',
-              }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <div className="overflow-hidden rounded-xl border bg-card card-shadow">
+                <table className="w-full border-collapse text-sm">
                   <thead>
-                    <tr style={{ backgroundColor: '#f7fafc' }}>
-                      <th style={thStyle}>Rank</th>
-                      <th style={thStyle}>Platform</th>
-                      <th style={thStyle}>Day</th>
-                      <th style={thStyle}>Time</th>
-                      <th style={thStyle}>Predicted Value (PHP)</th>
+                    <tr className="border-b bg-muted/40">
+                      <th className={thCn}>Rank</th>
+                      <th className={thCn}>Platform</th>
+                      <th className={thCn}>Day</th>
+                      <th className={thCn}>Time</th>
+                      <th className={thCn}>Predicted Value (PHP)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {donationLiftWindows.map((w, i) => (
-                      <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f7fafc' }}>
-                        <td style={tdStyle}>#{i + 1}</td>
-                        <td style={tdStyle}>
+                      <tr key={i} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                        <td className={tdCn}>#{i + 1}</td>
+                        <td className={tdCn}>
                           <span style={{
                             display: 'inline-block',
                             width: '8px',
@@ -379,9 +263,9 @@ export default function InsightsPage() {
                           }} />
                           {w.platform}
                         </td>
-                        <td style={tdStyle}>{w.dayOfWeek}</td>
-                        <td style={tdStyle}>{formatHour(w.postHour)}</td>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: '#38a169' }}>
+                        <td className={tdCn}>{w.dayOfWeek}</td>
+                        <td className={tdCn}>{formatHour(w.postHour)}</td>
+                        <td className={`${tdCn} font-semibold text-success`}>
                           ₱{w.predictedDonationValue.toLocaleString()}
                         </td>
                       </tr>
@@ -393,16 +277,9 @@ export default function InsightsPage() {
           </>
         )}
 
-        {/* Methodology Note */}
-        <section style={{
-          marginTop: '2.5rem',
-          backgroundColor: '#ebf8ff',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          border: '1px solid #bee3f8',
-        }}>
-          <h3 style={{ fontSize: '1rem', color: '#2b6cb0', margin: '0 0 0.5rem' }}>About This Analysis</h3>
-          <p style={{ fontSize: '0.875rem', color: '#4a5568', lineHeight: 1.7, margin: 0 }}>
+        <section className="mt-10 rounded-xl border border-info/30 bg-info/10 p-6">
+          <h3 className="font-heading text-lg font-semibold text-info">About This Analysis</h3>
+          <p className="mt-2 text-sm leading-7 text-muted-foreground">
             These recommendations are generated by machine learning models trained on Haven Light Philippines' historical social media data.
             The engagement model uses a Random Forest classifier to predict high-engagement posts (top 25th percentile),
             while the donation lift model uses Ridge Regression to estimate expected donation value per post.
@@ -413,20 +290,5 @@ export default function InsightsPage() {
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: '0.75rem 1rem',
-  textAlign: 'left',
-  fontWeight: 600,
-  color: '#4a5568',
-  borderBottom: '2px solid #e2e8f0',
-  fontSize: '0.8rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.65rem 1rem',
-  borderBottom: '1px solid #e2e8f0',
-  color: '#2d3748',
-};
+const thCn = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+const tdCn = 'px-4 py-3 text-foreground';

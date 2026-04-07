@@ -41,200 +41,98 @@ export default function RegisterPage() {
     }
   };
 
+  const inputCn =
+    'w-full rounded-md border border-input bg-card px-3 py-2.5 font-body text-base text-foreground outline-none ring-ring focus:ring-2';
+  const labelCn = 'mb-1.5 block font-body text-sm font-medium text-muted-foreground';
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 200px)',
-        padding: '2rem',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          padding: '2.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          backgroundColor: 'white',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '1.5rem',
-            textAlign: 'center',
-            color: '#1a365d',
-            marginBottom: '1.5rem',
-          }}
-        >
-          Staff Registration
-        </h1>
+    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-8">
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-xl border border-white/20 bg-card/95 card-shadow backdrop-blur-sm">
+        <div className="bg-primary px-6 py-5 text-primary-foreground">
+          <h1 className="font-heading text-2xl font-bold">User Registration</h1>
+          <p className="mt-1 font-body text-sm text-primary-foreground/85">
+            Create your account to continue.
+          </p>
+        </div>
 
-        {error && (
-          <div
-            style={{
-              padding: '0.75rem',
-              backgroundColor: '#fed7d7',
-              color: '#c53030',
-              borderRadius: '4px',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-            }}
+        <div className="p-6">
+          {error && (
+            <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-4 rounded-md border border-success/35 bg-success/10 px-3 py-2 text-sm text-success">
+              {successMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="register-email" className={labelCn}>Email</label>
+              <input
+                id="register-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className={inputCn}
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Password must be at least 14 characters long.
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="register-password" className={labelCn}>Password</label>
+              <input
+                id="register-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                className={inputCn}
+              />
+            </div>
+
+            <div className="mb-5">
+              <label htmlFor="register-confirm-password" className={labelCn}>Confirm password</label>
+              <input
+                id="register-confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                className={inputCn}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-md bg-primary px-4 py-2.5 font-body text-base font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Creating account…' : 'Create account'}
+            </button>
+          </form>
+
+          <Link
+            to="/login"
+            className="mt-3 flex w-full items-center justify-center rounded-md border border-primary bg-card px-4 py-2.5 font-body text-base font-semibold text-primary no-underline transition-colors hover:bg-primary/5"
           >
-            {error}
-          </div>
-        )}
-
-        {successMessage && (
-          <div
-            style={{
-              padding: '0.75rem',
-              backgroundColor: '#c6f6d5',
-              color: '#276749',
-              borderRadius: '4px',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-            }}
-          >
-            {successMessage}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              htmlFor="register-email"
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontWeight: 500,
-                color: '#4a5568',
-              }}
-            >
-              Email
-            </label>
-            <input
-              id="register-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-              }}
-            />
-            <p
-              style={{
-                marginTop: '0.5rem',
-                marginBottom: 0,
-                fontSize: '0.8rem',
-                color: '#718096',
-              }}
-            >
-              Password must be at least 14 characters long.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              htmlFor="register-password"
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontWeight: 500,
-                color: '#4a5568',
-              }}
-            >
-              Password
-            </label>
-            <input
-              id="register-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              htmlFor="register-confirm-password"
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontWeight: 500,
-                color: '#4a5568',
-              }}
-            >
-              Confirm password
-            </label>
-            <input
-              id="register-confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              backgroundColor: isSubmitting ? '#a0aec0' : '#2b6cb0',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              fontWeight: 600,
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {isSubmitting ? 'Creating account…' : 'Create account'}
-          </button>
-        </form>
-
-        <p
-          style={{
-            marginTop: '1.25rem',
-            textAlign: 'center',
-            fontSize: '0.875rem',
-            color: '#4a5568',
-          }}
-        >
-          Already have an account?{' '}
-          <Link to="/login" style={{ color: '#2b6cb0', fontWeight: 600 }}>
-            Sign in
+            Already have an account? Sign in
           </Link>
-        </p>
+
+          <div className="mt-4 border-t border-border pt-4 text-center">
+            <Link to="/impact" className="text-sm text-primary hover:underline">
+              View our public impact dashboard →
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -16,10 +16,10 @@ export default function ResidentInsightsPage() {
     <AdminLayout>
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <Link
-        to="/admin"
+        to="/admin/insights"
         style={{ display: 'inline-block', marginBottom: '1rem', color: '#2b6cb0', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}
       >
-        ← Back to Dashboard
+        ← Back to ML-Powered Insights
       </Link>
       <h1 style={{ fontSize: '1.75rem', color: '#1a365d', marginBottom: '0.5rem' }}>Resident Care Intelligence</h1>
       <p style={{ color: '#718096', marginBottom: '2rem' }}>

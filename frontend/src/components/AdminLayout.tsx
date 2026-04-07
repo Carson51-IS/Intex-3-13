@@ -3,11 +3,19 @@ import type { ReactNode } from 'react';
 import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 import { useAuth } from '../context/AuthContext';
 
+const mlInsightsPaths = [
+  '/admin/insights',
+  '/admin/donor-insights',
+  '/admin/resident-insights',
+  '/admin/social-insights',
+] as const;
+
 const navSections = [
   {
     title: 'Overview',
     items: [
       { path: '/admin', label: 'Dashboard', exact: true },
+      { path: '/admin/insights', label: 'ML-Powered Insights', matchPaths: mlInsightsPaths },
       { path: '/admin/reports', label: 'Report & Analytics' },
     ],
   },
@@ -74,7 +82,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </div>
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
+                  const isActive =
+                    'matchPaths' in item && item.matchPaths
+                      ? item.matchPaths.some(
+                          (p) => location.pathname === p || location.pathname.startsWith(`${p}/`),
+                        )
+                      : item.exact
+                        ? location.pathname === item.path
+                        : location.pathname.startsWith(item.path);
                   return (
                     <Link
                       key={item.path}

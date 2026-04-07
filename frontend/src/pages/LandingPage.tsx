@@ -229,6 +229,7 @@ export default function LandingPage() {
                 <a href="#mission" className="block transition-colors hover:text-primary-foreground">Our Mission</a>
                 <a href="#impact" className="block transition-colors hover:text-primary-foreground">Impact</a>
                 <a href="#donate" className="block transition-colors hover:text-primary-foreground">Donate</a>
+                <Link to="/privacy" className="block transition-colors hover:text-primary-foreground">Privacy Policy</Link>
               </div>
             </div>
           </div>

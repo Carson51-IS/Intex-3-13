@@ -7,7 +7,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminPage from './pages/AdminPage';
 import ImpactPage from './pages/ImpactPage';
 import PrivacyPage from './pages/PrivacyPage';
 import DonorDashboard from './pages/DonorDashboard';
@@ -16,6 +15,9 @@ import ResidentDetailPage from './pages/admin/ResidentDetailPage';
 import DonorsPage from './pages/admin/DonorsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import SettingsPage from './pages/admin/SettingsPage';
+import UserManagementPage from './pages/admin/UserManagementPage';
+import InsightsHubPage from './pages/admin/InsightsHubPage';
+import SocialInsightsAdminPage from './pages/admin/SocialInsightsAdminPage';
 import InsightsPage from './pages/InsightsPage';
 import DonorInsightsPage from './pages/DonorInsightsPage';
 import ResidentInsightsPage from './pages/ResidentInsightsPage';
@@ -57,8 +59,10 @@ const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
   { path: '/admin/residents/:id', element: <ResidentDetailPage /> },
   { path: '/admin/donors', element: <DonorsPage /> },
   { path: '/admin/reports', element: <ReportsPage /> },
+  { path: '/admin/insights', element: <InsightsHubPage /> },
+  { path: '/admin/social-insights', element: <SocialInsightsAdminPage /> },
   { path: '/admin/settings', element: <SettingsPage /> },
-  { path: '/admin/users', element: <AdminPage /> },
+  { path: '/admin/users', element: <UserManagementPage /> },
   { path: '/admin/donor-insights', element: <DonorInsightsPage /> },
   { path: '/admin/resident-insights', element: <ResidentInsightsPage /> },
 ];
