@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { api } from '../../api/client';
+import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
 
 interface Resident {
@@ -67,15 +67,21 @@ export default function ResidentsPage() {
       if (categoryFilter) params.set('category', categoryFilter);
       if (safehouseFilter) params.set('safehouseId', safehouseFilter);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/residents?${params}`, {
+      const base = getApiBase();
+      if (!base) throw new Error('API URL is not configured.');
+      const response = await fetch(`${base}/residents?${params}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
       const total = response.headers.get('X-Total-Count');
       setTotalCount(total ? parseInt(total, 10) : 0);
-      const data = await response.json();
-      setResidents(data);
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t || `Request failed: ${response.status}`);
+      }
+      const raw = await response.text();
+      setResidents(raw ? JSON.parse(raw) : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load residents');
     } finally {

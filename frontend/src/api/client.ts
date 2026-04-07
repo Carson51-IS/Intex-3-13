@@ -1,5 +1,5 @@
 /** Base URL including `/api` (e.g. https://your-api.azurewebsites.net/api). Required on Vercel build. */
-function getApiBase(): string {
+export function getApiBase(): string {
   const raw = import.meta.env.VITE_API_URL?.trim();
   if (raw) return raw.replace(/\/$/, '');
   if (import.meta.env.DEV) return 'https://localhost:5001/api';

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { api } from '../../api/client';
+import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
 
 interface Supporter {
@@ -50,15 +50,22 @@ export default function DonorsPage() {
   const fetchSupporters = useCallback(async () => {
     setIsLoading(true);
     try {
+      const base = getApiBase();
+      if (!base) throw new Error('API URL is not configured.');
       const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
       if (typeFilter) params.set('type', typeFilter);
       if (statusFilter) params.set('status', statusFilter);
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/supporters?${params}`, {
+      const response = await fetch(`${base}/supporters?${params}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       const total = response.headers.get('X-Total-Count');
       setSupporterTotal(total ? parseInt(total, 10) : 0);
-      setSupporters(await response.json());
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t || `Request failed: ${response.status}`);
+      }
+      const raw = await response.text();
+      setSupporters(raw ? JSON.parse(raw) : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load supporters');
     } finally {
@@ -69,14 +76,21 @@ export default function DonorsPage() {
   const fetchDonations = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/donations?page=${page}&pageSize=${pageSize}`, {
+      const base = getApiBase();
+      if (!base) throw new Error('API URL is not configured.');
+      const response = await fetch(`${base}/donations?page=${page}&pageSize=${pageSize}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       const total = response.headers.get('X-Total-Count');
       setDonationTotal(total ? parseInt(total, 10) : 0);
-      setDonations(await response.json());
-    } catch {
-      setError('Failed to load donations');
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t || `Request failed: ${response.status}`);
+      }
+      const raw = await response.text();
+      setDonations(raw ? JSON.parse(raw) : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load donations');
     } finally {
       setIsLoading(false);
     }

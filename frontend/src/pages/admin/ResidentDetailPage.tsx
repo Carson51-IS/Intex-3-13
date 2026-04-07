@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { api } from '../../api/client';
+import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
 
 interface Resident {
@@ -264,15 +264,22 @@ function ProcessRecordingsTab({ residentId }: { residentId: number }) {
   const fetchRecordings = async (p = 1) => {
     setIsLoading(true);
     try {
+      const base = getApiBase();
+      if (!base) throw new Error('API URL is not configured.');
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL ?? ''}/api/processrecordings?residentId=${residentId}&page=${p}&pageSize=10`,
+        `${base}/processrecordings?residentId=${residentId}&page=${p}&pageSize=10`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       const total = response.headers.get('X-Total-Count');
       setTotalCount(total ? parseInt(total, 10) : 0);
-      setRecordings(await response.json());
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t || `Request failed: ${response.status}`);
+      }
+      const raw = await response.text();
+      setRecordings(raw ? JSON.parse(raw) : []);
     } catch (err) {
-      setError('Failed to load process recordings.');
+      setError(err instanceof Error ? err.message : 'Failed to load process recordings.');
     } finally {
       setIsLoading(false);
     }
@@ -365,13 +372,20 @@ function HomeVisitationsTab({ residentId }: { residentId: number }) {
   const fetchVisitations = async (p = 1) => {
     setIsLoading(true);
     try {
+      const base = getApiBase();
+      if (!base) throw new Error('API URL is not configured.');
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL ?? ''}/api/homevisitations?residentId=${residentId}&page=${p}&pageSize=10`,
+        `${base}/homevisitations?residentId=${residentId}&page=${p}&pageSize=10`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       const total = response.headers.get('X-Total-Count');
       setTotalCount(total ? parseInt(total, 10) : 0);
-      setVisitations(await response.json());
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t || `Request failed: ${response.status}`);
+      }
+      const raw = await response.text();
+      setVisitations(raw ? JSON.parse(raw) : []);
     } finally {
       setIsLoading(false);
     }
