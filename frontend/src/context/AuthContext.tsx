@@ -13,6 +13,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
+  isDonor: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -57,9 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const isAdmin = user?.roles.includes('Admin') ?? false;
+  const isDonor = user?.roles.includes('Donor') ?? false;
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAdmin, isDonor }}>
       {children}
     </AuthContext.Provider>
   );
