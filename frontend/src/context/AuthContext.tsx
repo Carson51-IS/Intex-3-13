@@ -49,9 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshAuthSession = useCallback(async (): Promise<AuthSession> => {
     try {
       const session = await getAuthSession();
+      // #region agent log
+      console.log('[DEBUG-37e360] refreshAuthSession OK', { isAuthenticated: session.isAuthenticated, roles: session.roles, email: session.email, userName: session.userName });
+      // #endregion
       setAuthSession(session);
       return session;
-    } catch {
+    } catch (err) {
+      // #region agent log
+      console.log('[DEBUG-37e360] refreshAuthSession FAILED', { err: err instanceof Error ? err.message : String(err) });
+      // #endregion
       setAuthSession(anonymousAuthSession);
       return anonymousAuthSession;
     } finally {

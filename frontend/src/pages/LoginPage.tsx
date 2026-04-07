@@ -40,6 +40,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
+    // #region agent log
+    console.log('[DEBUG-37e360] handleSubmit start', { emailLen: email.trim().length });
+    // #endregion
     try {
       const trimmedTwoFactorCode = twoFactorCode.trim();
       const trimmedRecoveryCode = recoveryCode.trim();
@@ -49,16 +52,24 @@ export default function LoginPage() {
         trimmedTwoFactorCode || undefined,
         trimmedRecoveryCode || undefined,
       );
+      // #region agent log
+      console.log('[DEBUG-37e360] login returned session', { isAuthenticated: session.isAuthenticated, roles: session.roles, email: session.email, userName: session.userName });
+      // #endregion
       if (!session.isAuthenticated) {
         setError('Sign in failed. Please check your credentials.');
         return;
       }
       const isAdmin = session.roles.includes('Admin');
       const isDonor = session.roles.includes('Donor');
-      if (isAdmin) navigate('/admin');
-      else if (isDonor) navigate('/donor');
-      else navigate('/');
+      const target = isAdmin ? '/admin' : isDonor ? '/donor' : '/';
+      // #region agent log
+      console.log('[DEBUG-37e360] navigating to', target, { isAdmin, isDonor, roles: session.roles });
+      // #endregion
+      navigate(target);
     } catch (err) {
+      // #region agent log
+      console.log('[DEBUG-37e360] login error', { err: err instanceof Error ? err.message : String(err) });
+      // #endregion
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsSubmitting(false);
