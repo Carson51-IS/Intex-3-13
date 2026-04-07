@@ -7,9 +7,21 @@ using HavenLightApi;
 using HavenLightApi.Data;
 using HavenLightApi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Google;
+using System.Threading;
 
 // Npgsql 10.x requires DateTime.Kind == Utc for timestamptz columns; CSV seed data has Kind=Unspecified.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+// Prevent duplicate local launches from crashing on "address already in use".
+using var singleInstanceMutex = new Mutex(
+    initiallyOwned: true,
+    name: @"Global\HavenLightApi_Local_5055",
+    createdNew: out var isPrimaryInstance);
+if (!isPrimaryInstance)
+{
+    Console.WriteLine("[HavenLightApi] Another local instance is already running on port 5055. Reuse that process or stop it before starting a new one.");
+    return;
+}
 
 // Repo-root .env — must load before config. Clobber so .env wins over stale machine/user env (e.g. old localhost).
 if (PathResolver.FindEnvFile() is { } envFile)

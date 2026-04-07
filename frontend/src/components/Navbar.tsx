@@ -53,7 +53,7 @@ export default function Navbar() {
                 <NavLink to="/admin/resident-insights">Residents</NavLink>
               </>
             )}
-            <span style={{ color: '#cbd5e0', fontSize: '0.8rem', marginLeft: '0.25rem' }}>{user.email}</span>
+            <span className="ml-1 text-xs text-muted-foreground">{user.email}</span>
             <button
               type="button"
               onClick={handleLogout}

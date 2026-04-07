@@ -39,7 +39,7 @@ export default function ManageMFAPage() {
       setTwoFactorStatus(status);
       setRecoveryCodes(status.recoveryCodes ?? []);
     } catch (e) {
-      setError('Failed to load two-factor status');
+      setError(e instanceof Error ? e.message : 'Failed to load two-factor status');
       console.error(e);
     }
   }
@@ -76,7 +76,7 @@ export default function ManageMFAPage() {
         `Two-factor authentication enabled. ${status.recoveryCodesLeft} recovery codes left.`,
       );
     } catch (e) {
-      setError('Failed to enable two-factor authentication');
+      setError(e instanceof Error ? e.message : 'Failed to enable two-factor authentication');
       console.error(e);
     } finally {
       setIsSubmitting(false);
@@ -95,7 +95,7 @@ export default function ManageMFAPage() {
       setRecoveryCodes(status.recoveryCodes ?? []);
       setSuccessMessage('Two-factor authentication disabled.');
     } catch (e) {
-      setError('Failed to disable two-factor authentication');
+      setError(e instanceof Error ? e.message : 'Failed to disable two-factor authentication');
       console.error(e);
     } finally {
       setIsSubmitting(false);
@@ -114,7 +114,7 @@ export default function ManageMFAPage() {
       setRecoveryCodes(status.recoveryCodes ?? []);
       setSuccessMessage('Recovery codes reset.');
     } catch (e) {
-      setError('Failed to reset recovery codes');
+      setError(e instanceof Error ? e.message : 'Failed to reset recovery codes');
       console.error(e);
     } finally {
       setIsSubmitting(false);

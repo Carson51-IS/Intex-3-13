@@ -12,9 +12,8 @@ import type { AuthSession } from '../types/AuthSession';
 
 export interface AuthUser {
   email: string;
-  roles: string[];
-  /** Identity name from the auth session (may be null). */
   userName: string | null;
+  roles: string[];
 }
 
 interface AuthContextValue {
@@ -22,6 +21,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isDonor: boolean;
   isLoading: boolean;
   login: (
     email: string,
@@ -84,10 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!authSession?.isAuthenticated) return null;
     const email = authSession.email ?? authSession.userName ?? '';
     if (!email) return null;
-    return { email, roles: authSession.roles, userName: authSession.userName };
+    return {
+      email,
+      userName: authSession.userName,
+      roles: authSession.roles,
+    };
   }, [authSession]);
 
   const isAdmin = user?.roles.includes('Admin') ?? false;
+  const isDonor = user?.roles.includes('Donor') ?? false;
 
   return (
     <AuthContext.Provider
@@ -96,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: authSession?.isAuthenticated ?? false,
         isAdmin,
+        isDonor,
         isLoading,
         login,
         logout,

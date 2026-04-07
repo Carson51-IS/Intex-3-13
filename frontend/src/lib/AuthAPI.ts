@@ -4,4 +4,6 @@ export {
   registerUser,
   logoutUser,
   loginUser,
+  getExternalAuthProviders,
+  buildExternalLoginUrl,
 } from './authClient';
