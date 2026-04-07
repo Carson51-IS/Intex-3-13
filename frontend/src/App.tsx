@@ -19,7 +19,7 @@ import SettingsPage from './pages/admin/SettingsPage';
 import InsightsPage from './pages/InsightsPage';
 import DonorInsightsPage from './pages/DonorInsightsPage';
 import ResidentInsightsPage from './pages/ResidentInsightsPage';
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import ManageMFA from './pages/ManageMFAPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import CookieConsentBannerView from './components/CookieConsentBannerView';
@@ -64,15 +64,20 @@ const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
 ];
 
 function GuestOnlyRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
-  const { pathname } = useLocation();
+  const { user, isLoading, isAdmin, isDonor } = useAuth();
 
-  useEffect(() => {
-    if (pathname !== '/login') return;
-  }, [pathname, isLoading, user]);
+  // #region agent log
+  console.log('[DEBUG-37e360] GuestOnlyRoute', { isLoading, hasUser: !!user, roles: user?.roles, isAdmin, isDonor });
+  // #endregion
 
   if (isLoading) return <div style={{ padding: '2rem' }}>Loading...</div>;
-  if (user) return <Navigate to="/" replace />;
+  if (user) {
+    const target = isAdmin ? '/admin' : isDonor ? '/donor' : '/';
+    // #region agent log
+    console.log('[DEBUG-37e360] GuestOnlyRoute redirecting authenticated user to', target);
+    // #endregion
+    return <Navigate to={target} replace />;
+  }
 
   return <>{children}</>;
 }
