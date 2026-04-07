@@ -3,12 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 
 export default function Navbar() {
-  const { user, logout, isAdmin, isDonor } = useAuth();
+  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    navigate('/logout');
   };
 
   return (
@@ -22,11 +21,24 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-6">
+      <div
+        style={{
+          display: 'flex',
+          gap: '1.25rem',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+        }}
+      >
         <NavLink to="/impact">Impact</NavLink>
         <NavLink to="/insights">Insights</NavLink>
+        <NavLink to="/privacy">Privacy</NavLink>
+        <NavLink to="/cookies">Cookies</NavLink>
+        {isAuthenticated ? <NavLink to="/manage-mfa">MFA</NavLink> : null}
 
-        {user ? (
+        {isLoading ? (
+          <span style={{ color: '#cbd5e0', fontSize: '0.85rem' }}>Loading…</span>
+        ) : user ? (
           <>
             {isDonor && !isAdmin && (
               <Link to="/donor" className="text-sm font-medium text-primary hover:underline">
@@ -35,27 +47,69 @@ export default function Navbar() {
             )}
             {isAdmin && (
               <>
-                <span className="text-muted-foreground">|</span>
+                <span style={{ color: '#a0aec0', fontSize: '0.8rem' }} aria-hidden>
+                  |
+                </span>
                 <NavLink to="/admin">Dashboard</NavLink>
+                <NavLink to="/admin/users">Users</NavLink>
                 <NavLink to="/admin/donor-insights">Donors</NavLink>
                 <NavLink to="/admin/resident-insights">Residents</NavLink>
               </>
             )}
             <span className="ml-1 text-xs text-muted-foreground">{user.username}</span>
             <button
+              type="button"
               onClick={handleLogout}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted"
+              aria-label="Log out"
+              style={{
+                background: 'transparent',
+                border: '1px solid #e2e8f0',
+                color: '#e2e8f0',
+                padding: '0.35rem 0.85rem',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
-              Logout
+              Log out
             </button>
           </>
         ) : (
-          <Link
-            to="/login"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:translate-y-[-1px] hover:opacity-95"
-          >
-            Login
-          </Link>
+          <>
+            <Link
+              to="/register"
+              style={{
+                color: '#e2e8f0',
+                border: '1px solid #e2e8f0',
+                padding: '0.35rem 0.85rem',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+              }}
+            >
+              Register
+            </Link>
+            <Link
+              to="/login"
+              style={{
+                color: '#1a365d',
+                backgroundColor: '#e2e8f0',
+                padding: '0.35rem 0.85rem',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                transition: 'background-color 0.2s',
+              }}
+            >
+              Login
+            </Link>
+          </>
         )}
       </div>
       </div>

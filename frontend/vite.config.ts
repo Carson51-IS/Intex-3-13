@@ -7,6 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
+        // Must match backend (see HavenLightApi/Properties/launchSettings.json — http profile uses 5055)
         target: 'http://localhost:5055',
         changeOrigin: true,
       },
