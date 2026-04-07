@@ -66,16 +66,9 @@ const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
 function GuestOnlyRoute({ children }: { children: ReactNode }) {
   const { user, isLoading, isAdmin, isDonor } = useAuth();
 
-  // #region agent log
-  console.log('[DEBUG-37e360] GuestOnlyRoute', { isLoading, hasUser: !!user, roles: user?.roles, isAdmin, isDonor });
-  // #endregion
-
   if (isLoading) return <div style={{ padding: '2rem' }}>Loading...</div>;
   if (user) {
     const target = isAdmin ? '/admin' : isDonor ? '/donor' : '/';
-    // #region agent log
-    console.log('[DEBUG-37e360] GuestOnlyRoute redirecting authenticated user to', target);
-    // #endregion
     return <Navigate to={target} replace />;
   }
 
