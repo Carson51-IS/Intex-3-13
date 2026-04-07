@@ -111,20 +111,18 @@ export default function DonorsPage() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1200px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 style={{ fontSize: '1.5rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.2rem' }}>
-              Donors & Contributions
-            </h1>
-            <p style={{ color: '#718096', fontSize: '0.875rem' }}>
+            <h1 className="font-heading text-3xl font-bold text-foreground">Donors & Contributions</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Manage supporter profiles and track all contributions
             </p>
           </div>
           {activeSection === 'supporters' && (
             <button
               onClick={() => { setEditingSupporter(null); setShowForm(!showForm); }}
-              style={{ padding: '0.6rem 1.25rem', backgroundColor: '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
             >
               {showForm ? 'Cancel' : '+ Add Supporter'}
             </button>
@@ -132,22 +130,16 @@ export default function DonorsPage() {
         </div>
 
         {/* Section Tabs */}
-        <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem' }}>
+        <div className="mb-6 flex border-b-2 border-border">
           {(['supporters', 'donations'] as const).map((s) => (
             <button
               key={s}
               onClick={() => { setActiveSection(s); setPage(1); setShowForm(false); }}
-              style={{
-                padding: '0.65rem 1.5rem',
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                fontWeight: activeSection === s ? 700 : 400,
-                color: activeSection === s ? '#2b6cb0' : '#718096',
-                borderBottom: `2px solid ${activeSection === s ? '#2b6cb0' : 'transparent'}`,
-                marginBottom: '-2px',
-                fontSize: '0.9rem',
-              }}
+              className={`border-b-2 px-6 py-2 text-sm font-semibold ${
+                activeSection === s
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
             >
               {s === 'supporters' ? `Supporters (${supporterTotal})` : `Donations (${donationTotal})`}
             </button>
@@ -163,7 +155,7 @@ export default function DonorsPage() {
         )}
 
         {error && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #fed7d7' }}>
+          <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -172,7 +164,7 @@ export default function DonorsPage() {
         {activeSection === 'supporters' && (
           <>
             {/* Filters */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', padding: '0.75rem 1rem', backgroundColor: 'white', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+            <div className="mb-4 flex flex-wrap gap-3 rounded-xl border bg-card px-4 py-3 card-shadow">
               <FilterSelect label="Type" value={typeFilter} options={SUPPORTER_TYPES} onChange={(v) => handleFilterChange('type', v)} />
               <FilterSelect label="Status" value={statusFilter} options={STATUS_OPTIONS} onChange={(v) => handleFilterChange('status', v)} />
               {(typeFilter || statusFilter) && (
@@ -185,7 +177,7 @@ export default function DonorsPage() {
               )}
             </div>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div className="overflow-hidden rounded-xl border bg-card card-shadow">
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -230,7 +222,7 @@ export default function DonorsPage() {
 
         {/* Donations Section */}
         {activeSection === 'donations' && (
-          <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -14,6 +14,8 @@ import ResidentsPage from './pages/admin/ResidentsPage';
 import ResidentDetailPage from './pages/admin/ResidentDetailPage';
 import DonorsPage from './pages/admin/DonorsPage';
 import ReportsPage from './pages/admin/ReportsPage';
+import SettingsPage from './pages/admin/SettingsPage';
+import UserManagementPage from './pages/admin/UserManagementPage';
 import InsightsPage from './pages/InsightsPage';
 import DonorInsightsPage from './pages/DonorInsightsPage';
 import ResidentInsightsPage from './pages/ResidentInsightsPage';
@@ -42,9 +44,13 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
 }
 
 function AppRoutes() {
+  const location = useLocation();
+  const isLanding = location.pathname === '/';
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navbar />
+      {!isLanding && !isAdminRoute && <Navbar />}
       <main style={{ flex: 1, backgroundColor: '#f7fafc' }}>
         <Routes>
           {/* Public routes */}
@@ -106,6 +112,22 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <UserManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/donor-insights"
             element={
               <ProtectedRoute requiredRole="Admin">
@@ -126,7 +148,7 @@ function AppRoutes() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <Footer />
+      {!isLanding && !isAdminRoute && <Footer />}
       <CookieConsent />
     </div>
   );

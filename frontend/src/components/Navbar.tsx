@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 
 export default function Navbar() {
   const { user, logout, isAdmin, isDonor } = useAuth();
@@ -11,54 +12,39 @@ export default function Navbar() {
   };
 
   return (
-    <nav style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '0.85rem 2rem',
-      backgroundColor: '#1a365d',
-      color: 'white',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-    }}>
-      <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '1.2rem', fontWeight: 'bold' }}>
-        Haven Light Philippines
-      </Link>
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <div className="container mx-auto flex h-16 items-center justify-between px-6">
+        <Link to="/" className="flex items-center gap-1">
+          <img src={havenLightLogoMark} alt="Haven Light logo mark" className="h-10 w-auto" />
+          <div className="leading-tight">
+            <div className="font-heading text-lg font-semibold text-foreground">Haven Light</div>
+            <div className="font-body text-xs tracking-[0.18em] text-muted-foreground">PHILIPPINES</div>
+          </div>
+        </Link>
 
-      <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+        <div className="flex items-center gap-6">
         <NavLink to="/impact">Impact</NavLink>
         <NavLink to="/insights">Insights</NavLink>
-        <NavLink to="/privacy">Privacy</NavLink>
 
         {user ? (
           <>
             {isDonor && !isAdmin && (
-              <Link to="/donor" style={{ color: '#90cdf4', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>
+              <Link to="/donor" className="text-sm font-medium text-primary hover:underline">
                 My Dashboard
               </Link>
             )}
             {isAdmin && (
               <>
-                <span style={{ color: '#4a5568', fontSize: '0.8rem' }}>|</span>
+                <span className="text-muted-foreground">|</span>
                 <NavLink to="/admin">Dashboard</NavLink>
                 <NavLink to="/admin/donor-insights">Donors</NavLink>
                 <NavLink to="/admin/resident-insights">Residents</NavLink>
               </>
             )}
-            <span style={{ color: '#cbd5e0', fontSize: '0.8rem', marginLeft: '0.25rem' }}>{user.username}</span>
+            <span className="ml-1 text-xs text-muted-foreground">{user.username}</span>
             <button
               onClick={handleLogout}
-              style={{
-                background: 'transparent',
-                border: '1px solid #4a5568',
-                color: '#e2e8f0',
-                padding: '0.3rem 0.75rem',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted"
             >
               Logout
             </button>
@@ -66,20 +52,12 @@ export default function Navbar() {
         ) : (
           <Link
             to="/login"
-            style={{
-              color: '#1a365d',
-              backgroundColor: '#e2e8f0',
-              padding: '0.35rem 0.85rem',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              transition: 'background-color 0.2s',
-            }}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:translate-y-[-1px] hover:opacity-95"
           >
             Login
           </Link>
         )}
+      </div>
       </div>
     </nav>
   );
@@ -89,14 +67,7 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <Link
       to={to}
-      style={{
-        color: '#e2e8f0',
-        textDecoration: 'none',
-        fontSize: '0.9rem',
-        transition: 'color 0.2s',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-      onMouseLeave={e => (e.currentTarget.style.color = '#e2e8f0')}
+      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
     >
       {children}
     </Link>

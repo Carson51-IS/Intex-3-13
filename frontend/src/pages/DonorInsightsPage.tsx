@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { donorChurnPredictions, getChurnRiskLevel } from '../data/ml/donorChurn';
 import { supporterDonationPredictions, getDonationLikelihood } from '../data/ml/supporterDonation';
+import AdminLayout from '../components/AdminLayout';
 
 type SortField = 'id' | 'risk' | 'probability';
 type SortDir = 'asc' | 'desc';
@@ -46,7 +48,14 @@ export default function DonorInsightsPage() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <AdminLayout>
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <Link
+        to="/admin"
+        style={{ display: 'inline-block', marginBottom: '1rem', color: '#2b6cb0', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}
+      >
+        ← Back to Dashboard
+      </Link>
       <h1 style={{ fontSize: '1.75rem', color: '#1a365d', marginBottom: '0.5rem' }}>Donor Intelligence</h1>
       <p style={{ color: '#718096', marginBottom: '2rem' }}>
         ML-powered donor analytics: churn risk detection and donation likelihood forecasting
@@ -289,6 +298,7 @@ export default function DonorInsightsPage() {
         </p>
       </section>
     </div>
+    </AdminLayout>
   );
 }
 

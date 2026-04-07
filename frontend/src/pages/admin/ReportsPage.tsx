@@ -61,30 +61,28 @@ export default function ReportsPage() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div style={{ textAlign: 'center', padding: '4rem', color: '#a0aec0' }}>Loading reports…</div>
+        <div className="p-16 text-center text-muted-foreground">Loading reports…</div>
       </AdminLayout>
     );
   }
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1200px' }}>
-        <div style={{ marginBottom: '1.75rem' }}>
-          <h1 style={{ fontSize: '1.5rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.25rem' }}>
-            Reports & Analytics
-          </h1>
-          <p style={{ color: '#718096', fontSize: '0.875rem' }}>
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="mb-8">
+          <h1 className="font-heading text-3xl font-bold text-foreground">Reports & Analytics</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Aggregated insights and trends for decision-making
           </p>
         </div>
 
         {error && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '6px', marginBottom: '1.5rem', border: '1px solid #fed7d7', fontSize: '0.9rem' }}>
+          <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
           {/* Donation Trends */}
           <ReportCard title="Donation Trends (Last 12 Months)" subtitle={`Total: ₱${donationTrends.reduce((s, d) => s + d.total, 0).toLocaleString()}`}>
             <BarChart
@@ -104,7 +102,7 @@ export default function ReportsPage() {
           </ReportCard>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
           {/* Donation by Type */}
           <ReportCard title="Donations by Type">
             {donationTypes.length === 0 ? (
@@ -135,7 +133,7 @@ export default function ReportsPage() {
           {safehouses.length === 0 ? (
             <EmptyState />
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="overflow-x-auto">
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
@@ -177,7 +175,7 @@ export default function ReportsPage() {
 
         {/* Reintegration */}
         {reintegration && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+          <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
             <ReportCard title="Reintegration by Status">
               {reintegration.byStatus.length === 0 ? (
                 <EmptyState />
@@ -207,10 +205,10 @@ export default function ReportsPage() {
 
 function ReportCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-      <div style={{ marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#2d3748', marginBottom: '0.2rem' }}>{title}</h2>
-        {subtitle && <p style={{ fontSize: '0.8rem', color: '#718096' }}>{subtitle}</p>}
+    <div className="rounded-xl border bg-card p-6 card-shadow">
+      <div className="mb-4">
+        <h2 className="text-base font-semibold text-card-foreground">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -267,5 +265,5 @@ function HorizontalBarChart({ data, color }: { data: { label: string; value: num
 }
 
 function EmptyState() {
-  return <div style={{ textAlign: 'center', color: '#a0aec0', padding: '2rem', fontSize: '0.875rem' }}>No data available</div>;
+  return <div className="p-8 text-center text-sm text-muted-foreground">No data available</div>;
 }

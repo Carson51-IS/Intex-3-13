@@ -109,43 +109,24 @@ export default function ResidentsPage() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1200px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 style={{ fontSize: '1.5rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.2rem' }}>
-              Caseload Inventory
-            </h1>
-            <p style={{ color: '#718096', fontSize: '0.875rem' }}>
+            <h1 className="font-heading text-3xl font-bold text-foreground">Caseload Inventory</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               {totalCount} total records
             </p>
           </div>
           <Link
             to="/admin/residents/new"
-            style={{
-              padding: '0.6rem 1.25rem',
-              backgroundColor: '#2b6cb0',
-              color: 'white',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-            }}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
           >
             + Add Resident
           </Link>
         </div>
 
         {/* Filters */}
-        <div style={{
-          display: 'flex',
-          gap: '0.75rem',
-          flexWrap: 'wrap',
-          padding: '1rem',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          marginBottom: '1rem',
-          border: '1px solid #e2e8f0',
-        }}>
+        <div className="mb-4 flex flex-wrap gap-3 rounded-xl border bg-card p-4 card-shadow">
           <FilterSelect
             label="Status"
             value={statusFilter}
@@ -181,13 +162,13 @@ export default function ResidentsPage() {
         </div>
 
         {error && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #fed7d7' }}>
+          <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {/* Table */}
-        <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div className="overflow-hidden rounded-xl border bg-card card-shadow">
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
             <thead>
               <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
