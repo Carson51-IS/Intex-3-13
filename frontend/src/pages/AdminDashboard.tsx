@@ -21,13 +21,6 @@ const riskColors: Record<string, string> = {
   Low: '#38a169',
 };
 
-const riskBg: Record<string, string> = {
-  Critical: '#fff5f5',
-  High: '#fffaf0',
-  Medium: '#fffff0',
-  Low: '#f0fff4',
-};
-
 export default function AdminDashboard() {
   const [data, setData] = useState<AdminSummary | null>(null);
   const [error, setError] = useState('');
@@ -37,6 +30,11 @@ export default function AdminDashboard() {
       .then(setData)
       .catch((err) => setError(err.message));
   }, []);
+
+  const atRiskDonors = donorChurnPredictions.filter(d => d.pIsLapsed >= 0.5).length;
+  const likelyDonors = supporterDonationPredictions.filter(d => d.pWillDonate90d >= 0.5).length;
+  const flaggedSafehouses = getLatestForecasts().filter(f => f.maxPredicted > 0).length;
+  const readyResidents = reintegrationPredictions.filter(r => r.predictedStatus === 'Completed').length;
 
   return (
     <AdminLayout>
@@ -144,53 +142,13 @@ export default function AdminDashboard() {
                   </div>
                 </Link>
               ))}
-  const atRiskDonors = donorChurnPredictions.filter(d => d.pIsLapsed >= 0.5).length;
-  const likelyDonors = supporterDonationPredictions.filter(d => d.pWillDonate90d >= 0.5).length;
-  const flaggedSafehouses = getLatestForecasts().filter(f => f.maxPredicted > 0).length;
-  const readyResidents = reintegrationPredictions.filter(r => r.predictedStatus === 'Completed').length;
-
-  return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.75rem', color: '#1a365d', marginBottom: '2rem' }}>Admin Dashboard</h1>
-
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-        <KpiCard label="Active Residents" value={data.activeResidents.toString()} color="#2b6cb0" />
-        <KpiCard label="Donations (30 days)" value={`₱${data.recentDonationsTotal.toLocaleString()}`} color="#38a169" />
-        <KpiCard label="Incidents (30 days)" value={data.incidentsThisMonth.toString()} color="#dd6b20" />
-      </div>
-
-      {/* Risk Breakdown */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-        border: '1px solid #e2e8f0',
-        marginBottom: '2.5rem',
-      }}>
-        <h2 style={{ fontSize: '1.15rem', marginBottom: '1rem', color: '#2d3748' }}>Residents by Risk Level</h2>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          {data.riskBreakdown.map((r) => (
-            <div key={r.riskLevel} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '20px',
-              backgroundColor: `${riskColors[r.riskLevel] ?? '#718096'}20`,
-              color: riskColors[r.riskLevel] ?? '#718096',
-              fontWeight: 600,
-            }}>
-              <span>{r.riskLevel}:</span>
-              <span>{r.count}</span>
             </div>
           </div>
         </div>
 
-        {/* Risk Cards */}
+        {/* Critical Risk Alert */}
         {data && data.riskBreakdown.some(r => r.riskLevel === 'Critical' && r.count > 0) && (
-          <div style={{ padding: '1rem', backgroundColor: '#fff5f5', borderRadius: '8px', border: '1px solid #fed7d7', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ padding: '1rem', backgroundColor: '#fff5f5', borderRadius: '8px', border: '1px solid #fed7d7', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
             <span style={{ fontSize: '1.5rem' }}>🚨</span>
             <div>
               <div style={{ fontWeight: 700, color: '#c53030', fontSize: '0.95rem' }}>Critical Risk Residents Require Immediate Attention</div>
@@ -201,6 +159,51 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* ML Insights Section */}
+        <h2 style={{
+          fontSize: '1.3rem',
+          color: '#1a365d',
+          marginBottom: '1.25rem',
+          paddingLeft: '1rem',
+          borderLeft: '4px solid #4299e1',
+        }}>
+          ML-Powered Insights
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+          <InsightCard
+            title="Donor Churn Risk"
+            description={`${atRiskDonors} of ${donorChurnPredictions.length} donors are at risk of lapsing. Review the full analysis to prioritize retention outreach.`}
+            stat={atRiskDonors.toString()}
+            statLabel="at risk"
+            color="#c53030"
+            link="/admin/donor-insights"
+          />
+          <InsightCard
+            title="90-Day Donation Forecast"
+            description={`${likelyDonors} supporters have a high probability of donating in the next 90 days. Focus engagement on these high-potential donors.`}
+            stat={likelyDonors.toString()}
+            statLabel="likely donors"
+            color="#38a169"
+            link="/admin/donor-insights"
+          />
+          <InsightCard
+            title="Reintegration Readiness"
+            description={`${readyResidents} residents are predicted ready for reintegration. Review assessments and probability breakdowns.`}
+            stat={readyResidents.toString()}
+            statLabel="predicted ready"
+            color="#3182ce"
+            link="/admin/resident-insights"
+          />
+          <InsightCard
+            title="Incident Forecast"
+            description={`${flaggedSafehouses} safehouse(s) flagged with elevated incident risk. Review monthly forecasts and staffing needs.`}
+            stat={flaggedSafehouses.toString()}
+            statLabel="flagged"
+            color="#dd6b20"
+            link="/admin/resident-insights"
+          />
+        </div>
       </div>
     </AdminLayout>
   );
@@ -223,86 +226,10 @@ function KpiCard({ label, value, color, icon }: { label: string; value: string; 
         <div style={{ fontSize: '1.75rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
         <div style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.3rem' }}>{label}</div>
       </div>
-
-      {/* ML Insights Section */}
-      <h2 style={{
-        fontSize: '1.3rem',
-        color: '#1a365d',
-        marginBottom: '1.25rem',
-        paddingLeft: '1rem',
-        borderLeft: '4px solid #4299e1',
-      }}>
-        ML-Powered Insights
-      </h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-        <InsightCard
-          title="Donor Churn Risk"
-          description={`${atRiskDonors} of ${donorChurnPredictions.length} donors are at risk of lapsing. Review the full analysis to prioritize retention outreach.`}
-          stat={atRiskDonors.toString()}
-          statLabel="at risk"
-          color="#c53030"
-          link="/admin/donor-insights"
-        />
-        <InsightCard
-          title="90-Day Donation Forecast"
-          description={`${likelyDonors} supporters have a high probability of donating in the next 90 days. Focus engagement on these high-potential donors.`}
-          stat={likelyDonors.toString()}
-          statLabel="likely donors"
-          color="#38a169"
-          link="/admin/donor-insights"
-        />
-        <InsightCard
-          title="Reintegration Readiness"
-          description={`${readyResidents} residents are predicted ready for reintegration. Review assessments and probability breakdowns.`}
-          stat={readyResidents.toString()}
-          statLabel="predicted ready"
-          color="#3182ce"
-          link="/admin/resident-insights"
-        />
-        <InsightCard
-          title="Incident Forecast"
-          description={`${flaggedSafehouses} safehouse(s) flagged with elevated incident risk. Review monthly forecasts and staffing needs.`}
-          stat={flaggedSafehouses.toString()}
-          statLabel="flagged"
-          color="#dd6b20"
-          link="/admin/resident-insights"
-        />
-      </div>
     </div>
   );
 }
 
-function KpiCard({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '1.5rem',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-      border: '1px solid #e2e8f0',
-      textAlign: 'center',
-      borderTop: `4px solid ${color}`,
-    }}>
-      <div style={{ fontSize: '2rem', fontWeight: 700, color }}>{value}</div>
-      <div style={{ fontSize: '0.875rem', color: '#718096', marginTop: '0.5rem' }}>{label}</div>
-    </div>
-  );
-}
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: 'white',
-  borderRadius: '8px',
-  padding: '1.25rem 1.5rem',
-  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-  border: '1px solid #e2e8f0',
-};
-
-const cardTitle: React.CSSProperties = {
-  fontSize: '1rem',
-  fontWeight: 700,
-  color: '#2d3748',
-  marginBottom: '1rem',
-};
 function InsightCard({ title, description, stat, statLabel, color, link }: {
   title: string; description: string; stat: string; statLabel: string; color: string; link: string;
 }) {
@@ -336,3 +263,18 @@ function InsightCard({ title, description, stat, statLabel, color, link }: {
     </Link>
   );
 }
+
+const cardStyle: React.CSSProperties = {
+  backgroundColor: 'white',
+  borderRadius: '8px',
+  padding: '1.25rem 1.5rem',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+  border: '1px solid #e2e8f0',
+};
+
+const cardTitle: React.CSSProperties = {
+  fontSize: '1rem',
+  fontWeight: 700,
+  color: '#2d3748',
+  marginBottom: '1rem',
+};

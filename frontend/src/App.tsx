@@ -33,7 +33,6 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
   }
   if (!user) return <Navigate to="/login" replace />;
   if (requiredRole && !user.roles.includes(requiredRole)) {
-    // Redirect donors to donor dashboard, others to home
     if (user.roles.includes('Donor')) return <Navigate to="/donor" replace />;
     return <Navigate to="/" replace />;
   }
@@ -78,10 +77,6 @@ function AppRoutes() {
             element={
               <ProtectedRoute requiredRole="Admin">
                 <ResidentsPage />
-            path="/admin/donor-insights"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <DonorInsightsPage />
               </ProtectedRoute>
             }
           />
@@ -109,9 +104,15 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
-
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
+          <Route
+            path="/admin/donor-insights"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <DonorInsightsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/resident-insights"
             element={
               <ProtectedRoute requiredRole="Admin">
@@ -119,6 +120,9 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
+
+          {/* Catch-all */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
