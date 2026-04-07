@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import heroBeach from "../assets/hero-beach.png";
+import DonationPrompt from "../components/DonationPrompt";
 
 function IconBase({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -166,6 +167,8 @@ export default function LandingPage() {
           </p>
         </div>
       </section>
+
+      <DonationPrompt />
     </div>
   );
 }
