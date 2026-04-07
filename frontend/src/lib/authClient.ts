@@ -33,6 +33,15 @@ async function readApiError(
   try {
     const data = (await res.json()) as Record<string, unknown>;
 
+    if (data.errors && typeof data.errors === 'object') {
+      const messages = Object.values(data.errors as Record<string, unknown>)
+        .flat()
+        .filter((value): value is string => typeof value === 'string' && value.length > 0);
+      if (messages.length > 0) {
+        return messages.join(' ');
+      }
+    }
+
     if (typeof data.detail === 'string' && data.detail.length > 0) {
       return data.detail;
     }
@@ -41,14 +50,6 @@ async function readApiError(
     }
     if (typeof data.message === 'string' && data.message.length > 0) {
       return data.message;
-    }
-    if (data.errors && typeof data.errors === 'object') {
-      const firstError = Object.values(data.errors as Record<string, unknown>)
-        .flat()
-        .find((value): value is string => typeof value === 'string');
-      if (firstError) {
-        return firstError;
-      }
     }
   } catch {
     // ignore parse errors
@@ -76,6 +77,8 @@ async function postTwoFactorRequest(payload: object): Promise<TwoFactorStatus> {
 
   return response.json();
 }
+
+let twoFactorStatusInFlight: Promise<TwoFactorStatus> | null = null;
 
 function readAccessTokenFromJson(body: unknown): string | null {
   if (body === null || typeof body !== 'object') {
@@ -144,7 +147,12 @@ export async function logoutUser(): Promise<void> {
 }
 
 export async function getTwoFactorStatus(): Promise<TwoFactorStatus> {
-  return postTwoFactorRequest({});
+  if (!twoFactorStatusInFlight) {
+    twoFactorStatusInFlight = postTwoFactorRequest({}).finally(() => {
+      twoFactorStatusInFlight = null;
+    });
+  }
+  return twoFactorStatusInFlight;
 }
 
 export async function enableTwoFactor(
@@ -219,7 +227,7 @@ export async function loginUser(
 
 export function buildExternalLoginUrl(
   provider: string,
-  returnPath: '/catalog'
+  returnPath: '/'
 ) : string {
   const searchParams = new URLSearchParams({
     provider,
@@ -245,7 +253,7 @@ export async function getExternalAuthProviders(): Promise<ExternalAuthProvider[]
 
 export async function externalLogin(
   provider: string,
-  returnPath: '/catalog'
+  returnPath: '/'
 ) : Promise<void> {
   const url = buildExternalLoginUrl(provider, returnPath);
   window.location.href = url;

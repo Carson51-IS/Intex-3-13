@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import CookieConsent from './components/CookieConsent';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -46,6 +45,8 @@ function AppRoutes() {
       <main style={{ flex: 1, backgroundColor: '#f7fafc' }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/catalog" element={<Navigate to="/" replace />} />
+          <Route path="/signin" element={<Navigate to="/login" replace />} />
           <Route
             path="/login"
             element={
@@ -97,7 +98,6 @@ function AppRoutes() {
       </main>
       <Footer />
       <CookieConsentBannerView />
-      <CookieConsent />
     </div>
   );
 }
