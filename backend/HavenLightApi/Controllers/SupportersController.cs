@@ -56,8 +56,33 @@ public class SupportersController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<Supporter>> Create([FromBody] Supporter supporter)
+    public async Task<ActionResult<Supporter>> Create([FromBody] SupporterWriteDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.DisplayName))
+            return BadRequest(new { message = "Display name is required." });
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            return BadRequest(new { message = "Email is required." });
+
+        var normalizedEmail = dto.Email.Trim();
+        if (await _context.Supporters.AnyAsync(s => s.Email == normalizedEmail))
+            return BadRequest(new { message = "A supporter with this email already exists." });
+
+        var supporter = new Supporter
+        {
+            DisplayName = dto.DisplayName.Trim(),
+            SupporterType = dto.SupporterType ?? "Individual Donor",
+            RelationshipType = dto.RelationshipType ?? "Donor",
+            Email = normalizedEmail,
+            Phone = dto.Phone ?? string.Empty,
+            Status = dto.Status ?? "Active",
+            Country = dto.Country ?? string.Empty,
+            Region = dto.Region ?? string.Empty,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            OrganizationName = dto.OrganizationName,
+            CreatedAt = DateTime.UtcNow,
+        };
+
         _context.Supporters.Add(supporter);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = supporter.SupporterId }, supporter);
@@ -65,10 +90,32 @@ public class SupportersController : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update(int id, [FromBody] Supporter supporter)
+    public async Task<IActionResult> Update(int id, [FromBody] SupporterWriteDto dto)
     {
-        if (id != supporter.SupporterId) return BadRequest();
-        _context.Entry(supporter).State = EntityState.Modified;
+        var supporter = await _context.Supporters.FindAsync(id);
+        if (supporter == null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(dto.DisplayName))
+            return BadRequest(new { message = "Display name is required." });
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            return BadRequest(new { message = "Email is required." });
+
+        var normalizedEmail = dto.Email.Trim();
+        if (await _context.Supporters.AnyAsync(s => s.Email == normalizedEmail && s.SupporterId != id))
+            return BadRequest(new { message = "Another supporter already uses this email." });
+
+        supporter.DisplayName = dto.DisplayName.Trim();
+        supporter.SupporterType = dto.SupporterType ?? supporter.SupporterType;
+        supporter.RelationshipType = dto.RelationshipType ?? supporter.RelationshipType;
+        supporter.Email = normalizedEmail;
+        supporter.Phone = dto.Phone ?? string.Empty;
+        supporter.Status = dto.Status ?? supporter.Status;
+        supporter.Country = dto.Country ?? string.Empty;
+        supporter.Region = dto.Region ?? string.Empty;
+        supporter.FirstName = dto.FirstName;
+        supporter.LastName = dto.LastName;
+        supporter.OrganizationName = dto.OrganizationName;
+
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -84,3 +131,17 @@ public class SupportersController : ControllerBase
         return NoContent();
     }
 }
+
+public record SupporterWriteDto(
+    string DisplayName,
+    string? SupporterType,
+    string? RelationshipType,
+    string Email,
+    string? Phone,
+    string? Status,
+    string? Country,
+    string? Region,
+    string? FirstName,
+    string? LastName,
+    string? OrganizationName
+);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
 
@@ -75,13 +75,22 @@ export default function ResidentDetailPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || id === 'new') {
+      setIsLoading(false);
+      setResident(null);
+      setError('');
+      return;
+    }
     setIsLoading(true);
     api.get<Resident>(`/residents/${id}`)
       .then(setResident)
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false));
   }, [id]);
+
+  if (id === 'new') {
+    return <Navigate to="/admin/residents/new" replace />;
+  }
 
   if (isLoading) return <AdminLayout><LoadingState /></AdminLayout>;
   if (error) return <AdminLayout><ErrorState message={error} /></AdminLayout>;

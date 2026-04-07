@@ -38,21 +38,24 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto w-full max-w-7xl">
-        <div className="mb-8">
-          <h1 className="font-heading text-3xl font-bold text-foreground">Admin Dashboard</h1>
-          <p className="mt-1 font-body text-sm text-muted-foreground">
-            Overview of active operations - as of today
+      <div style={{ maxWidth: '1100px' }}>
+        <div style={{ marginBottom: '1.75rem' }}>
+          <h1 style={{ fontSize: '1.6rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.25rem' }}>
+            Admin Dashboard
+          </h1>
+          <p style={{ color: '#718096', fontSize: '0.9rem' }}>
+            Overview of active operations — as of today
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '6px', marginBottom: '1.5rem', border: '1px solid #fed7d7', fontSize: '0.9rem' }}>
             {error}
           </div>
         )}
 
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* KPI Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
           <KpiCard
             label="Active Residents"
             value={data ? data.activeResidents.toString() : '—'}
@@ -73,11 +76,12 @@ export default function AdminDashboard() {
           />
         </div>
 
-        <div className="mb-8">
-          <div className="rounded-xl border bg-card p-6 card-shadow">
-            <h2 className="mb-4 font-heading text-xl font-semibold text-card-foreground">Residents by Risk Level</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+          {/* Risk Breakdown */}
+          <div style={cardStyle}>
+            <h2 style={cardTitle}>Residents by Risk Level</h2>
             {data ? (
-              <div className="space-y-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {(['Critical', 'High', 'Medium', 'Low'] as const).map((level) => {
                   const entry = data.riskBreakdown.find(r => r.riskLevel === level);
                   const count = entry?.count ?? 0;
@@ -85,15 +89,16 @@ export default function AdminDashboard() {
                   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                   return (
                     <div key={level}>
-                      <div className="mb-1 flex items-center justify-between text-sm">
-                        <span style={{ color: riskColors[level] }} className="font-semibold">{level}</span>
-                        <span className="text-muted-foreground">{count} ({pct}%)</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.875rem' }}>
+                        <span style={{ fontWeight: 600, color: riskColors[level] }}>{level}</span>
+                        <span style={{ color: '#4a5568' }}>{count} ({pct}%)</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded bg-muted">
+                      <div style={{ height: '8px', borderRadius: '4px', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
                         <div style={{
                           height: '100%',
                           width: `${pct}%`,
                           backgroundColor: riskColors[level],
+                          borderRadius: '4px',
                           transition: 'width 0.6s ease',
                         }} />
                       </div>
@@ -101,27 +106,71 @@ export default function AdminDashboard() {
                   );
                 })}
               </div>
-            ) : <div className="text-sm text-muted-foreground">Loading…</div>}
+            ) : (
+              <div style={{ color: '#a0aec0', fontSize: '0.9rem' }}>Loading…</div>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div style={cardStyle}>
+            <h2 style={cardTitle}>Quick Navigation</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {[
+                { to: '/admin/residents', label: 'Caseload Inventory', desc: 'View & manage resident records', icon: '📋' },
+                { to: '/admin/donors', label: 'Donors & Contributions', desc: 'Supporter profiles & donations', icon: '💝' },
+                { to: '/admin/reports', label: 'Reports & Analytics', desc: 'Trends, outcomes, performance', icon: '📊' },
+              ].map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem',
+                    backgroundColor: '#f7fafc',
+                    borderRadius: '6px',
+                    textDecoration: 'none',
+                    border: '1px solid #e2e8f0',
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: '1.5rem' }}>{item.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#2b6cb0', fontSize: '0.9rem' }}>{item.label}</div>
+                    <div style={{ color: '#718096', fontSize: '0.8rem' }}>{item.desc}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* Critical Risk Alert */}
         {data && data.riskBreakdown.some(r => r.riskLevel === 'Critical' && r.count > 0) && (
-          <div className="mb-8 flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4">
-            <span className="text-2xl">🚨</span>
+          <div style={{ padding: '1rem', backgroundColor: '#fff5f5', borderRadius: '8px', border: '1px solid #fed7d7', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>🚨</span>
             <div>
-              <div className="text-sm font-bold text-destructive">Critical Risk Residents Require Immediate Attention</div>
-              <div className="text-sm text-destructive">
+              <div style={{ fontWeight: 700, color: '#c53030', fontSize: '0.95rem' }}>Critical Risk Residents Require Immediate Attention</div>
+              <div style={{ color: '#c53030', fontSize: '0.85rem' }}>
                 {data.riskBreakdown.find(r => r.riskLevel === 'Critical')?.count} resident(s) at critical risk level.{' '}
-                <Link to="/admin/residents?riskLevel=Critical" className="font-semibold underline">View records →</Link>
+                <Link to="/admin/residents?riskLevel=Critical" style={{ color: '#c53030', fontWeight: 600 }}>View records →</Link>
               </div>
             </div>
           </div>
         )}
 
-        <h2 className="mb-5 border-l-4 border-primary pl-4 font-heading text-2xl font-semibold text-foreground">
+        {/* ML Insights Section */}
+        <h2 style={{
+          fontSize: '1.3rem',
+          color: '#1a365d',
+          marginBottom: '1.25rem',
+          paddingLeft: '1rem',
+          borderLeft: '4px solid #4299e1',
+        }}>
           ML-Powered Insights
         </h2>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
           <InsightCard
             title="Donor Churn Risk"
             description={`${atRiskDonors} of ${donorChurnPredictions.length} donors are at risk of lapsing. Review the full analysis to prioritize retention outreach.`}
@@ -162,11 +211,20 @@ export default function AdminDashboard() {
 
 function KpiCard({ label, value, color, icon }: { label: string; value: string; color: string; icon: string }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border bg-card p-5 card-shadow">
-      <span className="text-3xl">{icon}</span>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      padding: '1.25rem 1.5rem',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem',
+      border: '1px solid #e2e8f0',
+    }}>
+      <span style={{ fontSize: '2rem' }}>{icon}</span>
       <div>
-        <div style={{ color }} className="text-3xl font-bold leading-none">{value}</div>
-        <div className="mt-1 text-xs text-muted-foreground">{label}</div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.3rem' }}>{label}</div>
       </div>
     </div>
   );
@@ -176,19 +234,47 @@ function InsightCard({ title, description, stat, statLabel, color, link }: {
   title: string; description: string; stat: string; statLabel: string; color: string; link: string;
 }) {
   return (
-    <Link to={link} className="block rounded-xl border bg-card p-6 card-shadow transition-shadow hover:card-shadow-hover" style={{ borderLeft: `4px solid ${color}` }}>
-      <div className="mb-3 flex items-start justify-between">
-        <h3 className="text-base font-semibold text-card-foreground">{title}</h3>
-        <div className="text-right">
-          <div style={{ color }} className="text-2xl font-bold leading-none">{stat}</div>
-          <div className="text-[11px] text-muted-foreground">{statLabel}</div>
+    <Link to={link} style={{ textDecoration: 'none' }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '1.5rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+        border: '1px solid #e2e8f0',
+        borderLeft: `4px solid ${color}`,
+        cursor: 'pointer',
+        transition: 'box-shadow 0.2s',
+      }}
+        onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)')}
+        onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)')}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+          <h3 style={{ fontSize: '1rem', color: '#2d3748', margin: 0 }}>{title}</h3>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color, lineHeight: 1 }}>{stat}</div>
+            <div style={{ fontSize: '0.7rem', color: '#a0aec0' }}>{statLabel}</div>
+          </div>
         </div>
-      </div>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <div className="mt-3 text-sm font-semibold text-primary">
-        View details →
+        <p style={{ fontSize: '0.85rem', color: '#718096', lineHeight: 1.5, margin: 0 }}>{description}</p>
+        <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#2b6cb0', fontWeight: 600 }}>
+          View details →
+        </div>
       </div>
     </Link>
   );
 }
 
+const cardStyle: React.CSSProperties = {
+  backgroundColor: 'white',
+  borderRadius: '8px',
+  padding: '1.25rem 1.5rem',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+  border: '1px solid #e2e8f0',
+};
+
+const cardTitle: React.CSSProperties = {
+  fontSize: '1rem',
+  fontWeight: 700,
+  color: '#2d3748',
+  marginBottom: '1rem',
+};

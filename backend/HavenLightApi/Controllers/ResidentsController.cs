@@ -66,6 +66,8 @@ public class ResidentsController : ControllerBase
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<Resident>> Create([FromBody] Resident resident)
     {
+        resident.ResidentId = 0;
+        resident.CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
         _context.Residents.Add(resident);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = resident.ResidentId }, resident);

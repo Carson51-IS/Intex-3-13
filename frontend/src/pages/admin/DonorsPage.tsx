@@ -48,6 +48,7 @@ export default function DonorsPage() {
   const pageSize = 15;
 
   const fetchSupporters = useCallback(async () => {
+    setError('');
     setIsLoading(true);
     try {
       const base = getApiBase();
@@ -74,6 +75,7 @@ export default function DonorsPage() {
   }, [page, typeFilter, statusFilter]);
 
   const fetchDonations = useCallback(async () => {
+    setError('');
     setIsLoading(true);
     try {
       const base = getApiBase();
@@ -102,6 +104,7 @@ export default function DonorsPage() {
   }, [activeSection, fetchSupporters, fetchDonations]);
 
   const handleFilterChange = (key: 'type' | 'status', value: string) => {
+    setError('');
     if (key === 'type') setTypeFilter(value);
     else setStatusFilter(value);
     setPage(1);
@@ -111,18 +114,20 @@ export default function DonorsPage() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto w-full max-w-7xl">
-        <div className="mb-6 flex items-start justify-between">
+      <div style={{ maxWidth: '1200px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
           <div>
-            <h1 className="font-heading text-3xl font-bold text-foreground">Donors & Contributions</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1 style={{ fontSize: '1.5rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.2rem' }}>
+              Donors & Contributions
+            </h1>
+            <p style={{ color: '#718096', fontSize: '0.875rem' }}>
               Manage supporter profiles and track all contributions
             </p>
           </div>
           {activeSection === 'supporters' && (
             <button
-              onClick={() => { setEditingSupporter(null); setShowForm(!showForm); }}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
+              onClick={() => { setError(''); setEditingSupporter(null); setShowForm(!showForm); }}
+              style={{ padding: '0.6rem 1.25rem', backgroundColor: '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}
             >
               {showForm ? 'Cancel' : '+ Add Supporter'}
             </button>
@@ -130,16 +135,22 @@ export default function DonorsPage() {
         </div>
 
         {/* Section Tabs */}
-        <div className="mb-6 flex border-b-2 border-border">
+        <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem' }}>
           {(['supporters', 'donations'] as const).map((s) => (
             <button
               key={s}
-              onClick={() => { setActiveSection(s); setPage(1); setShowForm(false); }}
-              className={`border-b-2 px-6 py-2 text-sm font-semibold ${
-                activeSection === s
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
+              onClick={() => { setError(''); setActiveSection(s); setPage(1); setShowForm(false); }}
+              style={{
+                padding: '0.65rem 1.5rem',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontWeight: activeSection === s ? 700 : 400,
+                color: activeSection === s ? '#2b6cb0' : '#718096',
+                borderBottom: `2px solid ${activeSection === s ? '#2b6cb0' : 'transparent'}`,
+                marginBottom: '-2px',
+                fontSize: '0.9rem',
+              }}
             >
               {s === 'supporters' ? `Supporters (${supporterTotal})` : `Donations (${donationTotal})`}
             </button>
@@ -148,14 +159,15 @@ export default function DonorsPage() {
 
         {showForm && (
           <SupporterForm
+            key={editingSupporter?.supporterId ?? 'new'}
             initial={editingSupporter}
-            onSuccess={() => { setShowForm(false); setEditingSupporter(null); fetchSupporters(); }}
-            onCancel={() => { setShowForm(false); setEditingSupporter(null); }}
+            onSuccess={() => { setError(''); setShowForm(false); setEditingSupporter(null); fetchSupporters(); }}
+            onCancel={() => { setError(''); setShowForm(false); setEditingSupporter(null); }}
           />
         )}
 
         {error && (
-          <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div style={{ padding: '0.75rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #fed7d7' }}>
             {error}
           </div>
         )}
@@ -164,12 +176,12 @@ export default function DonorsPage() {
         {activeSection === 'supporters' && (
           <>
             {/* Filters */}
-            <div className="mb-4 flex flex-wrap gap-3 rounded-xl border bg-card px-4 py-3 card-shadow">
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', padding: '0.75rem 1rem', backgroundColor: 'white', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
               <FilterSelect label="Type" value={typeFilter} options={SUPPORTER_TYPES} onChange={(v) => handleFilterChange('type', v)} />
               <FilterSelect label="Status" value={statusFilter} options={STATUS_OPTIONS} onChange={(v) => handleFilterChange('status', v)} />
               {(typeFilter || statusFilter) && (
                 <button
-                  onClick={() => { setTypeFilter(''); setStatusFilter(''); setPage(1); }}
+                  onClick={() => { setError(''); setTypeFilter(''); setStatusFilter(''); setPage(1); }}
                   style={{ alignSelf: 'flex-end', padding: '0.4rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f7fafc', cursor: 'pointer', fontSize: '0.8rem', color: '#718096' }}
                 >
                   Clear
@@ -177,7 +189,7 @@ export default function DonorsPage() {
               )}
             </div>
 
-            <div className="overflow-hidden rounded-xl border bg-card card-shadow">
+            <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -205,7 +217,7 @@ export default function DonorsPage() {
                         <td style={tdStyle}>{s.firstDonationDate ? new Date(s.firstDonationDate).toLocaleDateString() : '—'}</td>
                         <td style={tdStyle}>
                           <button
-                            onClick={() => { setEditingSupporter(s); setShowForm(true); window.scrollTo(0, 0); }}
+                            onClick={() => { setError(''); setEditingSupporter(s); setShowForm(true); window.scrollTo(0, 0); }}
                             style={{ color: '#2b6cb0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', padding: 0 }}
                           >
                             Edit
@@ -222,7 +234,7 @@ export default function DonorsPage() {
 
         {/* Donations Section */}
         {activeSection === 'donations' && (
-          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
+          <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -271,12 +283,39 @@ export default function DonorsPage() {
   );
 }
 
+/** Payload for POST/PUT — matches backend `SupporterWriteDto` (camelCase JSON). */
+function supporterWritePayloadFromForm(form: {
+  displayName: string;
+  supporterType: string;
+  relationshipType: string;
+  email: string;
+  phone: string;
+  status: string;
+  country: string;
+  region: string;
+}) {
+  const phone = form.phone.trim();
+  return {
+    displayName: form.displayName.trim(),
+    supporterType: form.supporterType,
+    relationshipType: form.relationshipType,
+    email: form.email.trim(),
+    phone: phone.length ? phone : null,
+    status: form.status,
+    country: form.country.trim() || null,
+    region: form.region.trim() || null,
+    firstName: null as string | null,
+    lastName: null as string | null,
+    organizationName: null as string | null,
+  };
+}
+
 function SupporterForm({ initial, onSuccess, onCancel }: {
   initial: Supporter | null;
   onSuccess: () => void;
   onCancel: () => void;
 }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => ({
     displayName: initial?.displayName ?? '',
     supporterType: initial?.supporterType ?? 'Individual Donor',
     relationshipType: initial?.relationshipType ?? 'Donor',
@@ -285,12 +324,13 @@ function SupporterForm({ initial, onSuccess, onCancel }: {
     status: initial?.status ?? 'Active',
     country: initial?.country ?? 'Philippines',
     region: initial?.region ?? '',
-  });
+  }));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!form.displayName.trim() || !form.email.trim()) {
       setError('Display name and email are required.');
       return;
@@ -301,10 +341,11 @@ function SupporterForm({ initial, onSuccess, onCancel }: {
     }
     setSubmitting(true);
     try {
+      const body = supporterWritePayloadFromForm(form);
       if (initial) {
-        await api.put(`/supporters/${initial.supporterId}`, { ...initial, ...form });
+        await api.put(`/supporters/${initial.supporterId}`, body);
       } else {
-        await api.post('/supporters', { ...form, createdAt: new Date().toISOString() });
+        await api.post('/supporters', body);
       }
       onSuccess();
     } catch (err) {
@@ -344,7 +385,7 @@ function SupporterForm({ initial, onSuccess, onCancel }: {
         <button type="submit" disabled={submitting} style={{ padding: '0.6rem 1.25rem', backgroundColor: submitting ? '#a0aec0' : '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', cursor: submitting ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>
           {submitting ? 'Saving…' : (initial ? 'Update Supporter' : 'Create Supporter')}
         </button>
-        <button type="button" onClick={onCancel} style={{ padding: '0.6rem 1.25rem', backgroundColor: 'white', color: '#718096', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem' }}>
+        <button type="button" onClick={() => { setError(''); onCancel(); }} style={{ padding: '0.6rem 1.25rem', backgroundColor: 'white', color: '#718096', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem' }}>
           Cancel
         </button>
       </div>
