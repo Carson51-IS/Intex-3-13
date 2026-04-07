@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -17,7 +16,6 @@ import ResidentDetailPage from './pages/admin/ResidentDetailPage';
 import DonorsPage from './pages/admin/DonorsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import SettingsPage from './pages/admin/SettingsPage';
-import UserManagementPage from './pages/admin/UserManagementPage';
 import InsightsPage from './pages/InsightsPage';
 import DonorInsightsPage from './pages/DonorInsightsPage';
 import ResidentInsightsPage from './pages/ResidentInsightsPage';
@@ -39,12 +37,31 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
   }
   if (!user) return <Navigate to="/login" replace />;
   if (requiredRole && !user.roles.includes(requiredRole)) {
-    if (user.roles.includes('Donor')) return <Navigate to="/donor" replace />;
-    return <Navigate to="/" replace />;
+    const adminMayAccessDonor = requiredRole === 'Donor' && user.roles.includes('Admin');
+    if (!adminMayAccessDonor) {
+      if (user.roles.includes('Donor')) return <Navigate to="/donor" replace />;
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <>{children}</>;
 }
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  return <ProtectedRoute requiredRole="Admin">{children}</ProtectedRoute>;
+}
+
+const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
+  { path: '/admin', element: <AdminDashboard /> },
+  { path: '/admin/residents', element: <ResidentsPage /> },
+  { path: '/admin/residents/:id', element: <ResidentDetailPage /> },
+  { path: '/admin/donors', element: <DonorsPage /> },
+  { path: '/admin/reports', element: <ReportsPage /> },
+  { path: '/admin/settings', element: <SettingsPage /> },
+  { path: '/admin/users', element: <AdminPage /> },
+  { path: '/admin/donor-insights', element: <DonorInsightsPage /> },
+  { path: '/admin/resident-insights', element: <ResidentInsightsPage /> },
+];
 
 function GuestOnlyRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -87,32 +104,8 @@ function AppRoutes() {
           <Route
             path="/donor"
             element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/users"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/donor-insights"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <DonorInsightsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/resident-insights"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentInsightsPage />
+              <ProtectedRoute requiredRole="Donor">
+                <DonorDashboard />
               </ProtectedRoute>
             }
           />
@@ -124,8 +117,8 @@ function AppRoutes() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <Footer />
-      <CookieConsentBannerView />
+      {showPublicChrome && <Footer />}
+      {showPublicChrome && <CookieConsentBannerView />}
     </div>
   );
 }
@@ -143,29 +136,18 @@ function NotFound() {
   );
 }
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
-
 function AppProviders({ children }: { children: ReactNode }) {
   return (
     <CookieConsentProvider>
       <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+        <BrowserRouter>{children}</BrowserRouter>
+      </AuthProvider>
     </CookieConsentProvider>
-    
   );
 }
 
 export default function App() {
-  return googleClientId ? (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <AppProviders>
-        <AppRoutes />
-      </AppProviders>
-    </GoogleOAuthProvider>
-  ) : (
+  return (
     <AppProviders>
       <AppRoutes />
     </AppProviders>

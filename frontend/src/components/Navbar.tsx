@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 
 export default function Navbar() {
-  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
+  const { user, isAuthenticated, isAdmin, isDonor, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -56,7 +56,7 @@ export default function Navbar() {
                 <NavLink to="/admin/resident-insights">Residents</NavLink>
               </>
             )}
-            <span className="ml-1 text-xs text-muted-foreground">{user.username}</span>
+            <span className="ml-1 text-xs text-muted-foreground">{user.email}</span>
             <button
               type="button"
               onClick={handleLogout}

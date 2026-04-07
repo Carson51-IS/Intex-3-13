@@ -225,13 +225,12 @@ export async function loginUser(
   localStorage.setItem('token', accessToken);
 }
 
-export function buildExternalLoginUrl(
-  provider: string,
-  returnPath: '/'
-) : string {
+export function buildExternalLoginUrl(provider: string, returnPath: string): string {
+  const safePath =
+    returnPath.startsWith('/') && !returnPath.startsWith('//') ? returnPath : '/';
   const searchParams = new URLSearchParams({
     provider,
-    returnPath,
+    returnPath: safePath,
   });
 
   return `${apiUrl('/auth/external-login')}?${searchParams.toString()}`;
@@ -251,10 +250,6 @@ export async function getExternalAuthProviders(): Promise<ExternalAuthProvider[]
   return response.json();
 }
 
-export async function externalLogin(
-  provider: string,
-  returnPath: '/'
-) : Promise<void> {
-  const url = buildExternalLoginUrl(provider, returnPath);
-  window.location.href = url;
+export async function externalLogin(provider: string, returnPath: string): Promise<void> {
+  window.location.href = buildExternalLoginUrl(provider, returnPath);
 }
