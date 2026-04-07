@@ -97,16 +97,52 @@ builder.Services.AddAuthorization(options =>
 var corsRaw = builder.Configuration["Cors:AllowedOrigins"];
 string[] corsOrigins = string.IsNullOrWhiteSpace(corsRaw)
     ? ["http://localhost:3000", "http://localhost:5173"]
-    : corsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    : corsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(o => o.Trim().TrimEnd('/'))
+        .Where(o => !string.IsNullOrWhiteSpace(o))
+        .ToArray();
+
+static bool IsOriginAllowed(string origin, string[] allowed)
+{
+    if (string.IsNullOrWhiteSpace(origin)) return false;
+    origin = origin.Trim().TrimEnd('/');
+
+    foreach (var entry in allowed)
+    {
+        if (string.IsNullOrWhiteSpace(entry)) continue;
+
+        var e = entry.Trim().TrimEnd('/');
+
+        // Exact match (preferred)
+        if (string.Equals(origin, e, StringComparison.OrdinalIgnoreCase)) return true;
+
+        // Allow specifying a base without the Vercel suffix (e.g. "https://intex-3-13")
+        // so it still matches "https://intex-3-13.vercel.app".
+        if (!e.Contains(".vercel.app", StringComparison.OrdinalIgnoreCase)
+            && origin.StartsWith(e, StringComparison.OrdinalIgnoreCase)
+            && origin.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Allow a safe prefix match when an entry ends with '*' (e.g. "https://foo-*-team.vercel.app*")
+        if (e.EndsWith('*'))
+        {
+            var prefix = e.TrimEnd('*').Trim();
+            if (prefix.Length > 0 && origin.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+    }
+
+    return false;
+}
 // No AllowCredentials: frontend uses Bearer tokens in headers only (no cookie auth). That avoids
 // stricter CORS + preflight behavior that can stall or fail cross-origin (e.g. Vercel → Azure).
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(corsOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy
+            .SetIsOriginAllowed(origin => IsOriginAllowed(origin, corsOrigins))
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
