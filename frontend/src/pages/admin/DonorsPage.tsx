@@ -32,6 +32,11 @@ interface Donation {
 const SUPPORTER_TYPES = ['Individual Donor', 'Corporate', 'Foundation', 'Church', 'Government', 'Volunteer', 'Skills Contributor', 'In-Kind Donor'];
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Lapsed'];
 
+const formLabelCn = 'mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+const formControlCn =
+  'w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+const formSelectCn = `${formControlCn} cursor-pointer`;
+
 export default function DonorsPage() {
   const [activeSection, setActiveSection] = useState<'supporters' | 'donations'>('supporters');
   const [supporters, setSupporters] = useState<Supporter[]>([]);
@@ -114,20 +119,23 @@ export default function DonorsPage() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1200px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 style={{ fontSize: '1.5rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.2rem' }}>
-              Donors & Contributions
-            </h1>
-            <p style={{ color: '#718096', fontSize: '0.875rem' }}>
+            <h1 className="font-heading text-2xl font-bold text-foreground md:text-3xl">Donors & Contributions</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Manage supporter profiles and track all contributions
             </p>
           </div>
           {activeSection === 'supporters' && (
             <button
+              type="button"
               onClick={() => { setError(''); setEditingSupporter(null); setShowForm(!showForm); }}
-              style={{ padding: '0.6rem 1.25rem', backgroundColor: '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}
+              className={
+                showForm
+                  ? 'inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted'
+                  : 'inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90'
+              }
             >
               {showForm ? 'Cancel' : '+ Add Supporter'}
             </button>
@@ -135,22 +143,17 @@ export default function DonorsPage() {
         </div>
 
         {/* Section Tabs */}
-        <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem' }}>
+        <div className="mb-6 flex gap-1 border-b border-border">
           {(['supporters', 'donations'] as const).map((s) => (
             <button
               key={s}
+              type="button"
               onClick={() => { setError(''); setActiveSection(s); setPage(1); setShowForm(false); }}
-              style={{
-                padding: '0.65rem 1.5rem',
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                fontWeight: activeSection === s ? 700 : 400,
-                color: activeSection === s ? '#2b6cb0' : '#718096',
-                borderBottom: `2px solid ${activeSection === s ? '#2b6cb0' : 'transparent'}`,
-                marginBottom: '-2px',
-                fontSize: '0.9rem',
-              }}
+              className={`mb-[-1px] border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                activeSection === s
+                  ? 'border-primary font-semibold text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
             >
               {s === 'supporters' ? `Supporters (${supporterTotal})` : `Donations (${donationTotal})`}
             </button>
@@ -167,7 +170,7 @@ export default function DonorsPage() {
         )}
 
         {error && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #fed7d7' }}>
+          <div className="mb-4 rounded-md border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -176,7 +179,7 @@ export default function DonorsPage() {
         {activeSection === 'supporters' && (
           <>
             {/* Filters */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', padding: '0.75rem 1rem', backgroundColor: 'white', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+            <div className="mb-4 flex flex-wrap gap-3 rounded-lg border border-border bg-card p-4 shadow-[var(--card-shadow)]">
               <FilterSelect label="Type" value={typeFilter} options={SUPPORTER_TYPES} onChange={(v) => handleFilterChange('type', v)} />
               <FilterSelect label="Status" value={statusFilter} options={STATUS_OPTIONS} onChange={(v) => handleFilterChange('status', v)} />
               {(typeFilter || statusFilter) && (
@@ -189,7 +192,7 @@ export default function DonorsPage() {
               )}
             </div>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -234,7 +237,7 @@ export default function DonorsPage() {
 
         {/* Donations Section */}
         {activeSection === 'donations' && (
-          <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -356,36 +359,51 @@ function SupporterForm({ initial, onSuccess, onCancel }: {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ backgroundColor: '#ebf8ff', borderRadius: '8px', padding: '1.5rem', border: '1px solid #bee3f8', marginBottom: '1.5rem' }}>
-      <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1a365d', marginBottom: '1rem' }}>
+    <form
+      onSubmit={handleSubmit}
+      className="mb-6 rounded-lg border border-border bg-card p-6 shadow-[var(--card-shadow)]"
+    >
+      <h3 className="mb-4 font-heading text-lg font-semibold text-foreground">
         {initial ? 'Edit Supporter' : 'New Supporter'}
       </h3>
-      {error && <div style={{ padding: '0.6rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '4px', marginBottom: '0.75rem', fontSize: '0.875rem', border: '1px solid #fed7d7' }}>{error}</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '0.75rem' }}>
+      {error && (
+        <div className="mb-3 rounded-md border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      <div className="mb-3 grid gap-3 md:grid-cols-3">
         <FormField label="Display Name*" value={form.displayName} onChange={(v) => setForm(f => ({ ...f, displayName: v }))} />
         <div>
-          <label style={labelStyle}>Type</label>
-          <select value={form.supporterType} onChange={(e) => setForm(f => ({ ...f, supporterType: e.target.value }))} style={selectStyle}>
+          <label className={formLabelCn}>Type</label>
+          <select value={form.supporterType} onChange={(e) => setForm(f => ({ ...f, supporterType: e.target.value }))} className={formSelectCn}>
             {SUPPORTER_TYPES.map(t => <option key={t}>{t}</option>)}
           </select>
         </div>
         <FormField label="Email*" type="email" value={form.email} onChange={(v) => setForm(f => ({ ...f, email: v }))} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+      <div className="mb-4 grid gap-3 md:grid-cols-3">
         <FormField label="Phone" value={form.phone} onChange={(v) => setForm(f => ({ ...f, phone: v }))} />
         <FormField label="Country" value={form.country} onChange={(v) => setForm(f => ({ ...f, country: v }))} />
         <div>
-          <label style={labelStyle}>Status</label>
-          <select value={form.status} onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))} style={selectStyle}>
+          <label className={formLabelCn}>Status</label>
+          <select value={form.status} onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))} className={formSelectCn}>
             {STATUS_OPTIONS.map(t => <option key={t}>{t}</option>)}
           </select>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '0.75rem' }}>
-        <button type="submit" disabled={submitting} style={{ padding: '0.6rem 1.25rem', backgroundColor: submitting ? '#a0aec0' : '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', cursor: submitting ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {submitting ? 'Saving…' : (initial ? 'Update Supporter' : 'Create Supporter')}
         </button>
-        <button type="button" onClick={() => { setError(''); onCancel(); }} style={{ padding: '0.6rem 1.25rem', backgroundColor: 'white', color: '#718096', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem' }}>
+        <button
+          type="button"
+          onClick={() => { setError(''); onCancel(); }}
+          className="rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted"
+        >
           Cancel
         </button>
       </div>
@@ -396,17 +414,21 @@ function SupporterForm({ initial, onSuccess, onCancel }: {
 function FormField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle} />
+      <label className={formLabelCn}>{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className={formControlCn} />
     </div>
   );
 }
 
 function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#718096', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} style={{ padding: '0.4rem 0.6rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.875rem', backgroundColor: value ? '#ebf8ff' : 'white', color: value ? '#2b6cb0' : '#4a5568', cursor: 'pointer' }}>
+    <div className="flex min-w-[8rem] flex-col gap-0.5">
+      <label className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`rounded-md border border-border px-2 py-1.5 text-sm transition-colors ${value ? 'bg-primary/5 font-medium text-primary' : 'bg-background text-foreground'} cursor-pointer`}
+      >
         <option value="">All</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -424,7 +446,12 @@ function Badge({ text, color }: { text: string; color: string }) {
 
 function PaginationBtn({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} disabled={disabled} style={{ padding: '0.4rem 0.9rem', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: disabled ? '#f7fafc' : 'white', color: disabled ? '#a0aec0' : '#2b6cb0', cursor: disabled ? 'not-allowed' : 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+    >
       {label}
     </button>
   );
@@ -434,7 +461,7 @@ const thStyle: React.CSSProperties = {
   padding: '0.75rem 1rem',
   textAlign: 'left',
   fontWeight: 700,
-  color: '#4a5568',
+  color: 'hsl(var(--muted-foreground))',
   fontSize: '0.75rem',
   textTransform: 'uppercase',
   letterSpacing: '0.03em',
@@ -442,30 +469,6 @@ const thStyle: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   padding: '0.75rem 1rem',
-  color: '#4a5568',
+  color: 'hsl(var(--foreground) / 0.85)',
   verticalAlign: 'middle',
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.75rem',
-  fontWeight: 700,
-  color: '#4a5568',
-  marginBottom: '0.25rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.03em',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem 0.65rem',
-  border: '1px solid #e2e8f0',
-  borderRadius: '6px',
-  fontSize: '0.875rem',
-  boxSizing: 'border-box',
-};
-
-const selectStyle: React.CSSProperties = {
-  ...inputStyle,
-  cursor: 'pointer',
 };

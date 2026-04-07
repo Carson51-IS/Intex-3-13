@@ -109,43 +109,22 @@ export default function ResidentsPage() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1200px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 style={{ fontSize: '1.5rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.2rem' }}>
-              Caseload Inventory
-            </h1>
-            <p style={{ color: '#718096', fontSize: '0.875rem' }}>
-              {totalCount} total records
-            </p>
+            <h1 className="font-heading text-2xl font-bold text-foreground md:text-3xl">Caseload Inventory</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{totalCount} total records</p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/admin/donors"
-              style={{
-                padding: '0.6rem 1.25rem',
-                backgroundColor: 'white',
-                color: '#2b6cb0',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                border: '1px solid #bee3f8',
-              }}
+              className="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-[var(--card-shadow)] transition-colors hover:bg-muted"
             >
               Donors & contributions
             </Link>
             <Link
               to="/admin/residents/new"
-              style={{
-                padding: '0.6rem 1.25rem',
-                backgroundColor: '#2b6cb0',
-                color: 'white',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-              }}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
             >
               + Add Resident
             </Link>
@@ -153,16 +132,7 @@ export default function ResidentsPage() {
         </div>
 
         {/* Filters */}
-        <div style={{
-          display: 'flex',
-          gap: '0.75rem',
-          flexWrap: 'wrap',
-          padding: '1rem',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          marginBottom: '1rem',
-          border: '1px solid #e2e8f0',
-        }}>
+        <div className="mb-4 flex flex-wrap gap-3 rounded-lg border border-border bg-card p-4 shadow-[var(--card-shadow)]">
           <FilterSelect
             label="Status"
             value={statusFilter}
@@ -198,13 +168,13 @@ export default function ResidentsPage() {
         </div>
 
         {error && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #fed7d7' }}>
+          <div className="mb-4 rounded-md border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {/* Table */}
-        <div style={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
             <thead>
               <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>

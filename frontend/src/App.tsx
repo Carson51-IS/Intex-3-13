@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -42,100 +42,117 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
   return <>{children}</>;
 }
 
-function AppRoutes() {
+function AppRouteTree() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navbar />
-      <main style={{ flex: 1, backgroundColor: '#f7fafc' }}>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/impact" element={<ImpactPage />} />
-          <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/impact" element={<ImpactPage />} />
+      <Route path="/insights" element={<InsightsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
 
-          {/* Donor routes */}
-          <Route
-            path="/donor"
-            element={
-              <ProtectedRoute>
-                <DonorDashboard />
-              </ProtectedRoute>
-            }
-          />
+      <Route
+        path="/donor"
+        element={
+          <ProtectedRoute>
+            <DonorDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-          {/* Admin routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/residents"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/residents/new"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentNewPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/residents/:id"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/donors"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <DonorsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/reports"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ReportsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/donor-insights"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <DonorInsightsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/resident-insights"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentInsightsPage />
-              </ProtectedRoute>
-            }
-          />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/residents"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <ResidentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/residents/new"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <ResidentNewPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/residents/:id"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <ResidentDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donors"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <DonorsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donor-insights"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <DonorInsightsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/resident-insights"
+        element={
+          <ProtectedRoute requiredRole="Admin">
+            <ResidentInsightsPage />
+          </ProtectedRoute>
+        }
+      />
 
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      <Footer />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+function AppRoutes() {
+  const { pathname } = useLocation();
+  const isAdminArea = /^\/admin(\/|$)/.test(pathname);
+
+  return (
+    <div
+      className={
+        isAdminArea
+          ? 'flex h-screen min-h-0 flex-col overflow-hidden bg-background'
+          : 'flex min-h-screen flex-col'
+      }
+    >
+      {!isAdminArea && <Navbar />}
+      {isAdminArea ? (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <AppRouteTree />
+        </div>
+      ) : (
+        <main className="flex-1 bg-[#f7fafc]">
+          <AppRouteTree />
+        </main>
+      )}
+      {!isAdminArea && <Footer />}
       <CookieConsent />
     </div>
   );
