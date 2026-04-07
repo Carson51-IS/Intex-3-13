@@ -1,0 +1,43 @@
+# Deploy HavenLightApi to Azure App Service when the backend changes.
+#
+# One-time setup (GitHub repo → Settings → Secrets and variables → Actions):
+#   1. In Azure Portal: App Service "havenlight-api-intex3-13" → Get publish profile (downloads .PublishSettings).
+#   2. New repository secret: name = AZURE_WEBAPP_PUBLISH_PROFILE
+#      value = entire contents of that file (XML), pasted as one block.
+#
+name: Deploy HavenLight API (Azure)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/HavenLightApi/**'
+      - '.github/workflows/deploy-havenlight-api.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AZURE_WEBAPP_NAME: havenlight-api-intex3-13
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish API
+        run: dotnet publish backend/HavenLightApi/HavenLightApi.csproj -c Release -o "${{ github.workspace }}/publish" --no-self-contained
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ github.workspace }}/publish
