@@ -174,7 +174,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseSecurityHeaders();
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseRouting();
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import heroBeach from "../assets/hero-beach.png";
 import havenLightLogoMark from "../assets/haven-light-logo-new.svg";
+import { useAuth } from "../context/AuthContext";
 
 function IconBase({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -51,6 +52,15 @@ const steps = [
 export default function LandingPage() {
   const [donationAmount, setDonationAmount] = useState<number | null>(1000);
   const amounts = [500, 1000, 2500, 5000];
+  const { user } = useAuth();
+
+  const loginTarget = !user
+    ? "/login"
+    : user.roles.includes("Admin")
+      ? "/admin"
+      : user.roles.includes("Donor")
+        ? "/donor"
+        : "/";
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,10 +79,10 @@ export default function LandingPage() {
             <a href="#how" className="text-muted-foreground transition-colors hover:text-foreground">How It Works</a>
             <a href="#donate" className="text-muted-foreground transition-colors hover:text-foreground">Donate</a>
             <Link
-              to="/login"
+              to={loginTarget}
               className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition-all hover:translate-y-[-1px] hover:opacity-95"
             >
-              Login
+              {user ? "Dashboard" : "Login"}
             </Link>
           </nav>
         </div>
