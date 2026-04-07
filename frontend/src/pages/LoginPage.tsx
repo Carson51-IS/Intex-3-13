@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import heroBeach from '../assets/hero-beach.png';
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
+
 export default function LoginPage() {
   const [tab, setTab] = useState<'login' | 'register'>('login');
   const { login, loginWithGoogle } = useAuth();
@@ -18,8 +20,8 @@ export default function LoginPage() {
       return;
     }
     try {
-      await loginWithGoogle(response.credential);
-      navigate('/donor');
+      const me = await loginWithGoogle(response.credential);
+      navigate(me.roles.includes('Admin') ? '/admin' : '/donor');
     } catch (err) {
       setGoogleError(err instanceof Error ? err.message : 'Google sign-in failed.');
     }
@@ -56,30 +58,34 @@ export default function LoginPage() {
         </div>
 
         <div className="p-6">
-          <div className="mb-5 flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setGoogleError('Google sign-in was cancelled or failed.')}
-              text={tab === 'login' ? 'signin_with' : 'signup_with'}
-              shape="rectangular"
-              width={360}
-            />
-          </div>
+          {googleClientId ? (
+            <div className="mb-5 flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setGoogleError('Google sign-in was cancelled or failed.')}
+                text={tab === 'login' ? 'signin_with' : 'signup_with'}
+                shape="rectangular"
+                width={360}
+              />
+            </div>
+          ) : null}
 
           {googleError && (
             <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{googleError}</div>
           )}
 
-          <div className="mb-5 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="whitespace-nowrap text-xs text-muted-foreground">or use a username</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
+          {googleClientId ? (
+            <div className="mb-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="whitespace-nowrap text-xs text-muted-foreground">or use a username</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          ) : null}
 
           {tab === 'login' ? (
             <LoginForm login={login} navigate={navigate} />
           ) : (
-            <RegisterForm navigate={navigate} />
+            <RegisterForm />
           )}
         </div>
 
@@ -164,7 +170,8 @@ function LoginForm({ login, navigate }: {
   );
 }
 
-function RegisterForm({ navigate }: { navigate: (path: string) => void }) {
+function RegisterForm() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

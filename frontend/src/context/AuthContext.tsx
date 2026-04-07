@@ -13,7 +13,7 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<void>;
-  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<User>;
   logout: () => void;
   isAdmin: boolean;
   isDonor: boolean;
@@ -44,11 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, [token]);
 
-  const saveToken = async (newToken: string) => {
+  const saveToken = async (newToken: string): Promise<User> => {
     localStorage.setItem('token', newToken);
     setToken(newToken);
     const me = await api.get<User>('/auth/me');
     setUser(me);
+    return me;
   };
 
   const login = async (identifier: string, password: string) => {
@@ -56,9 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await saveToken(newToken);
   };
 
-  const loginWithGoogle = async (idToken: string) => {
+  const loginWithGoogle = async (idToken: string): Promise<User> => {
     const { token: newToken } = await api.post<{ token: string }>('/auth/google', { idToken });
-    await saveToken(newToken);
+    return saveToken(newToken);
   };
 
   const logout = () => {

@@ -2,7 +2,8 @@
 export function getApiBase(): string {
   const raw = import.meta.env.VITE_API_URL?.trim();
   if (raw) return raw.replace(/\/$/, '');
-  if (import.meta.env.DEV) return 'https://localhost:5001/api';
+  // Local dev: same-origin `/api` → Vite proxy (see vite.config.ts)
+  if (import.meta.env.DEV) return '/api';
   return '';
 }
 

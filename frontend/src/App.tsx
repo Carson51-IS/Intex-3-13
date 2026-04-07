@@ -26,11 +26,8 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⏳</div>
-          <div style={{ color: '#a0aec0', fontSize: '0.9rem' }}>Loading…</div>
-        </div>
+      <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
+        Loading…
       </div>
     );
   }
@@ -43,24 +40,39 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
   return <>{children}</>;
 }
 
+function AdminRoute({ children }: { children: ReactNode }) {
+  return <ProtectedRoute requiredRole="Admin">{children}</ProtectedRoute>;
+}
+
+const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
+  { path: '/admin', element: <AdminDashboard /> },
+  { path: '/admin/residents', element: <ResidentsPage /> },
+  { path: '/admin/residents/:id', element: <ResidentDetailPage /> },
+  { path: '/admin/donors', element: <DonorsPage /> },
+  { path: '/admin/reports', element: <ReportsPage /> },
+  { path: '/admin/settings', element: <SettingsPage /> },
+  { path: '/admin/users', element: <UserManagementPage /> },
+  { path: '/admin/donor-insights', element: <DonorInsightsPage /> },
+  { path: '/admin/resident-insights', element: <ResidentInsightsPage /> },
+];
+
 function AppRoutes() {
-  const location = useLocation();
-  const isLanding = location.pathname === '/';
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const { pathname } = useLocation();
+  const isLanding = pathname === '/';
+  const isAdminRoute = pathname.startsWith('/admin');
+  const showPublicChrome = !isLanding && !isAdminRoute;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {!isLanding && !isAdminRoute && <Navbar />}
-      <main style={{ flex: 1, backgroundColor: '#f7fafc' }}>
+    <div className="flex min-h-screen flex-col">
+      {showPublicChrome && <Navbar />}
+      <main className="flex-1 bg-[#f7fafc]">
         <Routes>
-          {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/impact" element={<ImpactPage />} />
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
 
-          {/* Donor routes */}
           <Route
             path="/donor"
             element={
@@ -70,85 +82,14 @@ function AppRoutes() {
             }
           />
 
-          {/* Admin routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/residents"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/residents/:id"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/donors"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <DonorsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/reports"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ReportsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/settings"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/users"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <UserManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/donor-insights"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <DonorInsightsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/resident-insights"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <ResidentInsightsPage />
-              </ProtectedRoute>
-            }
-          />
+          {ADMIN_ROUTES.map(({ path, element }) => (
+            <Route key={path} path={path} element={<AdminRoute>{element}</AdminRoute>} />
+          ))}
 
-          {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!isLanding && !isAdminRoute && <Footer />}
+      {showPublicChrome && <Footer />}
       <CookieConsent />
     </div>
   );
@@ -156,27 +97,37 @@ function AppRoutes() {
 
 function NotFound() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', textAlign: 'center', padding: '2rem' }}>
-      <div>
-        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>404</div>
-        <h1 style={{ fontSize: '1.5rem', color: '#1a365d', marginBottom: '0.75rem' }}>Page Not Found</h1>
-        <p style={{ color: '#718096', marginBottom: '1.5rem' }}>The page you're looking for doesn't exist.</p>
-        <a href="/" style={{ color: '#2b6cb0', textDecoration: 'none', fontWeight: 600 }}>← Back to Home</a>
-      </div>
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-8 text-center">
+      <div className="mb-4 text-6xl text-foreground">404</div>
+      <h1 className="mb-3 text-2xl font-semibold text-[#1a365d]">Page Not Found</h1>
+      <p className="mb-6 text-[#718096]">The page you&apos;re looking for doesn&apos;t exist.</p>
+      <a href="/" className="font-semibold text-[#2b6cb0] no-underline hover:underline">
+        ← Back to Home
+      </a>
     </div>
   );
 }
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
+
+function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    <BrowserRouter>
+      <AuthProvider>{children}</AuthProvider>
+    </BrowserRouter>
+  );
+}
 
 export default function App() {
-  return (
+  return googleClientId ? (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
+      <AppProviders>
+        <AppRoutes />
+      </AppProviders>
     </GoogleOAuthProvider>
+  ) : (
+    <AppProviders>
+      <AppRoutes />
+    </AppProviders>
   );
 }
