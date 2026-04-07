@@ -124,7 +124,13 @@ public class ResidentsController : ControllerBase
 
         _context.Residents.Add(resident);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = resident.ResidentId }, resident);
+
+        var created = await _context.Residents
+            .AsNoTracking()
+            .Include(r => r.Safehouse)
+            .FirstAsync(r => r.ResidentId == resident.ResidentId);
+
+        return CreatedAtAction(nameof(GetById), new { id = created.ResidentId }, created);
     }
 
     [HttpPut("{id}")]

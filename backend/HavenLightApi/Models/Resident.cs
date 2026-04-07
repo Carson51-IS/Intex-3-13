@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace HavenLightApi.Models;
 
@@ -154,8 +155,10 @@ public class Resident
     [Column("notes_restricted")]
     public string? NotesRestricted { get; set; }
 
+    /// <summary>Optional in API payloads — only <see cref="SafehouseId"/> is required; validation must not require this navigation.</summary>
+    [ValidateNever]
     [ForeignKey(nameof(SafehouseId))]
-    public Safehouse Safehouse { get; set; } = null!;
+    public Safehouse? Safehouse { get; set; }
 
     public ICollection<ProcessRecording> ProcessRecordings { get; set; } = [];
     public ICollection<HomeVisitation> HomeVisitations { get; set; } = [];
