@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const { user, isLoading, isAdmin, isDonor } = useAuth();
   const isRegularUser = Boolean(user && !isAdmin && !isDonor);
 
@@ -18,20 +19,24 @@ export default function Navbar() {
         </Link>
         {isLoading ? (
           <span className="text-sm text-muted-foreground">Loading…</span>
-        ) : isRegularUser ? null : (
+        ) : (
           <nav className="hidden items-center gap-8 font-body text-sm md:flex">
-            <a href="/#mission" className="text-muted-foreground transition-colors hover:text-foreground">
-              Mission
-            </a>
-            <a href="/#impact" className="text-muted-foreground transition-colors hover:text-foreground">
-              Impact
-            </a>
-            <a href="/#how" className="text-muted-foreground transition-colors hover:text-foreground">
-              How It Works
-            </a>
-            <a href="/#donate" className="text-muted-foreground transition-colors hover:text-foreground">
-              Donate
-            </a>
+            {!isRegularUser ? (
+              <>
+                <a href="/#mission" className="text-muted-foreground transition-colors hover:text-foreground">
+                  Mission
+                </a>
+                <a href="/#impact" className="text-muted-foreground transition-colors hover:text-foreground">
+                  Impact
+                </a>
+                <a href="/#how" className="text-muted-foreground transition-colors hover:text-foreground">
+                  How It Works
+                </a>
+                <a href="/#donate" className="text-muted-foreground transition-colors hover:text-foreground">
+                  Donate
+                </a>
+              </>
+            ) : null}
             {!user ? (
               <Link
                 to="/login"
@@ -39,7 +44,28 @@ export default function Navbar() {
               >
                 Login
               </Link>
-            ) : null}
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="leading-tight text-right">
+                  <div className="text-sm font-semibold text-foreground">
+                    {user.userName?.trim() || user.email.split('@')[0] || user.email}
+                  </div>
+                  <div
+                    className="max-w-[220px] truncate text-xs text-muted-foreground"
+                    title={user.email}
+                  >
+                    {user.email}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/logout')}
+                  className="shrink-0 rounded-md border border-primary/25 bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
+                >
+                  Log out
+                </button>
+              </div>
+            )}
           </nav>
         )}
       </div>
