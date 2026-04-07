@@ -1,3 +1,27 @@
+/** ASP.NET Core ProblemDetails / ModelState — surface first useful string to the user. */
+function parseApiErrorMessage(body: Record<string, unknown>, status: number): string {
+  const msg = body.message;
+  if (typeof msg === 'string' && msg.trim()) return msg;
+
+  const errors = body.errors;
+  if (errors && typeof errors === 'object' && !Array.isArray(errors)) {
+    const lines: string[] = [];
+    for (const [, v] of Object.entries(errors as Record<string, unknown>)) {
+      if (Array.isArray(v)) {
+        for (const item of v) {
+          if (typeof item === 'string') lines.push(item);
+        }
+      } else if (typeof v === 'string') lines.push(v);
+    }
+    if (lines.length) return lines.join(' ');
+  }
+
+  const title = body.title;
+  if (typeof title === 'string' && title.trim()) return title;
+
+  return `Request failed: ${status}`;
+}
+
 /** Base URL including `/api` (e.g. https://your-api.azurewebsites.net/api). Required on Vercel build. */
 export function getApiBase(): string {
   const raw = import.meta.env.VITE_API_URL?.trim();
@@ -39,8 +63,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.message ?? `Request failed: ${res.status}`);
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    throw new Error(parseApiErrorMessage(body, res.status));
   }
 
   if (res.status === 204) return undefined as T;

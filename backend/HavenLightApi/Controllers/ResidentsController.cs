@@ -64,10 +64,64 @@ public class ResidentsController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<Resident>> Create([FromBody] Resident resident)
+    public async Task<ActionResult<Resident>> Create([FromBody] ResidentCreateDto dto)
     {
-        resident.ResidentId = 0;
-        resident.CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+        if (!await _context.Safehouses.AnyAsync(s => s.SafehouseId == dto.SafehouseId))
+            return BadRequest(new { message = "Invalid or unknown safehouse." });
+        if (string.IsNullOrWhiteSpace(dto.CaseControlNo) || string.IsNullOrWhiteSpace(dto.InternalCode))
+            return BadRequest(new { message = "Case control number and internal code are required." });
+        if (string.IsNullOrWhiteSpace(dto.AssignedSocialWorker))
+            return BadRequest(new { message = "Assigned social worker is required." });
+
+        var resident = new Resident
+        {
+            CaseControlNo = dto.CaseControlNo.Trim(),
+            InternalCode = dto.InternalCode.Trim(),
+            SafehouseId = dto.SafehouseId,
+            CaseStatus = dto.CaseStatus,
+            Sex = dto.Sex,
+            DateOfBirth = dto.DateOfBirth,
+            BirthStatus = dto.BirthStatus,
+            PlaceOfBirth = dto.PlaceOfBirth,
+            Religion = dto.Religion,
+            CaseCategory = dto.CaseCategory,
+            SubCatOrphaned = dto.SubCatOrphaned,
+            SubCatTrafficked = dto.SubCatTrafficked,
+            SubCatChildLabor = dto.SubCatChildLabor,
+            SubCatPhysicalAbuse = dto.SubCatPhysicalAbuse,
+            SubCatSexualAbuse = dto.SubCatSexualAbuse,
+            SubCatOsaec = dto.SubCatOsaec,
+            SubCatCicl = dto.SubCatCicl,
+            SubCatAtRisk = dto.SubCatAtRisk,
+            SubCatStreetChild = dto.SubCatStreetChild,
+            SubCatChildWithHiv = dto.SubCatChildWithHiv,
+            IsPwd = dto.IsPwd,
+            PwdType = dto.PwdType,
+            HasSpecialNeeds = dto.HasSpecialNeeds,
+            SpecialNeedsDiagnosis = dto.SpecialNeedsDiagnosis,
+            FamilyIs4Ps = dto.FamilyIs4Ps,
+            FamilySoloParent = dto.FamilySoloParent,
+            FamilyIndigenous = dto.FamilyIndigenous,
+            FamilyParentPwd = dto.FamilyParentPwd,
+            FamilyInformalSettler = dto.FamilyInformalSettler,
+            DateOfAdmission = dto.DateOfAdmission,
+            AgeUponAdmission = dto.AgeUponAdmission,
+            PresentAge = dto.PresentAge,
+            LengthOfStay = dto.LengthOfStay,
+            ReferralSource = dto.ReferralSource,
+            ReferringAgencyPerson = dto.ReferringAgencyPerson,
+            AssignedSocialWorker = dto.AssignedSocialWorker.Trim(),
+            InitialCaseAssessment = dto.InitialCaseAssessment,
+            ReintegrationType = dto.ReintegrationType,
+            ReintegrationStatus = dto.ReintegrationStatus,
+            InitialRiskLevel = dto.InitialRiskLevel,
+            CurrentRiskLevel = dto.CurrentRiskLevel,
+            DateEnrolled = dto.DateEnrolled,
+            DateClosed = dto.DateClosed,
+            NotesRestricted = dto.NotesRestricted,
+            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
+        };
+
         _context.Residents.Add(resident);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = resident.ResidentId }, resident);
