@@ -2,15 +2,18 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { api } from '../api/client';
 
 interface User {
-  email: string;
+  username: string;
+  email: string | null;
   roles: string[];
+  hasGoogle: boolean;
 }
 
 interface AuthContextValue {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
   isDonor: boolean;
@@ -41,14 +44,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, [token]);
 
-  const login = async (email: string, password: string) => {
-    const { token: newToken } = await api.post<{ token: string }>('/auth/login', { email, password });
+  const saveToken = async (newToken: string) => {
     localStorage.setItem('token', newToken);
     setToken(newToken);
-    // Load user before LoginPage navigates — otherwise ProtectedRoute sees token but no user
-    // and redirects back to /login (isLoading was false during the /me gap).
     const me = await api.get<User>('/auth/me');
     setUser(me);
+  };
+
+  const login = async (identifier: string, password: string) => {
+    const { token: newToken } = await api.post<{ token: string }>('/auth/login', { identifier, password });
+    await saveToken(newToken);
+  };
+
+  const loginWithGoogle = async (idToken: string) => {
+    const { token: newToken } = await api.post<{ token: string }>('/auth/google', { idToken });
+    await saveToken(newToken);
   };
 
   const logout = () => {
@@ -61,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isDonor = user?.roles.includes('Donor') ?? false;
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAdmin, isDonor }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, loginWithGoogle, logout, isAdmin, isDonor }}>
       {children}
     </AuthContext.Provider>
   );

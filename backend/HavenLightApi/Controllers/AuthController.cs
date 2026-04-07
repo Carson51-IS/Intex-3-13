@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -28,7 +29,10 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var user = await _userManager.FindByEmailAsync(dto.Email);
+        // Support login by username or email
+        var user = await _userManager.FindByNameAsync(dto.Identifier)
+                   ?? await _userManager.FindByEmailAsync(dto.Identifier);
+
         if (user == null)
             return Unauthorized(new { message = "Invalid credentials" });
 
@@ -43,14 +47,85 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        var user = new IdentityUser { UserName = dto.Email, Email = dto.Email };
+        if (string.IsNullOrWhiteSpace(dto.Username))
+            return BadRequest(new { message = "Username is required." });
+
+        if (await _userManager.FindByNameAsync(dto.Username) != null)
+            return BadRequest(new { message = "That username is already taken." });
+
+        if (!string.IsNullOrWhiteSpace(dto.Email) && await _userManager.FindByEmailAsync(dto.Email) != null)
+            return BadRequest(new { message = "That email is already registered." });
+
+        var user = new IdentityUser
+        {
+            UserName = dto.Username,
+            Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email,
+            EmailConfirmed = !string.IsNullOrWhiteSpace(dto.Email),
+        };
+
         var result = await _userManager.CreateAsync(user, dto.Password);
-
         if (!result.Succeeded)
-            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+            return BadRequest(new { message = string.Join(" ", result.Errors.Select(e => e.Description)) });
 
-        if (!string.IsNullOrEmpty(dto.Role))
-            await _userManager.AddToRoleAsync(user, dto.Role);
+        // Only allow Donor role from public registration
+        await _userManager.AddToRoleAsync(user, "Donor");
+
+        var token = await GenerateJwtToken(user);
+        return Ok(new { token });
+    }
+
+    [HttpPost("google")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+    {
+        GoogleJsonWebSignature.Payload payload;
+        try
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = [_config["Google:ClientId"]!],
+            };
+            payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken, settings);
+        }
+        catch (InvalidJwtException)
+        {
+            return Unauthorized(new { message = "Invalid Google token." });
+        }
+
+        // Check if we already linked this Google account
+        var user = await _userManager.FindByLoginAsync("Google", payload.Subject);
+
+        if (user == null)
+        {
+            // Check if a local account exists with the same email
+            user = await _userManager.FindByEmailAsync(payload.Email);
+
+            if (user == null)
+            {
+                // Create a new account — use email prefix as default username, ensure uniqueness
+                var baseUsername = payload.Email.Split('@')[0];
+                var username = baseUsername;
+                var suffix = 1;
+                while (await _userManager.FindByNameAsync(username) != null)
+                    username = $"{baseUsername}{suffix++}";
+
+                user = new IdentityUser
+                {
+                    UserName = username,
+                    Email = payload.Email,
+                    EmailConfirmed = true,
+                };
+
+                var createResult = await _userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                    return BadRequest(new { message = string.Join(" ", createResult.Errors.Select(e => e.Description)) });
+
+                await _userManager.AddToRoleAsync(user, "Donor");
+            }
+
+            // Link the Google login to this account
+            var loginInfo = new UserLoginInfo("Google", payload.Subject, "Google");
+            await _userManager.AddLoginAsync(user, loginInfo);
+        }
 
         var token = await GenerateJwtToken(user);
         return Ok(new { token });
@@ -68,7 +143,15 @@ public class AuthController : ControllerBase
             return Unauthorized();
 
         var roles = await _userManager.GetRolesAsync(user);
-        return Ok(new { email = user.Email, roles });
+        var logins = await _userManager.GetLoginsAsync(user);
+
+        return Ok(new
+        {
+            username = user.UserName,
+            email = user.Email,
+            roles,
+            hasGoogle = logins.Any(l => l.LoginProvider == "Google"),
+        });
     }
 
     private async Task<string> GenerateJwtToken(IdentityUser user)
@@ -77,7 +160,7 @@ public class AuthController : ControllerBase
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Email, user.Email!),
+            new(ClaimTypes.Email, user.Email ?? ""),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
@@ -99,5 +182,6 @@ public class AuthController : ControllerBase
     }
 }
 
-public record LoginDto(string Email, string Password);
-public record RegisterDto(string Email, string Password, string? Role);
+public record LoginDto(string Identifier, string Password);
+public record RegisterDto(string Username, string Password, string? Email);
+public record GoogleLoginDto(string IdToken);

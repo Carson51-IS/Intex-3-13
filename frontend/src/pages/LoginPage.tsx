@@ -1,12 +1,28 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 
 export default function LoginPage() {
   const [tab, setTab] = useState<'login' | 'register'>('login');
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [googleError, setGoogleError] = useState('');
+
+  const handleGoogleSuccess = async (response: CredentialResponse) => {
+    setGoogleError('');
+    if (!response.credential) {
+      setGoogleError('Google sign-in did not return a credential.');
+      return;
+    }
+    try {
+      await loginWithGoogle(response.credential);
+      navigate('/donor');
+    } catch (err) {
+      setGoogleError(err instanceof Error ? err.message : 'Google sign-in failed.');
+    }
+  };
 
   return (
     <div style={{
@@ -45,12 +61,44 @@ export default function LoginPage() {
                 transition: 'all 0.15s',
               }}
             >
-              {t === 'login' ? 'Sign In' : 'Create Donor Account'}
+              {t === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           ))}
         </div>
 
         <div style={{ padding: '2rem' }}>
+          {/* Google Sign-In (shared across both tabs) */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setGoogleError('Google sign-in was cancelled or failed.')}
+              text={tab === 'login' ? 'signin_with' : 'signup_with'}
+              shape="rectangular"
+              width={360}
+            />
+          </div>
+
+          {googleError && (
+            <div style={{
+              padding: '0.75rem',
+              backgroundColor: '#fff5f5',
+              color: '#c53030',
+              borderRadius: '6px',
+              marginBottom: '1rem',
+              fontSize: '0.875rem',
+              border: '1px solid #fed7d7',
+            }}>
+              {googleError}
+            </div>
+          )}
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
+            <span style={{ color: '#a0aec0', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>or use a username</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
+          </div>
+
           {tab === 'login' ? (
             <LoginForm login={login} navigate={navigate} />
           ) : (
@@ -69,10 +117,10 @@ export default function LoginPage() {
 }
 
 function LoginForm({ login, navigate }: {
-  login: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   navigate: (path: string) => void;
 }) {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,8 +131,7 @@ function LoginForm({ login, navigate }: {
     setError('');
     setIsSubmitting(true);
     try {
-      await login(email, password);
-      // Navigation happens after login resolves — user state is set synchronously in AuthContext
+      await login(identifier, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
     } finally {
@@ -92,7 +139,6 @@ function LoginForm({ login, navigate }: {
     }
   };
 
-  // Once user is set, navigate based on role
   if (user) {
     if (user.roles.includes('Admin')) {
       navigate('/admin');
@@ -103,10 +149,6 @@ function LoginForm({ login, navigate }: {
 
   return (
     <>
-      <h1 style={{ fontSize: '1.4rem', textAlign: 'center', color: '#1a365d', marginBottom: '1.5rem', fontWeight: 700 }}>
-        Welcome Back
-      </h1>
-
       {error && (
         <div style={{
           padding: '0.75rem',
@@ -123,23 +165,23 @@ function LoginForm({ login, navigate }: {
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, color: '#4a5568', fontSize: '0.9rem' }}>
-            Email address
+          <label htmlFor="identifier" style={labelStyle}>
+            Username or email
           </label>
           <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="identifier"
+            type="text"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             required
-            autoComplete="email"
-            placeholder="you@example.com"
+            autoComplete="username"
+            placeholder="your username or email"
             style={inputStyle}
           />
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, color: '#4a5568', fontSize: '0.9rem' }}>
+          <label htmlFor="password" style={labelStyle}>
             Password
           </label>
           <input
@@ -162,11 +204,10 @@ function LoginForm({ login, navigate }: {
 }
 
 function RegisterForm({ navigate }: { navigate: (path: string) => void }) {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -183,12 +224,14 @@ function RegisterForm({ navigate }: { navigate: (path: string) => void }) {
     }
     setIsSubmitting(true);
     try {
-      await api.post('/auth/register', { email, password, role: 'Donor' });
-      // Log in immediately after registration
-      const result = await api.post<{ token: string }>('/auth/login', { email, password });
-      localStorage.setItem('token', result.token);
+      const { token } = await api.post<{ token: string }>('/auth/register', {
+        username,
+        password,
+        email: email || undefined,
+      });
+      localStorage.setItem('token', token);
       navigate('/donor');
-      window.location.reload(); // refresh auth state to load user from /auth/me
+      window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
@@ -198,13 +241,6 @@ function RegisterForm({ navigate }: { navigate: (path: string) => void }) {
 
   return (
     <>
-      <h1 style={{ fontSize: '1.4rem', textAlign: 'center', color: '#1a365d', marginBottom: '0.5rem', fontWeight: 700 }}>
-        Create Donor Account
-      </h1>
-      <p style={{ textAlign: 'center', color: '#718096', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-        Join us and track your contributions
-      </p>
-
       {error && (
         <div style={{
           padding: '0.75rem',
@@ -220,19 +256,28 @@ function RegisterForm({ navigate }: { navigate: (path: string) => void }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-          <div>
-            <label style={labelStyle}>First Name</label>
-            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Last Name</label>
-            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required style={inputStyle} />
-          </div>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle}>Username <span style={{ color: '#c53030' }}>*</span></label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+            placeholder="pick a username"
+            style={inputStyle}
+          />
         </div>
         <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle}>Email address</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com" style={inputStyle} />
+          <label style={labelStyle}>Email <span style={{ color: '#a0aec0', fontWeight: 400 }}>(optional)</span></label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            placeholder="you@example.com"
+            style={inputStyle}
+          />
         </div>
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle}>Password <span style={{ color: '#a0aec0', fontWeight: 400 }}>(min 12 chars)</span></label>

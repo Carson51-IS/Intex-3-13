@@ -44,7 +44,7 @@ export default function Navbar() {
                 <NavLink to="/admin/resident-insights">Residents</NavLink>
               </>
             )}
-            <span style={{ color: '#cbd5e0', fontSize: '0.8rem', marginLeft: '0.25rem' }}>{user.email}</span>
+            <span style={{ color: '#cbd5e0', fontSize: '0.8rem', marginLeft: '0.25rem' }}>{user.username}</span>
             <button
               onClick={handleLogout}
               style={{
