@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import CookieConsent from './components/CookieConsent';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -97,7 +96,6 @@ function AppRoutes() {
       </main>
       <Footer />
       <CookieConsentBannerView />
-      <CookieConsent />
     </div>
   );
 }

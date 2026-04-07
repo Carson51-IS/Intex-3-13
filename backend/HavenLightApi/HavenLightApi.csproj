@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>d5f6076b-621a-4eb5-802a-7f1086726734</UserSecretsId>
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,5 +22,11 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
+
+  <Target Name="StopRunningApiOnWindows" BeforeTargets="Build"
+          Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Exec Command='cmd /c "taskkill /F /IM HavenLightApi.exe /T &gt;nul 2&gt;&amp;1 &amp; exit /b 0"' />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Get-CimInstance Win32_Process -Filter &apos;Name = &apos;&apos;dotnet.exe&apos;&apos;&apos; | Where-Object { $_.CommandLine -match &apos;HavenLightApi&apos; } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }&quot;" />
+  </Target>
 
 </Project>
