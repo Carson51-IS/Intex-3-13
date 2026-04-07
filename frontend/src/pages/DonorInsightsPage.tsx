@@ -49,20 +49,19 @@ export default function DonorInsightsPage() {
 
   return (
     <AdminLayout>
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div className="mx-auto w-full max-w-6xl">
       <Link
         to="/admin/insights"
-        style={{ display: 'inline-block', marginBottom: '1rem', color: '#2b6cb0', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}
+          className="mb-4 inline-block text-sm font-semibold text-primary no-underline hover:underline"
       >
         ← Back to ML-Powered Insights
       </Link>
-      <h1 style={{ fontSize: '1.75rem', color: '#1a365d', marginBottom: '0.5rem' }}>Donor Intelligence</h1>
-      <p style={{ color: '#718096', marginBottom: '2rem' }}>
+        <h1 className="font-heading text-3xl font-bold text-foreground">Donor Intelligence</h1>
+        <p className="mb-8 mt-2 text-sm text-muted-foreground md:text-base">
         ML-powered donor analytics: churn risk detection and donation likelihood forecasting
       </p>
 
-      {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+        <div className="mb-10 grid gap-4 md:grid-cols-3">
         <SummaryCard
           label="At-Risk Donors"
           value={atRiskCount.toString()}
@@ -86,42 +85,29 @@ export default function DonorInsightsPage() {
         />
       </div>
 
-      {/* Churn Risk Table */}
-      <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{
-          fontSize: '1.3rem',
-          color: '#1a365d',
-          marginBottom: '1rem',
-          paddingLeft: '1rem',
-          borderLeft: '4px solid #c53030',
-        }}>
+        <section className="mb-12">
+          <h2 className="mb-4 border-l-4 border-destructive pl-3 font-heading text-2xl font-semibold text-foreground">
           Donor Churn Risk
         </h2>
-        <p style={{ color: '#4a5568', marginBottom: '1.25rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
+          <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
           Identifies donors at risk of lapsing (no donation within 6 months). Higher probability means higher risk of losing the donor.
           Proactive outreach to high-risk donors can significantly improve retention.
         </p>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          border: '1px solid #e2e8f0',
-          overflow: 'hidden',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
+            <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ backgroundColor: '#f7fafc' }}>
-                <th style={{ ...thStyle, cursor: 'pointer' }} onClick={() => toggleSort(churnSort, 'id', setChurnSort)}>
+                <tr className="border-b bg-muted/40">
+                  <th className={`${thCn} cursor-pointer`} onClick={() => toggleSort(churnSort, 'id', setChurnSort)}>
                   Supporter ID{sortIndicator(churnSort, 'id')}
                 </th>
-                <th style={thStyle}>Snapshot Date</th>
-                <th style={{ ...thStyle, cursor: 'pointer' }} onClick={() => toggleSort(churnSort, 'probability', setChurnSort)}>
+                  <th className={thCn}>Snapshot Date</th>
+                  <th className={`${thCn} cursor-pointer`} onClick={() => toggleSort(churnSort, 'probability', setChurnSort)}>
                   Churn Probability{sortIndicator(churnSort, 'probability')}
                 </th>
-                <th style={{ ...thStyle, cursor: 'pointer' }} onClick={() => toggleSort(churnSort, 'risk', setChurnSort)}>
+                  <th className={`${thCn} cursor-pointer`} onClick={() => toggleSort(churnSort, 'risk', setChurnSort)}>
                   Risk Level{sortIndicator(churnSort, 'risk')}
                 </th>
-                <th style={thStyle}>Actual Status</th>
+                  <th className={thCn}>Actual Status</th>
               </tr>
             </thead>
             <tbody>
@@ -129,11 +115,11 @@ export default function DonorInsightsPage() {
                 const risk = getChurnRiskLevel(d.pIsLapsed);
                 const colors = riskColors[risk];
                 return (
-                  <tr key={d.supporterId} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f7fafc' }}>
-                    <td style={tdStyle}>#{d.supporterId}</td>
-                    <td style={tdStyle}>{d.snapshotDate}</td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <tr key={d.supporterId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                      <td className={tdCn}>#{d.supporterId}</td>
+                      <td className={tdCn}>{d.snapshotDate}</td>
+                      <td className={tdCn}>
+                      <div className="flex items-center gap-2">
                         <div style={{
                           flex: 1,
                           height: '8px',
@@ -149,10 +135,10 @@ export default function DonorInsightsPage() {
                             borderRadius: '4px',
                           }} />
                         </div>
-                        <span style={{ fontWeight: 600, minWidth: '42px' }}>{(d.pIsLapsed * 100).toFixed(0)}%</span>
+                        <span className="min-w-11 font-semibold">{(d.pIsLapsed * 100).toFixed(0)}%</span>
                       </div>
                     </td>
-                    <td style={tdStyle}>
+                      <td className={tdCn}>
                       <span style={{
                         padding: '0.2rem 0.75rem',
                         borderRadius: '12px',
@@ -164,7 +150,7 @@ export default function DonorInsightsPage() {
                         {risk}
                       </span>
                     </td>
-                    <td style={tdStyle}>
+                      <td className={tdCn}>
                       <span style={{
                         padding: '0.2rem 0.75rem',
                         borderRadius: '12px',
@@ -184,40 +170,27 @@ export default function DonorInsightsPage() {
         </div>
       </section>
 
-      {/* Donation Forecast Table */}
-      <section>
-        <h2 style={{
-          fontSize: '1.3rem',
-          color: '#1a365d',
-          marginBottom: '1rem',
-          paddingLeft: '1rem',
-          borderLeft: '4px solid #38a169',
-        }}>
+        <section>
+          <h2 className="mb-4 border-l-4 border-success pl-3 font-heading text-2xl font-semibold text-foreground">
           90-Day Donation Forecast
         </h2>
-        <p style={{ color: '#4a5568', marginBottom: '1.25rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
+          <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
           Predicts which supporters are most likely to donate within the next 90 days.
           Use this to prioritize engagement outreach and personalize communications.
         </p>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          border: '1px solid #e2e8f0',
-          overflow: 'hidden',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
+            <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ backgroundColor: '#f7fafc' }}>
-                <th style={{ ...thStyle, cursor: 'pointer' }} onClick={() => toggleSort(donationSort, 'id', setDonationSort)}>
+                <tr className="border-b bg-muted/40">
+                  <th className={`${thCn} cursor-pointer`} onClick={() => toggleSort(donationSort, 'id', setDonationSort)}>
                   Supporter ID{sortIndicator(donationSort, 'id')}
                 </th>
-                <th style={thStyle}>Snapshot Date</th>
-                <th style={{ ...thStyle, cursor: 'pointer' }} onClick={() => toggleSort(donationSort, 'probability', setDonationSort)}>
+                  <th className={thCn}>Snapshot Date</th>
+                  <th className={`${thCn} cursor-pointer`} onClick={() => toggleSort(donationSort, 'probability', setDonationSort)}>
                   Donation Probability{sortIndicator(donationSort, 'probability')}
                 </th>
-                <th style={thStyle}>Likelihood</th>
-                <th style={thStyle}>Actual</th>
+                  <th className={thCn}>Likelihood</th>
+                  <th className={thCn}>Actual</th>
               </tr>
             </thead>
             <tbody>
@@ -225,11 +198,11 @@ export default function DonorInsightsPage() {
                 const likelihood = getDonationLikelihood(d.pWillDonate90d);
                 const colors = riskColors[likelihood === 'High' ? 'Low' : likelihood === 'Low' ? 'High' : 'Medium'];
                 return (
-                  <tr key={d.supporterId} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f7fafc' }}>
-                    <td style={tdStyle}>#{d.supporterId}</td>
-                    <td style={tdStyle}>{d.snapshotDate}</td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <tr key={d.supporterId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                      <td className={tdCn}>#{d.supporterId}</td>
+                      <td className={tdCn}>{d.snapshotDate}</td>
+                      <td className={tdCn}>
+                        <div className="flex items-center gap-2">
                         <div style={{
                           flex: 1,
                           height: '8px',
@@ -245,10 +218,10 @@ export default function DonorInsightsPage() {
                             borderRadius: '4px',
                           }} />
                         </div>
-                        <span style={{ fontWeight: 600, minWidth: '42px' }}>{(d.pWillDonate90d * 100).toFixed(0)}%</span>
+                          <span className="min-w-11 font-semibold">{(d.pWillDonate90d * 100).toFixed(0)}%</span>
                       </div>
                     </td>
-                    <td style={tdStyle}>
+                      <td className={tdCn}>
                       <span style={{
                         padding: '0.2rem 0.75rem',
                         borderRadius: '12px',
@@ -260,7 +233,7 @@ export default function DonorInsightsPage() {
                         {likelihood}
                       </span>
                     </td>
-                    <td style={tdStyle}>
+                      <td className={tdCn}>
                       <span style={{
                         padding: '0.2rem 0.75rem',
                         borderRadius: '12px',
@@ -280,16 +253,9 @@ export default function DonorInsightsPage() {
         </div>
       </section>
 
-      {/* Methodology Note */}
-      <section style={{
-        marginTop: '2.5rem',
-        backgroundColor: '#ebf8ff',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        border: '1px solid #bee3f8',
-      }}>
-        <h3 style={{ fontSize: '1rem', color: '#2b6cb0', margin: '0 0 0.5rem' }}>Model Details</h3>
-        <p style={{ fontSize: '0.875rem', color: '#4a5568', lineHeight: 1.7, margin: 0 }}>
+        <section className="mt-10 rounded-xl border border-info/30 bg-info/10 p-6">
+          <h3 className="mb-2 font-heading text-lg font-semibold text-info">Model Details</h3>
+          <p className="m-0 text-sm leading-relaxed text-foreground/80">
           <strong>Donor Churn:</strong> Logistic Regression & Random Forest models trained on donation history features
           (recency, frequency, tenure, donation mix). Uses temporal snapshots to prevent data leakage. Threshold: 50%.
           <br />
@@ -297,7 +263,7 @@ export default function DonorInsightsPage() {
           and supporter demographics. Predictions are decision-support tools — always combine with staff judgment.
         </p>
       </section>
-    </div>
+      </div>
     </AdminLayout>
   );
 }
@@ -306,45 +272,19 @@ function SummaryCard({ label, value, subtitle, color, bgColor }: {
   label: string; value: string; subtitle: string; color: string; bgColor: string;
 }) {
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '1.5rem',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-      border: '1px solid #e2e8f0',
-      borderLeft: `4px solid ${color}`,
-    }}>
-      <div style={{ fontSize: '0.8rem', color: '#718096', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      <div style={{ fontSize: '2rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+    <div className="rounded-xl border bg-card p-6 card-shadow" style={{ borderLeft: `4px solid ${color}` }}>
+      <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div style={{ color }} className="text-3xl font-bold leading-none">{value}</div>
       <div style={{
-        fontSize: '0.8rem',
-        color: '#a0aec0',
         marginTop: '0.5rem',
         backgroundColor: bgColor,
-        display: 'inline-block',
-        padding: '0.15rem 0.5rem',
-        borderRadius: '8px',
+        display: 'inline-block'
       }}>
-        {subtitle}
+        <span className="rounded-md px-2 py-0.5 text-xs text-muted-foreground">{subtitle}</span>
+        
       </div>
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: '0.75rem 1rem',
-  textAlign: 'left',
-  fontWeight: 600,
-  color: '#4a5568',
-  borderBottom: '2px solid #e2e8f0',
-  fontSize: '0.8rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  whiteSpace: 'nowrap',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.65rem 1rem',
-  borderBottom: '1px solid #e2e8f0',
-  color: '#2d3748',
-};
+const thCn = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap';
+const tdCn = 'px-4 py-3 text-foreground';

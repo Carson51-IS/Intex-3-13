@@ -12,32 +12,17 @@ export function CookieConsentBanner() {
         <aside
             role="dialog"
             aria-live="polite"
-            style={{
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                backgroundColor: '#1f2937',
-                color: '#f9fafb',
-                borderTop: '1px solid #374151',
-                padding: '0.9rem 1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '1rem',
-                flexWrap: 'wrap',
-            }}
+            className="fixed inset-x-0 bottom-0 z-[1000] flex flex-wrap items-center justify-between gap-4 border-t border-sidebar-border bg-sidebar px-4 py-4 text-sidebar-foreground"
         >
-            <div style={{ maxWidth: '900px' }}>
-                <p style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.35rem' }}>Cookie notice</p>
-                <p style={{ marginBottom: '0.35rem' }}>
+            <div className="max-w-4xl">
+                <p className="mb-1 text-sm font-semibold">Cookie notice</p>
+                <p className="mb-1 text-sm text-sidebar-foreground/90">
                     This demo uses cookies for sign-in and security features. Google sign-in may also
                     set provider cookies during the external login flow.
                 </p>
-                <p style={{ margin: 0 }}>
+                <p className="m-0 text-sm text-sidebar-foreground/90">
                     We are not adding analytics or marketing cookies in this phase. Read the{' '}
-                    <Link to="/cookies" style={{ color: '#93c5fd', textDecoration: 'underline' }}>
+                    <Link to="/cookies" className="text-info underline underline-offset-2">
                         cookie policy
                     </Link>{' '}
                     for more information.
@@ -47,15 +32,7 @@ export function CookieConsentBanner() {
             <button
                 type="button"
                 onClick={acknowledgeConsent}
-                style={{
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '0.5rem 0.9rem',
-                    backgroundColor: '#2563eb',
-                    color: '#ffffff',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                }}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
                 I understand
             </button>

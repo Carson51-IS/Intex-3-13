@@ -122,150 +122,63 @@ export default function ManageMFAPage() {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 200px)',
-        padding: '2rem',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '560px',
-          padding: '2.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          backgroundColor: 'white',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '1.5rem',
-            textAlign: 'center',
-            color: '#1a365d',
-            marginBottom: '1rem',
-          }}
-        >
+    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-8">
+      <div className="w-full max-w-2xl rounded-xl border bg-card p-10 card-shadow">
+        <h1 className="mb-4 text-center font-heading text-2xl font-semibold text-card-foreground">
           Manage MFA
         </h1>
-        <p
-          style={{
-            marginBottom: '1.25rem',
-            color: '#4a5568',
-            textAlign: 'center',
-            fontSize: '0.95rem',
-          }}
-        >
+        <p className="mb-5 text-center text-sm text-muted-foreground">
           Secure your account with an authenticator app and recovery codes.
         </p>
 
         {!isLoading && !isAuthenticated ? (
-          <div
-            style={{
-              padding: '0.75rem',
-              backgroundColor: '#ebf8ff',
-              color: '#2a4365',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-            }}
-          >
+          <div className="rounded-md border border-info/30 bg-info/10 px-3 py-2 text-sm text-foreground">
             Sign in first, then return to <Link to="/manage-mfa">Manage MFA</Link>.
           </div>
         ) : (
           <>
             {error && (
-              <div
-                style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#fed7d7',
-                  color: '#c53030',
-                  borderRadius: '4px',
-                  marginBottom: '1rem',
-                  fontSize: '0.875rem',
-                }}
-              >
+              <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </div>
             )}
 
             {successMessage && (
-              <div
-                style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#c6f6d5',
-                  color: '#276749',
-                  borderRadius: '4px',
-                  marginBottom: '1rem',
-                  fontSize: '0.875rem',
-                }}
-              >
+              <div className="mb-4 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
                 {successMessage}
               </div>
             )}
 
-            <div
-              style={{
-                marginBottom: '1rem',
-                color: '#4a5568',
-                fontSize: '0.95rem',
-              }}
-            >
+            <div className="mb-4 text-sm text-muted-foreground">
               {twoFactorStatus?.isTwoFactorEnabled
                 ? `Two-factor authentication is enabled. ${twoFactorStatus.recoveryCodesLeft} recovery codes left.`
                 : 'Two-factor authentication is disabled. Scan the QR code below and enter the one-time code from your authenticator app.'}
             </div>
 
             {!twoFactorStatus?.isTwoFactorEnabled && (
-              <div
-                style={{
-                  marginBottom: '1.25rem',
-                  padding: '1rem',
-                  borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: '#f7fafc',
-                }}
-              >
-                <p style={{ marginTop: 0, marginBottom: '0.75rem', color: '#2d3748', fontWeight: 600 }}>
+              <div className="mb-5 rounded-lg border border-border bg-muted/30 p-4">
+                <p className="mb-3 mt-0 font-semibold text-foreground">
                   Authenticator setup
                 </p>
                 {qrCodeDataUrl ? (
                   <img
                     src={qrCodeDataUrl}
                     alt="MFA QR code"
-                    style={{
-                      display: 'block',
-                      width: '224px',
-                      height: '224px',
-                      margin: '0 auto 0.75rem',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '6px',
-                      backgroundColor: 'white',
-                    }}
+                    className="mx-auto mb-3 h-56 w-56 rounded-md border bg-white"
                   />
                 ) : (
-                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#718096' }}>
+                  <p className="m-0 text-sm text-muted-foreground">
                     QR code unavailable. You can still enter the setup key manually.
                   </p>
                 )}
-                <p style={{ marginBottom: 0, fontSize: '0.8rem', color: '#718096', wordBreak: 'break-all' }}>
+                <p className="mb-0 break-all text-xs text-muted-foreground">
                   Setup key: <code>{twoFactorStatus?.sharedKey ?? 'Unavailable'}</code>
                 </p>
               </div>
             )}
 
-            <form onSubmit={handleEnable} style={{ marginBottom: '1rem' }}>
-              <label
-                htmlFor="authenticationCode"
-                style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  fontWeight: 500,
-                  color: '#4a5568',
-                }}
-              >
+            <form onSubmit={handleEnable} className="mb-4">
+              <label htmlFor="authenticationCode" className="mb-2 block text-sm font-medium text-foreground">
                 Authentication Code
               </label>
               <input
@@ -275,51 +188,22 @@ export default function ManageMFAPage() {
                 onChange={(e) => setAuthenticationCode(e.target.value)}
                 placeholder="Enter 6-digit code"
                 required={!twoFactorStatus?.isTwoFactorEnabled}
-                style={{
-                  width: '100%',
-                  padding: '0.625rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  boxSizing: 'border-box',
-                  marginBottom: '0.75rem',
-                }}
+                className="mb-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  backgroundColor: isSubmitting ? '#a0aec0' : '#2b6cb0',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                }}
+                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? 'Enabling...' : 'Enable MFA'}
               </button>
             </form>
 
-            <form onSubmit={handleDisable} style={{ marginBottom: '0.75rem' }}>
+            <form onSubmit={handleDisable} className="mb-3">
               <button
                 type="submit"
                 disabled={isSubmitting || !twoFactorStatus?.isTwoFactorEnabled}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  backgroundColor: 'white',
-                  color: '#c53030',
-                  border: '1px solid #feb2b2',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: isSubmitting || !twoFactorStatus?.isTwoFactorEnabled ? 'not-allowed' : 'pointer',
-                  opacity: !twoFactorStatus?.isTwoFactorEnabled ? 0.7 : 1,
-                }}
+                className="w-full rounded-md border border-destructive/40 bg-background px-4 py-2.5 text-sm font-semibold text-destructive transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? 'Disabling...' : 'Disable MFA'}
               </button>
@@ -329,46 +213,21 @@ export default function ManageMFAPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || !twoFactorStatus?.isTwoFactorEnabled}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  backgroundColor: 'white',
-                  color: '#2b6cb0',
-                  border: '1px solid #90cdf4',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: isSubmitting || !twoFactorStatus?.isTwoFactorEnabled ? 'not-allowed' : 'pointer',
-                  opacity: !twoFactorStatus?.isTwoFactorEnabled ? 0.7 : 1,
-                }}
+                className="w-full rounded-md border border-info/40 bg-background px-4 py-2.5 text-sm font-semibold text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? 'Resetting...' : 'Reset Recovery Codes'}
               </button>
             </form>
 
             {recoveryCodes.length > 0 && (
-              <div
-                style={{
-                  marginTop: '1.25rem',
-                  padding: '1rem',
-                  borderRadius: '6px',
-                  backgroundColor: '#f7fafc',
-                  border: '1px solid #e2e8f0',
-                }}
-              >
-                <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: '#2d3748' }}>Recovery Codes</h3>
-                <p style={{ marginTop: 0, color: '#718096', fontSize: '0.8rem' }}>
+              <div className="mt-5 rounded-lg border border-border bg-muted/30 p-4">
+                <h3 className="mb-2 mt-0 font-heading text-base font-semibold text-foreground">Recovery Codes</h3>
+                <p className="mt-0 text-xs text-muted-foreground">
                   Save these codes somewhere safe. Each code can be used once.
                 </p>
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: '1.2rem',
-                    color: '#2d3748',
-                  }}
-                >
+                <ul className="m-0 list-disc pl-5 text-foreground">
                   {recoveryCodes.map((code) => (
-                    <li key={code} style={{ marginBottom: '0.25rem' }}>
+                    <li key={code} className="mb-1">
                       <code>{code}</code>
                     </li>
                   ))}

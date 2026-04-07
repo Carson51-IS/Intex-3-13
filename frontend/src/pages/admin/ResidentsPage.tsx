@@ -160,7 +160,7 @@ export default function ResidentsPage() {
           {(statusFilter || riskFilter || categoryFilter || safehouseFilter) && (
             <button
               onClick={() => setSearchParams(new URLSearchParams({ page: '1' }))}
-              style={{ padding: '0.4rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f7fafc', cursor: 'pointer', fontSize: '0.8rem', color: '#718096' }}
+              className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/80"
             >
               Clear Filters
             </button>
@@ -175,11 +175,11 @@ export default function ResidentsPage() {
 
         {/* Table */}
         <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+          <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
+              <tr className="border-b-2 bg-muted/40">
                 {['Case No.', 'Code', 'Status', 'Risk Level', 'Category', 'Social Worker', 'Admitted', 'Actions'].map((h) => (
-                  <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, color: '#4a5568', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {h}
                   </th>
                 ))}
@@ -188,13 +188,13 @@ export default function ResidentsPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: '#a0aec0' }}>
+                  <td colSpan={8} className="p-12 text-center text-muted-foreground">
                     Loading…
                   </td>
                 </tr>
               ) : residents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: '#a0aec0' }}>
+                  <td colSpan={8} className="p-12 text-center text-muted-foreground">
                     No residents found matching the current filters.
                   </td>
                 </tr>
@@ -202,30 +202,27 @@ export default function ResidentsPage() {
                 residents.map((r, i) => (
                   <tr
                     key={r.residentId}
-                    style={{
-                      borderBottom: '1px solid #e2e8f0',
-                      backgroundColor: i % 2 === 0 ? 'white' : '#fafafa',
-                    }}
+                    className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}
                   >
-                    <td style={tdStyle}>{r.caseControlNo || '—'}</td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', color: '#2b6cb0', fontWeight: 600 }}>{r.internalCode}</td>
-                    <td style={tdStyle}>
+                    <td className={tdCn}>{r.caseControlNo || '—'}</td>
+                    <td className={`${tdCn} font-mono font-semibold text-primary`}>{r.internalCode}</td>
+                    <td className={tdCn}>
                       <Badge text={r.caseStatus} color={statusColor[r.caseStatus] ?? '#718096'} />
                     </td>
-                    <td style={tdStyle}>
+                    <td className={tdCn}>
                       <Badge text={r.currentRiskLevel} color={riskColor[r.currentRiskLevel] ?? '#718096'} />
                     </td>
-                    <td style={{ ...tdStyle, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td className={`${tdCn} max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap`}>
                       {r.caseCategory || '—'}
                     </td>
-                    <td style={{ ...tdStyle, maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td className={`${tdCn} max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap`}>
                       {r.assignedSocialWorker || '—'}
                     </td>
-                    <td style={tdStyle}>{r.dateOfAdmission ? new Date(r.dateOfAdmission).toLocaleDateString() : '—'}</td>
-                    <td style={tdStyle}>
+                    <td className={tdCn}>{r.dateOfAdmission ? new Date(r.dateOfAdmission).toLocaleDateString() : '—'}</td>
+                    <td className={tdCn}>
                       <Link
                         to={`/admin/residents/${r.residentId}`}
-                        style={{ color: '#2b6cb0', textDecoration: 'none', fontWeight: 600, fontSize: '0.8rem' }}
+                        className="text-xs font-semibold text-primary no-underline hover:underline"
                       >
                         View →
                       </Link>
@@ -239,13 +236,13 @@ export default function ResidentsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+          <div className="mt-6 flex items-center justify-center gap-2">
             <PaginationBtn
               label="← Prev"
               disabled={page <= 1}
               onClick={() => setFilter('page', String(page - 1))}
             />
-            <span style={{ fontSize: '0.875rem', color: '#4a5568', padding: '0 0.5rem' }}>
+            <span className="px-2 text-sm text-muted-foreground">
               Page {page} of {totalPages}
             </span>
             <PaginationBtn
@@ -272,22 +269,14 @@ function FilterSelect({
   onChange: (v: string) => void;
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#718096', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+    <div className="flex flex-col gap-0.5">
+      <label className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          padding: '0.4rem 0.6rem',
-          border: '1px solid #e2e8f0',
-          borderRadius: '6px',
-          fontSize: '0.875rem',
-          backgroundColor: value ? '#ebf8ff' : 'white',
-          color: value ? '#2b6cb0' : '#4a5568',
-          cursor: 'pointer',
-        }}
+        className={`cursor-pointer rounded-md border border-border px-2 py-1.5 text-sm transition-colors ${value ? 'bg-primary/5 font-medium text-primary' : 'bg-background text-foreground'}`}
       >
         <option value="">All</option>
         {options.map((opt) =>
@@ -304,15 +293,7 @@ function FilterSelect({
 
 function Badge({ text, color }: { text: string; color: string }) {
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '0.2rem 0.5rem',
-      borderRadius: '12px',
-      fontSize: '0.75rem',
-      fontWeight: 600,
-      backgroundColor: `${color}18`,
-      color,
-    }}>
+    <span style={{ backgroundColor: `${color}18`, color }} className="inline-block rounded-full px-2 py-1 text-xs font-semibold">
       {text}
     </span>
   );
@@ -323,24 +304,10 @@ function PaginationBtn({ label, disabled, onClick }: { label: string; disabled: 
     <button
       onClick={onClick}
       disabled={disabled}
-      style={{
-        padding: '0.4rem 0.9rem',
-        border: '1px solid #e2e8f0',
-        borderRadius: '6px',
-        backgroundColor: disabled ? '#f7fafc' : 'white',
-        color: disabled ? '#a0aec0' : '#2b6cb0',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        fontWeight: 500,
-        fontSize: '0.875rem',
-      }}
+      className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
     >
       {label}
     </button>
   );
 }
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.75rem 1rem',
-  color: '#4a5568',
-  verticalAlign: 'middle',
-};
+const tdCn = 'px-4 py-3 align-middle text-foreground/85';

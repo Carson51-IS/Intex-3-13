@@ -81,14 +81,13 @@ function GuestOnlyRoute({ children }: { children: ReactNode }) {
 
 function AppRoutes() {
   const { pathname } = useLocation();
-  const isLanding = pathname === '/';
   const isAdminRoute = pathname.startsWith('/admin');
-  const showPublicChrome = !isLanding && !isAdminRoute;
+  const showPublicChrome = !isAdminRoute;
 
   return (
     <div className="flex min-h-screen flex-col">
       {showPublicChrome && <Navbar />}
-      <main className="flex-1 bg-[#f7fafc]">
+      <main className={`flex-1 bg-[#f7fafc] ${showPublicChrome ? 'pt-16' : ''}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/catalog" element={<Navigate to="/" replace />} />

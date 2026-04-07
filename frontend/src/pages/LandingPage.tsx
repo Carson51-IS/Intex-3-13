@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import heroBeach from "../assets/hero-beach.png";
-import havenLightLogoMark from "../assets/haven-light-logo-new.svg";
-import { useAuth } from "../context/AuthContext";
 
 function IconBase({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -17,9 +15,6 @@ const Shield = ({ className }: { className?: string }) => <IconBase className={c
 const BookOpen = ({ className }: { className?: string }) => <IconBase className={className}><path d="M2 6.5A2.5 2.5 0 0 1 4.5 4H11v16H4.5A2.5 2.5 0 0 0 2 22z" /><path d="M22 6.5A2.5 2.5 0 0 0 19.5 4H13v16h6.5A2.5 2.5 0 0 1 22 22z" /></IconBase>;
 const Users = ({ className }: { className?: string }) => <IconBase className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.9" /><path d="M16 3.1a4 4 0 0 1 0 7.8" /></IconBase>;
 const ArrowRight = ({ className }: { className?: string }) => <IconBase className={className}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></IconBase>;
-const Mail = ({ className }: { className?: string }) => <IconBase className={className}><path d="M4 4h16v16H4z" /><path d="m4 7 8 6 8-6" /></IconBase>;
-const Phone = ({ className }: { className?: string }) => <IconBase className={className}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.3 19.3 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.2 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .8 2.9a2 2 0 0 1-.5 2.1L8.3 10a16 16 0 0 0 5.7 5.7l1.3-1.2a2 2 0 0 1 2.1-.5c.9.4 1.9.7 2.9.8A2 2 0 0 1 22 16.9z" /></IconBase>;
-const MapPin = ({ className }: { className?: string }) => <IconBase className={className}><path d="M12 22s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12z" /><circle cx="12" cy="10" r="2.5" /></IconBase>;
 
 const stats = [
   { label: "Girls Served", value: "60+", icon: Heart },
@@ -52,43 +47,10 @@ const steps = [
 export default function LandingPage() {
   const [donationAmount, setDonationAmount] = useState<number | null>(1000);
   const amounts = [500, 1000, 2500, 5000];
-  const { user } = useAuth();
-
-  const loginTarget = !user
-    ? "/login"
-    : user.roles.includes("Admin")
-      ? "/admin"
-      : user.roles.includes("Donor")
-        ? "/donor"
-        : "/";
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="fixed top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-1">
-            <img src={havenLightLogoMark} alt="Haven Light logo mark" className="h-10 w-auto" />
-            <div className="leading-tight">
-              <div className="font-heading text-lg font-semibold text-foreground">Haven Light</div>
-              <div className="font-body text-xs tracking-[0.18em] text-muted-foreground">PHILIPPINES</div>
-            </div>
-          </div>
-          <nav className="hidden items-center gap-8 font-body text-sm md:flex">
-            <a href="#mission" className="text-muted-foreground transition-colors hover:text-foreground">Mission</a>
-            <a href="#impact" className="text-muted-foreground transition-colors hover:text-foreground">Impact</a>
-            <a href="#how" className="text-muted-foreground transition-colors hover:text-foreground">How It Works</a>
-            <a href="#donate" className="text-muted-foreground transition-colors hover:text-foreground">Donate</a>
-            <Link
-              to={loginTarget}
-              className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition-all hover:translate-y-[-1px] hover:opacity-95"
-            >
-              {user ? "Dashboard" : "Login"}
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden pt-16">
+      <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden">
         <img src={heroBeach} alt="Girls standing together on a beach at sunrise" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-primary/55" />
         <div className="absolute inset-0 hero-gradient opacity-40" />
@@ -204,40 +166,6 @@ export default function LandingPage() {
           </p>
         </div>
       </section>
-
-      <footer className="hero-gradient py-12">
-        <div className="container mx-auto px-6">
-          <div className="grid gap-8 font-body text-sm text-primary-foreground/80 md:grid-cols-3">
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <img src={havenLightLogoMark} alt="Haven Light logo mark" className="h-7 w-auto" />
-                <span className="font-heading text-lg font-semibold text-primary-foreground">Haven Light Philippines</span>
-              </div>
-              <p>Providing safe homes and healing for girls who are survivors of abuse and trafficking since 2013.</p>
-            </div>
-            <div>
-              <h4 className="mb-3 font-heading font-semibold text-primary-foreground">Contact</h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> info@havenlight.ph</div>
-                <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> +63 (2) 8123-4567</div>
-                <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Metro Manila, Philippines</div>
-              </div>
-            </div>
-            <div>
-              <h4 className="mb-3 font-heading font-semibold text-primary-foreground">Quick Links</h4>
-              <div className="space-y-2">
-                <a href="#mission" className="block transition-colors hover:text-primary-foreground">Our Mission</a>
-                <a href="#impact" className="block transition-colors hover:text-primary-foreground">Impact</a>
-                <a href="#donate" className="block transition-colors hover:text-primary-foreground">Donate</a>
-                <Link to="/privacy" className="block transition-colors hover:text-primary-foreground">Privacy Policy</Link>
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 border-t border-primary-foreground/20 pt-6 text-center font-body text-xs text-primary-foreground/50">
-            © 2025 Haven Light Philippines. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -14,80 +14,61 @@ export default function ResidentInsightsPage() {
 
   return (
     <AdminLayout>
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <Link
-        to="/admin/insights"
-        style={{ display: 'inline-block', marginBottom: '1rem', color: '#2b6cb0', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}
-      >
-        ← Back to ML-Powered Insights
-      </Link>
-      <h1 style={{ fontSize: '1.75rem', color: '#1a365d', marginBottom: '0.5rem' }}>Resident Care Intelligence</h1>
-      <p style={{ color: '#718096', marginBottom: '2rem' }}>
-        ML-powered resident analytics: reintegration readiness assessment and safehouse incident forecasting
-      </p>
-
-      {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
-        {Object.entries(statusCounts).map(([status, count]) => (
-          <div key={status} style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '1.25rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-            border: '1px solid #e2e8f0',
-            borderTop: `4px solid ${statusColors[status] ?? '#718096'}`,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: statusColors[status] ?? '#718096' }}>{count}</div>
-            <div style={{ fontSize: '0.85rem', color: '#718096', marginTop: '0.25rem' }}>Predicted {status}</div>
-          </div>
-        ))}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '1.25rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          border: '1px solid #e2e8f0',
-          borderTop: `4px solid ${flaggedSafehouses.length > 0 ? '#dd6b20' : '#38a169'}`,
-          textAlign: 'center',
-        }}>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: flaggedSafehouses.length > 0 ? '#dd6b20' : '#38a169' }}>
-            {flaggedSafehouses.length}
-          </div>
-          <div style={{ fontSize: '0.85rem', color: '#718096', marginTop: '0.25rem' }}>Safehouses Flagged</div>
-        </div>
-      </div>
-
-      {/* Reintegration Readiness */}
-      <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{
-          fontSize: '1.3rem',
-          color: '#1a365d',
-          marginBottom: '1rem',
-          paddingLeft: '1rem',
-          borderLeft: '4px solid #3182ce',
-        }}>
-          Reintegration Readiness Assessment
-        </h2>
-        <p style={{ color: '#4a5568', marginBottom: '1.25rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
-          Predicts each resident's reintegration readiness status based on counseling sessions, education progress,
-          health scores, intervention plans, and behavioral incidents. These predictions support — but never replace — staff decision-making.
+      <div className="mx-auto w-full max-w-6xl">
+        <Link
+          to="/admin/insights"
+          className="mb-4 inline-block text-sm font-semibold text-primary no-underline hover:underline"
+        >
+          ← Back to ML-Powered Insights
+        </Link>
+        <h1 className="font-heading text-3xl font-bold text-foreground">Resident Care Intelligence</h1>
+        <p className="mb-8 mt-2 text-sm text-muted-foreground md:text-base">
+          ML-powered resident analytics: reintegration readiness assessment and safehouse incident forecasting.
         </p>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          border: '1px solid #e2e8f0',
-          overflow: 'hidden',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+
+        <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Object.entries(statusCounts).map(([status, count]) => (
+            <div
+              key={status}
+              className="rounded-xl border bg-card p-5 text-center card-shadow"
+              style={{ borderTop: `4px solid ${statusColors[status] ?? '#718096'}` }}
+            >
+              <div style={{ color: statusColors[status] ?? '#718096' }} className="text-3xl font-bold">{count}</div>
+              <div className="mt-1 text-sm text-muted-foreground">Predicted {status}</div>
+            </div>
+          ))}
+          <div
+            className="rounded-xl border bg-card p-5 text-center card-shadow"
+            style={{ borderTop: `4px solid ${flaggedSafehouses.length > 0 ? '#dd6b20' : '#38a169'}` }}
+          >
+            <div
+              style={{ color: flaggedSafehouses.length > 0 ? '#dd6b20' : '#38a169' }}
+              className="text-3xl font-bold"
+            >
+              {flaggedSafehouses.length}
+            </div>
+            <div className="mt-1 text-sm text-muted-foreground">Safehouses Flagged</div>
+          </div>
+        </div>
+
+        <section className="mb-12">
+          <h2 className="mb-4 border-l-4 border-primary pl-3 font-heading text-2xl font-semibold text-foreground">
+          Reintegration Readiness Assessment
+          </h2>
+          <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
+          Predicts each resident's reintegration readiness status based on counseling sessions, education progress,
+            health scores, intervention plans, and behavioral incidents. These predictions support, but never replace,
+            staff decision-making.
+          </p>
+          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
+            <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ backgroundColor: '#f7fafc' }}>
-                <th style={thStyle}>Resident ID</th>
-                <th style={thStyle}>Predicted Status</th>
-                <th style={thStyle}>Probability Breakdown</th>
-                <th style={thStyle}>Actual Status</th>
-                <th style={thStyle}>Match</th>
+                <tr className="border-b bg-muted/40">
+                  <th className={thCn}>Resident ID</th>
+                  <th className={thCn}>Predicted Status</th>
+                  <th className={thCn}>Probability Breakdown</th>
+                  <th className={thCn}>Actual Status</th>
+                  <th className={thCn}>Match</th>
               </tr>
             </thead>
             <tbody>
@@ -101,9 +82,9 @@ export default function ResidentInsightsPage() {
                 ].filter(p => p.value > 0);
 
                 return (
-                  <tr key={r.residentId} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f7fafc' }}>
-                    <td style={tdStyle}>#{r.residentId}</td>
-                    <td style={tdStyle}>
+                    <tr key={r.residentId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                      <td className={tdCn}>#{r.residentId}</td>
+                      <td className={tdCn}>
                       <span style={{
                         padding: '0.2rem 0.75rem',
                         borderRadius: '12px',
@@ -115,15 +96,8 @@ export default function ResidentInsightsPage() {
                         {r.predictedStatus}
                       </span>
                     </td>
-                    <td style={{ ...tdStyle, minWidth: '250px' }}>
-                      {/* Stacked probability bar */}
-                      <div style={{
-                        display: 'flex',
-                        height: '20px',
-                        borderRadius: '4px',
-                        overflow: 'hidden',
-                        backgroundColor: '#e2e8f0',
-                      }}>
+                      <td className={tdCn}>
+                        <div className="flex h-5 overflow-hidden rounded bg-muted">
                         {probs.map((p) => (
                           <div
                             key={p.label}
@@ -144,10 +118,10 @@ export default function ResidentInsightsPage() {
                             {p.value >= 0.15 ? `${(p.value * 100).toFixed(0)}%` : ''}
                           </div>
                         ))}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-3">
                         {probs.map(p => (
-                          <span key={p.label} style={{ fontSize: '0.7rem', color: '#718096' }}>
+                            <span key={p.label} className="text-xs text-muted-foreground">
                             <span style={{
                               display: 'inline-block',
                               width: '6px',
@@ -159,9 +133,9 @@ export default function ResidentInsightsPage() {
                             {p.label}
                           </span>
                         ))}
-                      </div>
-                    </td>
-                    <td style={tdStyle}>
+                        </div>
+                      </td>
+                      <td className={tdCn}>
                       <span style={{
                         padding: '0.2rem 0.75rem',
                         borderRadius: '12px',
@@ -173,10 +147,11 @@ export default function ResidentInsightsPage() {
                         {r.actualStatus}
                       </span>
                     </td>
-                    <td style={tdStyle}>
+                      <td className={tdCn}>
                       <span style={{
-                        fontSize: '1.1rem',
+                        fontSize: '1rem',
                         color: isMatch ? '#38a169' : '#e53e3e',
+                          fontWeight: 700,
                       }}>
                         {isMatch ? 'Yes' : 'No'}
                       </span>
@@ -186,45 +161,31 @@ export default function ResidentInsightsPage() {
               })}
             </tbody>
           </table>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Safehouse Incident Forecast */}
-      <section>
-        <h2 style={{
-          fontSize: '1.3rem',
-          color: '#1a365d',
-          marginBottom: '1rem',
-          paddingLeft: '1rem',
-          borderLeft: '4px solid #dd6b20',
-        }}>
+        <section>
+          <h2 className="mb-4 border-l-4 border-warning pl-3 font-heading text-2xl font-semibold text-foreground">
           Safehouse Incident Forecast
-        </h2>
-        <p style={{ color: '#4a5568', marginBottom: '1.25rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
+          </h2>
+          <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
           Monthly incident volume predictions per safehouse using a Random Forest model.
           Forecasts help inform staffing decisions and proactive safety measures.
-        </p>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '1.25rem',
-        }}>
+          </p>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {forecasts.map(f => {
             const isFlagged = f.maxPredicted > 0;
             const monthlyData = safehouseIncidentForecasts.filter(d => d.safehouseId === f.safehouseId);
             return (
-              <div key={f.safehouseId} style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                border: `1px solid ${isFlagged ? '#fed7d7' : '#e2e8f0'}`,
-                borderLeft: `4px solid ${isFlagged ? '#dd6b20' : '#38a169'}`,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1.1rem', color: '#2d3748', margin: 0 }}>
+                <div
+                  key={f.safehouseId}
+                  className="rounded-xl border bg-card p-6 card-shadow"
+                  style={{ borderLeft: `4px solid ${isFlagged ? '#dd6b20' : '#38a169'}` }}
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-semibold text-card-foreground">
                     Safehouse #{f.safehouseId}
-                  </h3>
+                    </h3>
                   <span style={{
                     fontSize: '0.75rem',
                     padding: '0.2rem 0.6rem',
@@ -235,26 +196,25 @@ export default function ResidentInsightsPage() {
                   }}>
                     {isFlagged ? 'Elevated Risk' : 'Low Risk'}
                   </span>
-                </div>
+                  </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: '#718096' }}>Peak Forecast</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: isFlagged ? '#dd6b20' : '#38a169' }}>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Peak Forecast</div>
+                      <div style={{ color: isFlagged ? '#dd6b20' : '#38a169' }} className="text-xl font-bold">
                       {f.maxPredicted.toFixed(2)}
+                      </div>
                     </div>
-                  </div>
                   <div>
-                    <div style={{ fontSize: '0.75rem', color: '#718096' }}>Avg Forecast</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#2d3748' }}>
+                      <div className="text-xs text-muted-foreground">Avg Forecast</div>
+                      <div className="text-xl font-bold text-foreground">
                       {f.avgPredicted.toFixed(3)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Mini trend bar */}
-                <div style={{ fontSize: '0.75rem', color: '#718096', marginBottom: '0.35rem' }}>Monthly Forecast Trend</div>
-                <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-end', height: '32px' }}>
+                  <div className="mb-1 text-xs text-muted-foreground">Monthly Forecast Trend</div>
+                  <div className="flex h-8 items-end gap-0.5">
                   {monthlyData.map((m, idx) => {
                     const barHeight = Math.max(2, (m.predictedNextMonth / Math.max(f.maxPredicted, 0.01)) * 30);
                     return (
@@ -270,27 +230,20 @@ export default function ResidentInsightsPage() {
                       />
                     );
                   })}
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                    <span>{monthlyData[0]?.monthStart}</span>
+                    <span>{monthlyData[monthlyData.length - 1]?.monthStart}</span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: '#a0aec0', marginTop: '0.15rem' }}>
-                  <span>{monthlyData[0]?.monthStart}</span>
-                  <span>{monthlyData[monthlyData.length - 1]?.monthStart}</span>
-                </div>
-              </div>
             );
           })}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Methodology Note */}
-      <section style={{
-        marginTop: '2.5rem',
-        backgroundColor: '#ebf8ff',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        border: '1px solid #bee3f8',
-      }}>
-        <h3 style={{ fontSize: '1rem', color: '#2b6cb0', margin: '0 0 0.5rem' }}>Model Details</h3>
-        <p style={{ fontSize: '0.875rem', color: '#4a5568', lineHeight: 1.7, margin: 0 }}>
+        <section className="mt-10 rounded-xl border border-info/30 bg-info/10 p-6">
+          <h3 className="mb-2 font-heading text-lg font-semibold text-info">Model Details</h3>
+          <p className="m-0 text-sm leading-relaxed text-foreground/80">
           <strong>Reintegration Readiness:</strong> Decision Tree classifier (max depth 5) trained on counseling frequency,
           education progress, health scores, intervention achievement, incident counts, and home visitation outcomes.
           Optimized for precision on "ready" predictions due to safety stakes.
@@ -298,27 +251,12 @@ export default function ResidentInsightsPage() {
           <strong>Incident Forecast:</strong> Random Forest regression (400 trees) with lagged incident counts,
           active residents, education/health metrics, and seasonal features. Time-based train/test split prevents data leakage.
           All predictions are decision-support tools — staff confirmation is always required.
-        </p>
-      </section>
-    </div>
+          </p>
+        </section>
+      </div>
     </AdminLayout>
   );
 }
 
-const thStyle: React.CSSProperties = {
-  padding: '0.75rem 1rem',
-  textAlign: 'left',
-  fontWeight: 600,
-  color: '#4a5568',
-  borderBottom: '2px solid #e2e8f0',
-  fontSize: '0.8rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  whiteSpace: 'nowrap',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.65rem 1rem',
-  borderBottom: '1px solid #e2e8f0',
-  color: '#2d3748',
-};
+const thCn = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap';
+const tdCn = 'px-4 py-3 text-foreground align-top';

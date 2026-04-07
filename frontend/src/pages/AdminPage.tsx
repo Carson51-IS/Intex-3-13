@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import type { CSSProperties } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 type AccessLevel = 'Admin' | 'Staff' | 'Viewer';
@@ -21,13 +20,6 @@ const seedUsers: AdminUserRow[] = [
   { id: 1004, name: 'Joshua Lim', email: 'joshua.lim@havenlight.org', role: 'Staff', status: 'Suspended', lastSeen: '6 days ago' },
 ];
 
-const cardStyle: CSSProperties = {
-  backgroundColor: 'white',
-  borderRadius: '12px',
-  border: '1px solid #e2e8f0',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-};
-
 export default function AdminPage() {
   const { isLoading, isAdmin, user } = useAuth();
   const [search, setSearch] = useState('');
@@ -45,15 +37,15 @@ export default function AdminPage() {
   }, [search, statusFilter, roleFilter]);
 
   if (isLoading) {
-    return <div style={{ padding: '2rem' }}>Loading admin tools...</div>;
+    return <div className="p-8 text-muted-foreground">Loading admin tools...</div>;
   }
 
   if (!isAdmin) {
     return (
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
-        <div style={{ ...cardStyle, padding: '1.25rem' }}>
-          <h1 style={{ marginTop: 0, color: '#1a365d' }}>Admin Access Required</h1>
-          <p style={{ marginBottom: 0, color: '#4a5568' }}>
+      <div className="mx-auto max-w-4xl p-8">
+        <div className="rounded-xl border bg-card p-5 card-shadow">
+          <h1 className="mt-0 font-heading text-2xl font-semibold text-foreground">Admin Access Required</h1>
+          <p className="mb-0 text-muted-foreground">
             You are signed in as <strong>{user?.email ?? 'unknown user'}</strong>, but this page is only available to administrators.
           </p>
         </div>
@@ -62,34 +54,25 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem' }}>
-      <h1 style={{ fontSize: '1.75rem', color: '#1a365d', marginBottom: '0.4rem' }}>Admin User Management</h1>
-      <p style={{ color: '#4a5568', marginTop: 0, marginBottom: '1.25rem' }}>
+    <div className="mx-auto max-w-6xl p-8">
+      <h1 className="mb-1 font-heading text-3xl font-bold text-foreground">Admin User Management</h1>
+      <p className="mb-5 mt-0 text-muted-foreground">
         Monitor account access, review status, and quickly search members of the admin portal.
       </p>
 
-      <div
-        style={{
-          ...cardStyle,
-          display: 'grid',
-          gridTemplateColumns: '1.8fr 1fr 1fr',
-          gap: '0.75rem',
-          padding: '1rem',
-          marginBottom: '1rem',
-        }}
-      >
+      <div className="mb-4 grid gap-3 rounded-xl border bg-card p-4 card-shadow md:grid-cols-[1.8fr_1fr_1fr]">
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search by name or email..."
           aria-label="Search users"
-          style={inputStyle}
+          className={inputCn}
         />
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as UserStatus | 'All')}
           aria-label="Filter by status"
-          style={inputStyle}
+          className={inputCn}
         >
           <option value="All">All statuses</option>
           <option value="Active">Active</option>
@@ -100,7 +83,7 @@ export default function AdminPage() {
           value={roleFilter}
           onChange={(event) => setRoleFilter(event.target.value as AccessLevel | 'All')}
           aria-label="Filter by role"
-          style={inputStyle}
+          className={inputCn}
         >
           <option value="All">All roles</option>
           <option value="Admin">Admin</option>
@@ -109,38 +92,38 @@ export default function AdminPage() {
         </select>
       </div>
 
-      <div style={{ ...cardStyle, overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '760px' }}>
+      <div className="overflow-x-auto rounded-xl border bg-card card-shadow">
+        <table className="w-full min-w-[760px] border-collapse">
           <thead>
-            <tr style={{ backgroundColor: '#f7fafc', textAlign: 'left' }}>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Role</th>
-              <th style={thStyle}>Status</th>
-              <th style={thStyle}>Last Seen</th>
+            <tr className="bg-muted/40 text-left">
+              <th className={thCn}>Name</th>
+              <th className={thCn}>Email</th>
+              <th className={thCn}>Role</th>
+              <th className={thCn}>Status</th>
+              <th className={thCn}>Last Seen</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ padding: '1rem', color: '#718096' }}>
+                <td colSpan={5} className="p-4 text-muted-foreground">
                   No users match your current filters.
                 </td>
               </tr>
             ) : (
               filteredUsers.map((row) => (
-                <tr key={row.id} style={{ borderTop: '1px solid #edf2f7' }}>
-                  <td style={tdStyle}>
-                    <div style={{ fontWeight: 600, color: '#2d3748' }}>{row.name}</div>
+                <tr key={row.id} className="border-t">
+                  <td className={tdCn}>
+                    <div className="font-semibold text-foreground">{row.name}</div>
                   </td>
-                  <td style={tdStyle}>{row.email}</td>
-                  <td style={tdStyle}>
-                    <span style={getRoleBadgeStyle(row.role)}>{row.role}</span>
+                  <td className={tdCn}>{row.email}</td>
+                  <td className={tdCn}>
+                    <span className={getRoleBadgeClass(row.role)}>{row.role}</span>
                   </td>
-                  <td style={tdStyle}>
-                    <span style={getStatusBadgeStyle(row.status)}>{row.status}</span>
+                  <td className={tdCn}>
+                    <span className={getStatusBadgeClass(row.status)}>{row.status}</span>
                   </td>
-                  <td style={tdStyle}>{row.lastSeen}</td>
+                  <td className={tdCn}>{row.lastSeen}</td>
                 </tr>
               ))
             )}
@@ -151,57 +134,24 @@ export default function AdminPage() {
   );
 }
 
-const inputStyle: CSSProperties = {
-  width: '100%',
-  border: '1px solid #cbd5e0',
-  borderRadius: '8px',
-  padding: '0.6rem 0.75rem',
-  fontSize: '0.95rem',
-  color: '#2d3748',
-};
+const inputCn = 'w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground';
+const thCn = 'px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+const tdCn = 'px-4 py-3 text-sm text-foreground';
 
-const thStyle: CSSProperties = {
-  padding: '0.85rem 1rem',
-  fontSize: '0.8rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
-  color: '#4a5568',
-};
-
-const tdStyle: CSSProperties = {
-  padding: '0.95rem 1rem',
-  color: '#2d3748',
-  fontSize: '0.92rem',
-};
-
-function getRoleBadgeStyle(role: AccessLevel): CSSProperties {
-  const styles: Record<AccessLevel, CSSProperties> = {
-    Admin: { color: '#2b6cb0', backgroundColor: '#ebf8ff' },
-    Staff: { color: '#2f855a', backgroundColor: '#f0fff4' },
-    Viewer: { color: '#6b46c1', backgroundColor: '#faf5ff' },
+function getRoleBadgeClass(role: AccessLevel): string {
+  const styles: Record<AccessLevel, string> = {
+    Admin: 'text-primary bg-primary/10',
+    Staff: 'text-success bg-success/10',
+    Viewer: 'text-purple-700 bg-purple-100',
   };
-  return {
-    ...styles[role],
-    display: 'inline-block',
-    borderRadius: '9999px',
-    padding: '0.2rem 0.55rem',
-    fontSize: '0.78rem',
-    fontWeight: 700,
-  };
+  return `inline-block rounded-full px-2 py-1 text-xs font-bold ${styles[role]}`;
 }
 
-function getStatusBadgeStyle(status: UserStatus): CSSProperties {
-  const styles: Record<UserStatus, CSSProperties> = {
-    Active: { color: '#2f855a', backgroundColor: '#f0fff4' },
-    Pending: { color: '#b7791f', backgroundColor: '#fffaf0' },
-    Suspended: { color: '#c53030', backgroundColor: '#fff5f5' },
+function getStatusBadgeClass(status: UserStatus): string {
+  const styles: Record<UserStatus, string> = {
+    Active: 'text-success bg-success/10',
+    Pending: 'text-warning-foreground bg-warning/15',
+    Suspended: 'text-destructive bg-destructive/10',
   };
-  return {
-    ...styles[status],
-    display: 'inline-block',
-    borderRadius: '9999px',
-    padding: '0.2rem 0.55rem',
-    fontSize: '0.78rem',
-    fontWeight: 700,
-  };
+  return `inline-block rounded-full px-2 py-1 text-xs font-bold ${styles[status]}`;
 }

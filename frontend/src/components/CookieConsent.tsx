@@ -21,50 +21,21 @@ export default function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: '#2d3748',
-      color: 'white',
-      padding: '1.25rem 2rem',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      zIndex: 1000,
-      flexWrap: 'wrap',
-      gap: '1rem',
-    }}>
-      <p style={{ margin: 0, fontSize: '0.9rem', maxWidth: '700px', lineHeight: 1.5 }}>
+    <div className="fixed inset-x-0 bottom-0 z-[1000] flex flex-wrap items-center justify-between gap-4 bg-sidebar px-6 py-5 text-sidebar-foreground">
+      <p className="m-0 max-w-3xl text-sm leading-relaxed">
         We use cookies to enhance your experience. By continuing to visit this site you agree to our
-        use of cookies. See our <a href="/privacy" style={{ color: '#90cdf4', textDecoration: 'underline' }}>Privacy Policy</a> for details.
+        use of cookies. See our <a href="/privacy" className="text-info underline underline-offset-2">Privacy Policy</a> for details.
       </p>
-      <div style={{ display: 'flex', gap: '0.75rem' }}>
+      <div className="flex gap-3">
         <button
           onClick={handleDecline}
-          style={{
-            padding: '0.5rem 1.25rem',
-            border: '1px solid #a0aec0',
-            backgroundColor: 'transparent',
-            color: '#a0aec0',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          className="rounded-md border border-sidebar-border px-5 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60"
         >
           Decline
         </button>
         <button
           onClick={handleAccept}
-          style={{
-            padding: '0.5rem 1.25rem',
-            border: 'none',
-            backgroundColor: '#4299e1',
-            color: 'white',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}
+          className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
           Accept
         </button>

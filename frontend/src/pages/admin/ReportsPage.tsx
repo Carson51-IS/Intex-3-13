@@ -134,11 +134,11 @@ export default function ReportsPage() {
             <EmptyState />
           ) : (
             <div className="overflow-x-auto">
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                  <tr className="border-b-2">
                     {['Safehouse', 'Status', 'Capacity', 'Active', 'Occupancy %', 'Closed', 'Reintegrated'].map(h => (
-                      <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 700, color: '#718096', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{h}</th>
+                      <th key={h} className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -147,23 +147,23 @@ export default function ReportsPage() {
                     const pct = s.capacityGirls > 0 ? Math.round((s.activeResidents / s.capacityGirls) * 100) : 0;
                     const pctColor = pct >= 90 ? '#c53030' : pct >= 75 ? '#dd6b20' : '#38a169';
                     return (
-                      <tr key={s.safehouseId} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                        <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600, color: '#2d3748' }}>{s.name}</td>
-                        <td style={{ padding: '0.6rem 0.75rem' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: s.status === 'Active' ? '#38a169' : '#718096' }}>{s.status}</span>
+                      <tr key={s.safehouseId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                        <td className="px-3 py-2.5 font-semibold text-foreground">{s.name}</td>
+                        <td className="px-3 py-2.5">
+                          <span className={`text-xs font-semibold ${s.status === 'Active' ? 'text-success' : 'text-muted-foreground'}`}>{s.status}</span>
                         </td>
-                        <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>{s.capacityGirls}</td>
-                        <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontWeight: 700, color: '#2b6cb0' }}>{s.activeResidents}</td>
-                        <td style={{ padding: '0.6rem 0.75rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ flex: 1, height: '8px', borderRadius: '4px', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
+                        <td className="px-3 py-2.5 text-center">{s.capacityGirls}</td>
+                        <td className="px-3 py-2.5 text-center font-bold text-primary">{s.activeResidents}</td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 flex-1 overflow-hidden rounded bg-muted">
                               <div style={{ height: '100%', width: `${pct}%`, backgroundColor: pctColor, borderRadius: '4px' }} />
                             </div>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: pctColor, minWidth: '36px' }}>{pct}%</span>
+                            <span style={{ color: pctColor }} className="min-w-9 text-xs font-bold">{pct}%</span>
                           </div>
                         </td>
-                        <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', color: '#718096' }}>{s.closedResidents}</td>
-                        <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', color: '#38a169', fontWeight: 600 }}>{s.reintegratedResidents}</td>
+                        <td className="px-3 py-2.5 text-center text-muted-foreground">{s.closedResidents}</td>
+                        <td className="px-3 py-2.5 text-center font-semibold text-success">{s.reintegratedResidents}</td>
                       </tr>
                     );
                   })}
@@ -248,14 +248,14 @@ function BarChart({ data, color, formatValue }: { data: { label: string; value: 
 function HorizontalBarChart({ data, color }: { data: { label: string; value: number }[]; color: string }) {
   const max = Math.max(...data.map(d => d.value), 1);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="flex flex-col gap-2">
       {data.slice(0, 8).map((d) => (
         <div key={d.label}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '0.8rem' }}>
-            <span style={{ color: '#4a5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{d.label}</span>
-            <span style={{ fontWeight: 700, color }}>{d.value}</span>
+          <div className="mb-1 flex justify-between text-xs">
+            <span className="max-w-[70%] overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground">{d.label}</span>
+            <span style={{ color }} className="font-bold">{d.value}</span>
           </div>
-          <div style={{ height: '6px', borderRadius: '3px', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
+          <div className="h-1.5 overflow-hidden rounded bg-muted">
             <div style={{ height: '100%', width: `${(d.value / max) * 100}%`, backgroundColor: color, borderRadius: '3px' }} />
           </div>
         </div>

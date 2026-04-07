@@ -185,7 +185,7 @@ export default function DonorsPage() {
               {(typeFilter || statusFilter) && (
                 <button
                   onClick={() => { setError(''); setTypeFilter(''); setStatusFilter(''); setPage(1); }}
-                  style={{ alignSelf: 'flex-end', padding: '0.4rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f7fafc', cursor: 'pointer', fontSize: '0.8rem', color: '#718096' }}
+                  className="self-end rounded-md border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/80"
                 >
                   Clear
                 </button>
@@ -193,35 +193,35 @@ export default function DonorsPage() {
             </div>
 
             <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
+                  <tr className="border-b-2 bg-muted/40">
                     {['Name', 'Type', 'Relationship', 'Email', 'Country', 'Status', 'First Donation', 'Actions'].map(h => (
-                      <th key={h} style={thStyle}>{h}</th>
+                      <th key={h} className={thCn}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
-                    <tr><td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: '#a0aec0' }}>Loading…</td></tr>
+                    <tr><td colSpan={8} className="p-12 text-center text-muted-foreground">Loading…</td></tr>
                   ) : supporters.length === 0 ? (
-                    <tr><td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: '#a0aec0' }}>No supporters found.</td></tr>
+                    <tr><td colSpan={8} className="p-12 text-center text-muted-foreground">No supporters found.</td></tr>
                   ) : (
                     supporters.map((s, i) => (
-                      <tr key={s.supporterId} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: '#2d3748' }}>{s.displayName}</td>
-                        <td style={tdStyle}><Badge text={s.supporterType} color="#805ad5" /></td>
-                        <td style={tdStyle}>{s.relationshipType}</td>
-                        <td style={{ ...tdStyle, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.email}</td>
-                        <td style={tdStyle}>{s.country || '—'}</td>
-                        <td style={tdStyle}>
+                      <tr key={s.supporterId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                        <td className={`${tdCn} font-semibold text-foreground`}>{s.displayName}</td>
+                        <td className={tdCn}><Badge text={s.supporterType} color="#805ad5" /></td>
+                        <td className={tdCn}>{s.relationshipType}</td>
+                        <td className={`${tdCn} max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap`}>{s.email}</td>
+                        <td className={tdCn}>{s.country || '—'}</td>
+                        <td className={tdCn}>
                           <Badge text={s.status} color={s.status === 'Active' ? '#38a169' : '#718096'} />
                         </td>
-                        <td style={tdStyle}>{s.firstDonationDate ? new Date(s.firstDonationDate).toLocaleDateString() : '—'}</td>
-                        <td style={tdStyle}>
+                        <td className={tdCn}>{s.firstDonationDate ? new Date(s.firstDonationDate).toLocaleDateString() : '—'}</td>
+                        <td className={tdCn}>
                           <button
                             onClick={() => { setError(''); setEditingSupporter(s); setShowForm(true); window.scrollTo(0, 0); }}
-                            style={{ color: '#2b6cb0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', padding: 0 }}
+                            className="p-0 text-xs font-semibold text-primary underline-offset-2 hover:underline"
                           >
                             Edit
                           </button>
@@ -238,31 +238,31 @@ export default function DonorsPage() {
         {/* Donations Section */}
         {activeSection === 'donations' && (
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <table className="w-full border-collapse text-sm">
               <thead>
-                <tr style={{ backgroundColor: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
+                <tr className="border-b-2 bg-muted/40">
                   {['Date', 'Supporter', 'Type', 'Amount', 'Campaign', 'Channel', 'Recurring'].map(h => (
-                    <th key={h} style={thStyle}>{h}</th>
+                    <th key={h} className={thCn}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#a0aec0' }}>Loading…</td></tr>
+                  <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">Loading…</td></tr>
                 ) : donations.length === 0 ? (
-                  <tr><td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#a0aec0' }}>No donations found.</td></tr>
+                  <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">No donations found.</td></tr>
                 ) : (
                   donations.map((d, i) => (
-                    <tr key={d.donationId} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                      <td style={tdStyle}>{new Date(d.donationDate).toLocaleDateString()}</td>
-                      <td style={{ ...tdStyle, fontWeight: 600 }}>{d.supporter?.displayName ?? `Donor #${d.supporterId}`}</td>
-                      <td style={tdStyle}><Badge text={d.donationType} color="#2b6cb0" /></td>
-                      <td style={{ ...tdStyle, fontWeight: 700, color: '#38a169' }}>
+                    <tr key={d.donationId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                      <td className={tdCn}>{new Date(d.donationDate).toLocaleDateString()}</td>
+                      <td className={`${tdCn} font-semibold`}>{d.supporter?.displayName ?? `Donor #${d.supporterId}`}</td>
+                      <td className={tdCn}><Badge text={d.donationType} color="#2b6cb0" /></td>
+                      <td className={`${tdCn} font-bold text-success`}>
                         {d.amount != null ? `${d.currencyCode ?? '₱'} ${d.amount.toLocaleString()}` : 'In-Kind'}
                       </td>
-                      <td style={tdStyle}>{d.campaignName ?? '—'}</td>
-                      <td style={tdStyle}>{d.channelSource}</td>
-                      <td style={tdStyle}>{d.isRecurring ? <Badge text="Recurring" color="#2b6cb0" /> : '—'}</td>
+                      <td className={tdCn}>{d.campaignName ?? '—'}</td>
+                      <td className={tdCn}>{d.channelSource}</td>
+                      <td className={tdCn}>{d.isRecurring ? <Badge text="Recurring" color="#2b6cb0" /> : '—'}</td>
                     </tr>
                   ))
                 )}
@@ -273,9 +273,9 @@ export default function DonorsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+          <div className="mt-6 flex items-center justify-center gap-2">
             <PaginationBtn label="← Prev" disabled={page <= 1} onClick={() => setPage(p => p - 1)} />
-            <span style={{ fontSize: '0.875rem', color: '#4a5568', padding: '0 0.5rem' }}>
+            <span className="px-2 text-sm text-muted-foreground">
               Page {page} of {totalPages}
             </span>
             <PaginationBtn label="Next →" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} />
@@ -438,7 +438,7 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
 
 function Badge({ text, color }: { text: string; color: string }) {
   return (
-    <span style={{ display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: `${color}18`, color }}>
+    <span style={{ backgroundColor: `${color}18`, color }} className="inline-block rounded-full px-2 py-1 text-xs font-semibold">
       {text}
     </span>
   );
@@ -457,18 +457,5 @@ function PaginationBtn({ label, disabled, onClick }: { label: string; disabled: 
   );
 }
 
-const thStyle: React.CSSProperties = {
-  padding: '0.75rem 1rem',
-  textAlign: 'left',
-  fontWeight: 700,
-  color: 'hsl(var(--muted-foreground))',
-  fontSize: '0.75rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.03em',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.75rem 1rem',
-  color: 'hsl(var(--foreground) / 0.85)',
-  verticalAlign: 'middle',
-};
+const thCn = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+const tdCn = 'px-4 py-3 align-middle text-foreground/85';

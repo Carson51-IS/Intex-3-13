@@ -22,76 +22,39 @@ export default function ImpactPage() {
       .catch((err) => setError(err.message));
   }, []);
 
-  if (error) return <div style={{ padding: '2rem', color: '#c53030' }}>Error: {error}</div>;
-  if (!data) return <div style={{ padding: '2rem' }}>Loading impact data...</div>;
+  if (error) return <div className="p-8 text-destructive">Error: {error}</div>;
+  if (!data) return <div className="p-8 text-muted-foreground">Loading impact data...</div>;
 
   return (
-    <div>
-      <section style={{
-        textAlign: 'center',
-        padding: '3.5rem 2rem',
-        background: 'linear-gradient(135deg, #2b6cb0 0%, #4299e1 100%)',
-        color: 'white',
-      }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.75rem', fontWeight: 700 }}>Your Generosity in Action</h1>
-        <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>See the real impact of your support</p>
+    <div className="min-h-screen bg-background">
+      <section className="hero-gradient px-6 py-16 text-center text-primary-foreground">
+        <h1 className="font-heading text-4xl font-bold md:text-5xl">Your Generosity in Action</h1>
+        <p className="mt-3 text-base text-primary-foreground/85 md:text-lg">See the real impact of your support</p>
       </section>
 
-      <section style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '2rem',
-        padding: '3.5rem 2rem',
-        flexWrap: 'wrap',
-      }}>
-        <StatCard label="Girls Served" value={data.activeResidents} color="#2b6cb0" />
-        <StatCard label="Active Safehouses" value={data.totalSafehouses} color="#38a169" />
-        <StatCard label="Supporters" value={data.totalSupporters} color="#dd6b20" />
+      <section className="mx-auto grid w-full max-w-6xl gap-4 px-6 py-10 md:grid-cols-3">
+        <StatCard label="Girls Served" value={data.activeResidents} accent="text-info" />
+        <StatCard label="Active Safehouses" value={data.totalSafehouses} accent="text-success" />
+        <StatCard label="Supporters" value={data.totalSupporters} accent="text-warning" />
       </section>
 
       {data.latestSnapshot && (
-        <section style={{
-          maxWidth: '700px',
-          margin: '0 auto',
-          padding: '2rem',
-          textAlign: 'center',
-        }}>
-          <h2 style={{ fontSize: '1.5rem', color: '#1a365d', marginBottom: '1rem' }}>
-            {data.latestSnapshot.headline}
-          </h2>
-          <p style={{ color: '#4a5568', lineHeight: 1.8 }}>
+        <section className="mx-auto w-full max-w-3xl px-6 pb-8 text-center">
+          <h2 className="font-heading text-2xl font-semibold text-foreground">{data.latestSnapshot.headline}</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
             {data.latestSnapshot.summaryText}
           </p>
         </section>
       )}
 
-      {/* Link to Insights */}
-      <section style={{
-        textAlign: 'center',
-        padding: '3rem 2rem',
-        background: 'linear-gradient(135deg, #ebf8ff 0%, #e6fffa 100%)',
-      }}>
-        <h2 style={{ fontSize: '1.5rem', color: '#1a365d', marginBottom: '0.75rem' }}>
-          Explore Our Data-Driven Strategy
-        </h2>
-        <p style={{ color: '#4a5568', maxWidth: '500px', margin: '0 auto 1.5rem', lineHeight: 1.6 }}>
+      <section className="mx-6 mb-10 rounded-2xl border border-info/30 bg-info/10 px-6 py-10 text-center">
+        <h2 className="font-heading text-2xl font-semibold text-foreground">Explore Our Data-Driven Strategy</h2>
+        <p className="mx-auto mb-6 mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
           See how we use machine learning to optimize social media outreach and maximize the impact of every post.
         </p>
         <Link
           to="/insights"
-          style={{
-            display: 'inline-block',
-            padding: '0.75rem 2rem',
-            backgroundColor: '#2b6cb0',
-            color: 'white',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontWeight: 600,
-            boxShadow: '0 2px 8px rgba(43,108,176,0.3)',
-            transition: 'transform 0.2s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-          onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+          className="inline-block rounded-md bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground no-underline transition-opacity hover:opacity-90"
         >
           View Social Media Insights
         </Link>
@@ -100,20 +63,11 @@ export default function ImpactPage() {
   );
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+function StatCard({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
-    <div style={{
-      textAlign: 'center',
-      padding: '2rem 2.5rem',
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-      border: '1px solid #e2e8f0',
-      borderTop: `4px solid ${color}`,
-      minWidth: '160px',
-    }}>
-      <div style={{ fontSize: '2.75rem', fontWeight: 700, color }}>{value}</div>
-      <div style={{ fontSize: '0.9rem', color: '#718096', marginTop: '0.5rem' }}>{label}</div>
+    <div className="rounded-xl border bg-card p-8 text-center card-shadow">
+      <div className={`text-5xl font-bold ${accent}`}>{value}</div>
+      <div className="mt-2 text-sm text-muted-foreground">{label}</div>
     </div>
   );
 }

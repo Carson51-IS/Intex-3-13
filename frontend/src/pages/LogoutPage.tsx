@@ -38,85 +38,36 @@ export default function LogoutPage() {
   const isSignedOut = message === 'Signed out successfully' && !error;
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 200px)',
-        padding: '2rem',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          padding: '2.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          backgroundColor: 'white',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '1.5rem',
-            textAlign: 'center',
-            color: '#1a365d',
-            marginBottom: '1.5rem',
-          }}
-        >
+    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-8">
+      <div className="w-full max-w-md rounded-xl border bg-card p-10 card-shadow">
+        <h1 className="mb-6 text-center font-heading text-2xl font-semibold text-card-foreground">
           Staff Sign Out
         </h1>
 
         {error && (
-          <div
-            style={{
-              padding: '0.75rem',
-              backgroundColor: '#fed7d7',
-              color: '#c53030',
-              borderRadius: '4px',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-            }}
-          >
+          <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {isSignedOut && (
-          <div
-            style={{
-              padding: '0.75rem',
-              backgroundColor: '#c6f6d5',
-              color: '#276749',
-              borderRadius: '4px',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-            }}
-          >
+          <div className="mb-4 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
             Signed out successfully
           </div>
         )}
 
         {isSigningOut && (
-          <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: '#4a5568' }}>
+          <p className="mb-6 text-sm text-muted-foreground">
             Signing you out...
           </p>
         )}
 
-        <p
-          style={{
-            marginTop: '1.25rem',
-            textAlign: 'center',
-            fontSize: '0.875rem',
-            color: '#4a5568',
-          }}
-        >
-          <Link to="/" style={{ color: '#2b6cb0', fontWeight: 600 }}>
+        <p className="mt-5 text-center text-sm text-muted-foreground">
+          <Link to="/" className="font-semibold text-primary no-underline hover:underline">
             Return home
           </Link>
           {' · '}
-          <Link to="/login" style={{ color: '#2b6cb0', fontWeight: 600 }}>
+          <Link to="/login" className="font-semibold text-primary no-underline hover:underline">
             Sign in
           </Link>
         </p>

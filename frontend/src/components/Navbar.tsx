@@ -1,74 +1,48 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 
 export default function Navbar() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    navigate('/logout');
-  };
+  const { user, isLoading, isAdmin, isDonor } = useAuth();
+  const isRegularUser = Boolean(user && !isAdmin && !isDonor);
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-primary/15 bg-white/85 px-4 py-3 backdrop-blur md:px-8">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2 no-underline">
-          <img src={havenLightLogoMark} alt="Haven Light logo" className="h-9 w-9 object-contain" />
-          <span className="font-heading text-lg font-semibold text-primary md:text-xl">Haven Light Philippines</span>
+    <header className="fixed top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <div className="container mx-auto flex h-16 items-center justify-between px-6">
+        <Link to="/" className="flex items-center gap-1 no-underline">
+          <img src={havenLightLogoMark} alt="Haven Light logo mark" className="h-10 w-auto" />
+          <div className="leading-tight">
+            <div className="font-heading text-lg font-semibold text-foreground">Haven Light</div>
+            <div className="font-body text-xs tracking-[0.18em] text-muted-foreground">PHILIPPINES</div>
+          </div>
         </Link>
-
-        <div className="flex items-center gap-4 md:gap-6">
-          <a href="/#mission" className="text-sm font-medium text-foreground/80 no-underline transition-colors hover:text-primary">Mission</a>
-          <a href="/#impact" className="text-sm font-medium text-foreground/80 no-underline transition-colors hover:text-primary">Impact</a>
-          <a href="/#how" className="text-sm font-medium text-foreground/80 no-underline transition-colors hover:text-primary">How It Works</a>
-          <a href="/#donate" className="text-sm font-medium text-foreground/80 no-underline transition-colors hover:text-primary">Donate</a>
-
-          {isAuthenticated ? <NavLink to="/manage-mfa">MFA</NavLink> : null}
-
-          {isLoading ? (
-            <span className="text-sm text-muted-foreground">Loading…</span>
-          ) : user ? (
-            <>
-              <span className="hidden text-sm text-muted-foreground md:inline">{user.email}</span>
-              <button
-                type="button"
-                onClick={handleLogout}
-                aria-label="Log out"
-                className="rounded-md border border-primary/25 bg-white px-3 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/register"
-                className="rounded-md border border-primary/25 px-3 py-1.5 text-sm font-semibold text-primary no-underline transition-colors hover:bg-primary/5"
-              >
-                Register
-              </Link>
+        {isLoading ? (
+          <span className="text-sm text-muted-foreground">Loading…</span>
+        ) : isRegularUser ? null : (
+          <nav className="hidden items-center gap-8 font-body text-sm md:flex">
+            <a href="/#mission" className="text-muted-foreground transition-colors hover:text-foreground">
+              Mission
+            </a>
+            <a href="/#impact" className="text-muted-foreground transition-colors hover:text-foreground">
+              Impact
+            </a>
+            <a href="/#how" className="text-muted-foreground transition-colors hover:text-foreground">
+              How It Works
+            </a>
+            <a href="/#donate" className="text-muted-foreground transition-colors hover:text-foreground">
+              Donate
+            </a>
+            {!user ? (
               <Link
                 to="/login"
-                className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground no-underline transition-opacity hover:opacity-90"
+                className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition-all hover:translate-y-[-1px] hover:opacity-95"
               >
                 Login
               </Link>
-            </>
-          )}
-        </div>
+            ) : null}
+          </nav>
+        )}
       </div>
-    </nav>
-  );
-}
-
-function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
-  return (
-    <Link
-      to={to}
-      className="text-sm font-medium text-foreground/80 no-underline transition-colors hover:text-primary"
-    >
-      {children}
-    </Link>
+    </header>
   );
 }
