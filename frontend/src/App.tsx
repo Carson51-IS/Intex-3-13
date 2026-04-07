@@ -19,7 +19,7 @@ import SettingsPage from './pages/admin/SettingsPage';
 import InsightsPage from './pages/InsightsPage';
 import DonorInsightsPage from './pages/DonorInsightsPage';
 import ResidentInsightsPage from './pages/ResidentInsightsPage';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import ManageMFA from './pages/ManageMFAPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import CookieConsentBannerView from './components/CookieConsentBannerView';
@@ -65,6 +65,14 @@ const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
 
 function GuestOnlyRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    if (pathname !== '/login') return;
+    // #region agent log
+    fetch('http://127.0.0.1:7740/ingest/36bf70e9-3466-40a5-9552-f35feee42e28',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'37e360'},body:JSON.stringify({sessionId:'37e360',location:'App.tsx:GuestOnlyRoute',message:'GuestOnlyRoute on /login',data:{isLoading,hasUser:!!user,roleCount:user?.roles?.length??0,roles:user?.roles??[]},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
+  }, [pathname, isLoading, user]);
 
   if (isLoading) return <div style={{ padding: '2rem' }}>Loading...</div>;
   if (user) return <Navigate to="/" replace />;

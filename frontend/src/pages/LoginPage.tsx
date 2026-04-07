@@ -41,6 +41,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
+    // #region agent log
+    fetch('http://127.0.0.1:7740/ingest/36bf70e9-3466-40a5-9552-f35feee42e28',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'37e360'},body:JSON.stringify({sessionId:'37e360',location:'LoginPage.tsx:handleSubmit:start',message:'login submit started',data:{emailLen:email.trim().length},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+    // #endregion
     try {
       const trimmedTwoFactorCode = twoFactorCode.trim();
       const trimmedRecoveryCode = recoveryCode.trim();
@@ -51,15 +54,25 @@ export default function LoginPage() {
         trimmedRecoveryCode || undefined,
       );
       if (!session.isAuthenticated) {
+        // #region agent log
+        fetch('http://127.0.0.1:7740/ingest/36bf70e9-3466-40a5-9552-f35feee42e28',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'37e360'},body:JSON.stringify({sessionId:'37e360',location:'LoginPage.tsx:handleSubmit:notAuth',message:'session not authenticated after login',data:{roles:session.roles},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
         setError('Sign in failed. Please check your credentials.');
         return;
       }
       const isAdmin = session.roles.includes('Admin');
       const isDonor = session.roles.includes('Donor');
+      const target = isAdmin ? '/admin' : isDonor ? '/donor' : '/';
+      // #region agent log
+      fetch('http://127.0.0.1:7740/ingest/36bf70e9-3466-40a5-9552-f35feee42e28',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'37e360'},body:JSON.stringify({sessionId:'37e360',location:'LoginPage.tsx:handleSubmit:navigate',message:'navigate after login',data:{roles:session.roles,isAdmin,isDonor,target},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       if (isAdmin) navigate('/admin');
       else if (isDonor) navigate('/donor');
       else navigate('/');
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7740/ingest/36bf70e9-3466-40a5-9552-f35feee42e28',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'37e360'},body:JSON.stringify({sessionId:'37e360',location:'LoginPage.tsx:handleSubmit:catch',message:'login threw',data:{err:err instanceof Error?err.message:String(err)},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsSubmitting(false);

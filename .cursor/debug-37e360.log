@@ -1,0 +1,10 @@
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":true,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775592818396,"hypothesisId":"H2"}
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":true,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775592818398,"hypothesisId":"H2"}
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":false,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775592819122,"hypothesisId":"H2"}
+{"sessionId":"37e360","location":"LoginPage.tsx:handleSubmit:start","message":"login submit started","data":{"emailLen":19},"timestamp":1775592866376,"hypothesisId":"H4"}
+{"sessionId":"37e360","location":"LoginPage.tsx:handleSubmit:catch","message":"login threw","data":{"err":"Failed to fetch"},"timestamp":1775592868713,"hypothesisId":"H4"}
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":true,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775592936220,"hypothesisId":"H2"}
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":true,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775592936245,"hypothesisId":"H2"}
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":false,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775592936963,"hypothesisId":"H2"}
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":false,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775593012970,"hypothesisId":"H2"}
+{"sessionId":"37e360","location":"App.tsx:GuestOnlyRoute","message":"GuestOnlyRoute on /login","data":{"isLoading":false,"hasUser":false,"roleCount":0,"roles":[]},"timestamp":1775593012973,"hypothesisId":"H2"}
