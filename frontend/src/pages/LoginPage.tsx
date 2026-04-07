@@ -1,328 +1,268 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../api/client';
 
 export default function LoginPage() {
-  const [tab, setTab] = useState<'login' | 'register'>('login');
-  const { login, loginWithGoogle } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [googleError, setGoogleError] = useState('');
+  const { refreshAuthSession } = useAuth();
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [recoveryCode, setRecoveryCode] = useState('');
 
-  const handleGoogleSuccess = async (response: CredentialResponse) => {
-    setGoogleError('');
-    if (!response.credential) {
-      setGoogleError('Google sign-in did not return a credential.');
-      return;
-    }
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
     try {
-      await loginWithGoogle(response.credential);
-      navigate('/donor');
+      const trimmedTwoFactorCode = twoFactorCode.trim();
+      const trimmedRecoveryCode = recoveryCode.trim();
+      const session = await login(
+        email,
+        password,
+        trimmedTwoFactorCode || undefined,
+        trimmedRecoveryCode || undefined,
+      );
+      await refreshAuthSession();
+      if (!session.isAuthenticated) {
+        setError('Sign in failed. Please check your credentials.');
+        return;
+      }
+      const isAdmin = session.roles.includes('Admin');
+      navigate(isAdmin ? '/admin' : '/');
     } catch (err) {
-      setGoogleError(err instanceof Error ? err.message : 'Google sign-in failed.');
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: 'calc(100vh - 200px)',
-      padding: '2rem',
-      backgroundColor: '#f7fafc',
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '420px',
-        borderRadius: '10px',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
-        backgroundColor: 'white',
-        overflow: 'hidden',
-      }}>
-        {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0' }}>
-          {(['login', 'register'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                color: tab === t ? '#2b6cb0' : '#a0aec0',
-                borderBottom: tab === t ? '2px solid #2b6cb0' : '2px solid transparent',
-                marginBottom: '-2px',
-                transition: 'all 0.15s',
-              }}
-            >
-              {t === 'login' ? 'Sign In' : 'Create Account'}
-            </button>
-          ))}
-        </div>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 'calc(100vh - 200px)',
+        padding: '2rem',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '440px',
+          padding: '2.5rem',
+          borderRadius: '8px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          backgroundColor: 'white',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '1.5rem',
+            textAlign: 'center',
+            color: '#1a365d',
+            marginBottom: '0.75rem',
+          }}
+        >
+          Staff Login
+        </h1>
+        <p
+          style={{
+            marginTop: 0,
+            marginBottom: '1.25rem',
+            textAlign: 'center',
+            fontSize: '0.9rem',
+            color: '#4a5568',
+          }}
+        >
+          Sign in to continue to Haven Light.
+        </p>
 
-        <div style={{ padding: '2rem' }}>
-          {/* Google Sign-In (shared across both tabs) */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setGoogleError('Google sign-in was cancelled or failed.')}
-              text={tab === 'login' ? 'signin_with' : 'signup_with'}
-              shape="rectangular"
-              width={360}
+        {error && (
+          <div
+            style={{
+              padding: '0.75rem',
+              backgroundColor: '#fed7d7',
+              color: '#c53030',
+              borderRadius: '4px',
+              marginBottom: '1rem',
+              fontSize: '0.875rem',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label
+              htmlFor="email"
+              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4a5568' }}
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              style={{
+                width: '100%',
+                padding: '0.625rem',
+                border: '1px solid #e2e8f0',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
-          {googleError && (
-            <div style={{
-              padding: '0.75rem',
-              backgroundColor: '#fff5f5',
-              color: '#c53030',
-              borderRadius: '6px',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-              border: '1px solid #fed7d7',
-            }}>
-              {googleError}
-            </div>
-          )}
-
-          {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-            <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
-            <span style={{ color: '#a0aec0', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>or use a username</span>
-            <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label
+              htmlFor="password"
+              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4a5568' }}
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              style={{
+                width: '100%',
+                padding: '0.625rem',
+                border: '1px solid #e2e8f0',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                boxSizing: 'border-box',
+              }}
+            />
           </div>
 
-          {tab === 'login' ? (
-            <LoginForm login={login} navigate={navigate} />
-          ) : (
-            <RegisterForm navigate={navigate} />
-          )}
-        </div>
+          <div
+            style={{
+              marginBottom: '1rem',
+              padding: '0.85rem',
+              border: '1px solid #e2e8f0',
+              borderRadius: '6px',
+              backgroundColor: '#f7fafc',
+            }}
+          >
+            <p
+              style={{
+                marginTop: 0,
+                marginBottom: '0.5rem',
+                fontSize: '0.8rem',
+                color: '#4a5568',
+                fontWeight: 600,
+              }}
+            >
+              Optional MFA
+            </p>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <label
+                htmlFor="twoFactorCode"
+                style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, color: '#4a5568' }}
+              >
+                Authentication Code
+              </label>
+              <input
+                id="twoFactorCode"
+                type="text"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value)}
+                placeholder="6-digit code"
+                autoComplete="one-time-code"
+                style={{
+                  width: '100%',
+                  padding: '0.625rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <p style={{ marginTop: '0.35rem', marginBottom: 0, fontSize: '0.78rem', color: '#718096' }}>
+                Leave blank unless MFA is enabled on your account.
+              </p>
+            </div>
 
-        <div style={{ padding: '1rem 2rem 1.5rem', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
-          <Link to="/impact" style={{ color: '#4299e1', fontSize: '0.85rem', textDecoration: 'none' }}>
-            View our public impact dashboard →
-          </Link>
-        </div>
+            <div>
+              <label
+                htmlFor="recoveryCode"
+                style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, color: '#4a5568' }}
+              >
+                Recovery Code
+              </label>
+              <input
+                id="recoveryCode"
+                type="text"
+                value={recoveryCode}
+                onChange={(e) => setRecoveryCode(e.target.value)}
+                placeholder="Recovery code"
+                style={{
+                  width: '100%',
+                  padding: '0.625rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <p style={{ marginTop: '0.35rem', marginBottom: 0, fontSize: '0.78rem', color: '#718096' }}>
+                Use this instead of an authentication code if needed.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              backgroundColor: isSubmitting ? '#a0aec0' : '#2b6cb0',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '1rem',
+              fontWeight: 600,
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={() => navigate('/register')}
+          style={{
+            width: '100%',
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            backgroundColor: 'white',
+            color: '#2b6cb0',
+            border: '1px solid #2b6cb0',
+            borderRadius: '4px',
+            fontSize: '1rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          Create an account
+        </button>
       </div>
     </div>
   );
 }
-
-function LoginForm({ login, navigate }: {
-  login: (identifier: string, password: string) => Promise<void>;
-  navigate: (path: string) => void;
-}) {
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-    try {
-      await login(identifier, password);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (user) {
-    if (user.roles.includes('Admin')) {
-      navigate('/admin');
-    } else {
-      navigate('/donor');
-    }
-  }
-
-  return (
-    <>
-      {error && (
-        <div style={{
-          padding: '0.75rem',
-          backgroundColor: '#fff5f5',
-          color: '#c53030',
-          borderRadius: '6px',
-          marginBottom: '1rem',
-          fontSize: '0.875rem',
-          border: '1px solid #fed7d7',
-        }}>
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="identifier" style={labelStyle}>
-            Username or email
-          </label>
-          <input
-            id="identifier"
-            type="text"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            required
-            autoComplete="username"
-            placeholder="your username or email"
-            style={inputStyle}
-          />
-        </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label htmlFor="password" style={labelStyle}>
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            style={inputStyle}
-          />
-        </div>
-
-        <button type="submit" disabled={isSubmitting} style={btnStyle(isSubmitting)}>
-          {isSubmitting ? 'Signing in…' : 'Sign In'}
-        </button>
-      </form>
-    </>
-  );
-}
-
-function RegisterForm({ navigate }: { navigate: (path: string) => void }) {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    if (password.length < 12) {
-      setError('Password must be at least 12 characters.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const { token } = await api.post<{ token: string }>('/auth/register', {
-        username,
-        password,
-        email: email || undefined,
-      });
-      localStorage.setItem('token', token);
-      navigate('/donor');
-      window.location.reload();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <>
-      {error && (
-        <div style={{
-          padding: '0.75rem',
-          backgroundColor: '#fff5f5',
-          color: '#c53030',
-          borderRadius: '6px',
-          marginBottom: '1rem',
-          fontSize: '0.875rem',
-          border: '1px solid #fed7d7',
-        }}>
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle}>Username <span style={{ color: '#c53030' }}>*</span></label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            autoComplete="username"
-            placeholder="pick a username"
-            style={inputStyle}
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle}>Email <span style={{ color: '#a0aec0', fontWeight: 400 }}>(optional)</span></label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            placeholder="you@example.com"
-            style={inputStyle}
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle}>Password <span style={{ color: '#a0aec0', fontWeight: 400 }}>(min 12 chars)</span></label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" style={inputStyle} />
-        </div>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={labelStyle}>Confirm Password</label>
-          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password" style={inputStyle} />
-        </div>
-        <button type="submit" disabled={isSubmitting} style={btnStyle(isSubmitting)}>
-          {isSubmitting ? 'Creating account…' : 'Create Account'}
-        </button>
-      </form>
-    </>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.6rem 0.75rem',
-  border: '1px solid #e2e8f0',
-  borderRadius: '6px',
-  fontSize: '0.95rem',
-  boxSizing: 'border-box',
-  outline: 'none',
-  transition: 'border-color 0.15s',
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: '0.3rem',
-  fontWeight: 500,
-  color: '#4a5568',
-  fontSize: '0.875rem',
-};
-
-const btnStyle = (disabled: boolean): React.CSSProperties => ({
-  width: '100%',
-  padding: '0.75rem',
-  backgroundColor: disabled ? '#a0aec0' : '#2b6cb0',
-  color: 'white',
-  border: 'none',
-  borderRadius: '6px',
-  fontSize: '1rem',
-  fontWeight: 600,
-  cursor: disabled ? 'not-allowed' : 'pointer',
-  transition: 'background 0.15s',
-});
