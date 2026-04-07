@@ -14,7 +14,8 @@ function readInitialConsentValue() {
         return false;
     }
 
-    return window.localStorage.getItem(CookieConsentStorageKey) === 'acknowledged';
+    const stored = window.localStorage.getItem(CookieConsentStorageKey);
+    return stored === 'acknowledged' || stored === 'accepted' || stored === 'declined';
 }
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
@@ -25,6 +26,7 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
             hasAcknowledgedConsent,
             acknowledgeConsent() {
                 window.localStorage.setItem(CookieConsentStorageKey, 'acknowledged');
+                document.cookie = 'cookieConsent=acknowledged; path=/; max-age=31536000; SameSite=Lax';
                 setHasAcknowledgedConsent(true);
             },
         }),
