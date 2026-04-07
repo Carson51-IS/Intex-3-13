@@ -13,6 +13,8 @@ import type { AuthSession } from '../types/AuthSession';
 export interface AuthUser {
   email: string;
   roles: string[];
+  /** Identity name from the auth session (may be null). */
+  userName: string | null;
 }
 
 interface AuthContextValue {
@@ -82,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!authSession?.isAuthenticated) return null;
     const email = authSession.email ?? authSession.userName ?? '';
     if (!email) return null;
-    return { email, roles: authSession.roles };
+    return { email, roles: authSession.roles, userName: authSession.userName };
   }, [authSession]);
 
   const isAdmin = user?.roles.includes('Admin') ?? false;

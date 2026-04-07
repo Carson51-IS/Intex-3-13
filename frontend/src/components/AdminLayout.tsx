@@ -50,7 +50,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     logout();
     navigate('/');
   };
-  const displayName = toDisplayName(user?.username, user?.email ?? undefined);
+  const displayName = toDisplayName(user?.userName ?? undefined, user?.email ?? undefined);
   const email = user?.email ?? 'admin@havenlight.ph';
 
   return (

@@ -78,7 +78,13 @@ export default function DonorDashboard() {
       {/* Header */}
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.6rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.3rem' }}>
-          Welcome{history?.supporter ? `, ${history.supporter.displayName}` : user ? `, ${user.username}` : ''}! 👋
+          Welcome
+          {history?.supporter
+            ? `, ${history.supporter.displayName}`
+            : user
+              ? `, ${user.userName?.trim() || user.email.split('@')[0] || user.email}`
+              : ''}
+          ! 👋
         </h1>
         <p style={{ color: '#718096', fontSize: '0.95rem' }}>
           Thank you for supporting Haven Light Philippines. Your generosity makes a real difference.
