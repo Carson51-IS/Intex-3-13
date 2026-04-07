@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -84,4 +85,89 @@ public class DonationsController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
+
+    /// <summary>Returns donation history for the currently logged-in donor (matched by email)</summary>
+    [HttpGet("my-history")]
+    public async Task<IActionResult> GetMyHistory()
+    {
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+        var supporter = await _context.Supporters
+            .FirstOrDefaultAsync(s => s.Email == email);
+
+        if (supporter == null)
+            return Ok(new { supporter = (object?)null, donations = Array.Empty<object>() });
+
+        var donations = await _context.Donations
+            .Where(d => d.SupporterId == supporter.SupporterId)
+            .OrderByDescending(d => d.DonationDate)
+            .ToListAsync();
+
+        return Ok(new { supporter, donations });
+    }
+
+    /// <summary>Submit a new donation as the logged-in donor</summary>
+    [HttpPost("submit")]
+    public async Task<IActionResult> Submit([FromBody] DonorSubmitDto dto)
+    {
+        if (dto.Amount <= 0)
+            return BadRequest(new { message = "Donation amount must be greater than zero." });
+
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+        var supporter = await _context.Supporters.FirstOrDefaultAsync(s => s.Email == email);
+
+        if (supporter == null)
+        {
+            // Auto-create a supporter profile for this donor
+            supporter = new Supporter
+            {
+                Email = email,
+                DisplayName = dto.DisplayName ?? email,
+                FirstName = dto.FirstName ?? string.Empty,
+                LastName = dto.LastName ?? string.Empty,
+                SupporterType = "Individual Donor",
+                RelationshipType = "Donor",
+                Region = string.Empty,
+                Country = string.Empty,
+                Phone = string.Empty,
+                Status = "Active",
+                CreatedAt = DateTime.UtcNow,
+                FirstDonationDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            };
+            _context.Supporters.Add(supporter);
+            await _context.SaveChangesAsync();
+        }
+
+        var donation = new Donation
+        {
+            SupporterId = supporter.SupporterId,
+            DonationType = "Monetary",
+            DonationDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            Amount = dto.Amount,
+            CurrencyCode = dto.CurrencyCode ?? "PHP",
+            CampaignName = dto.CampaignName,
+            ChannelSource = "Online Portal",
+            IsRecurring = dto.IsRecurring,
+            Notes = dto.Notes,
+        };
+
+        _context.Donations.Add(donation);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Thank you for your donation!", donationId = donation.DonationId });
+    }
 }
+
+public record DonorSubmitDto(
+    decimal Amount,
+    string? CurrencyCode,
+    string? CampaignName,
+    bool IsRecurring,
+    string? Notes,
+    string? DisplayName,
+    string? FirstName,
+    string? LastName
+);
