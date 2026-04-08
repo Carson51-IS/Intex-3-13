@@ -95,6 +95,8 @@ public class ResidentsController : ControllerBase
 
         var resident = new Resident
         {
+            // Seeded datasets can leave identity counters behind; assign next id defensively in local/dev.
+            ResidentId = (await _context.Residents.MaxAsync(r => (int?)r.ResidentId) ?? 0) + 1,
             CaseControlNo = dto.CaseControlNo.Trim(),
             InternalCode = dto.InternalCode.Trim(),
             SafehouseId = dto.SafehouseId,
@@ -165,6 +167,34 @@ public class ResidentsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Updates common case fields without requiring the full resident payload.</summary>
+    [HttpPut("{id}/core")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> UpdateCore(int id, [FromBody] ResidentCoreUpdateDto dto)
+    {
+        var resident = await _context.Residents.FirstOrDefaultAsync(r => r.ResidentId == id);
+        if (resident is null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(dto.CaseControlNo) || string.IsNullOrWhiteSpace(dto.InternalCode))
+            return BadRequest(new { message = "Case control number and internal code are required." });
+        if (string.IsNullOrWhiteSpace(dto.AssignedSocialWorker))
+            return BadRequest(new { message = "Assigned social worker is required." });
+
+        resident.CaseControlNo = dto.CaseControlNo.Trim();
+        resident.InternalCode = dto.InternalCode.Trim();
+        resident.CaseStatus = dto.CaseStatus;
+        resident.CaseCategory = dto.CaseCategory;
+        resident.AssignedSocialWorker = dto.AssignedSocialWorker.Trim();
+        resident.ReferralSource = dto.ReferralSource;
+        resident.InitialRiskLevel = dto.InitialRiskLevel;
+        resident.CurrentRiskLevel = dto.CurrentRiskLevel;
+        resident.ReintegrationStatus = string.IsNullOrWhiteSpace(dto.ReintegrationStatus) ? null : dto.ReintegrationStatus.Trim();
+        resident.InitialCaseAssessment = string.IsNullOrWhiteSpace(dto.InitialCaseAssessment) ? null : dto.InitialCaseAssessment.Trim();
+
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(int id)
@@ -178,3 +208,16 @@ public class ResidentsController : ControllerBase
         return NoContent();
     }
 }
+
+public record ResidentCoreUpdateDto(
+    string CaseControlNo,
+    string InternalCode,
+    string CaseStatus,
+    string CaseCategory,
+    string AssignedSocialWorker,
+    string ReferralSource,
+    string InitialRiskLevel,
+    string CurrentRiskLevel,
+    string? ReintegrationStatus,
+    string? InitialCaseAssessment
+);

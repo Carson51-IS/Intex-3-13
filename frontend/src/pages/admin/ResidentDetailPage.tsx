@@ -65,7 +65,7 @@ const statusColor: Record<string, string> = {
   Discharged: '#38a169',
 };
 
-type Tab = 'overview' | 'recordings' | 'visitations';
+type Tab = 'overview' | 'recordings' | 'visitations' | 'conferences';
 
 export default function ResidentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -98,25 +98,25 @@ export default function ResidentDetailPage() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1000px' }}>
+      <div className="mx-auto w-full max-w-5xl">
         {/* Breadcrumb */}
-        <div style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '1rem' }}>
-          <Link to="/admin/residents" style={{ color: '#4299e1', textDecoration: 'none' }}>Caseload</Link>
-          {' / '}
-          <span>{resident.internalCode}</span>
+        <div className="mb-4 text-sm text-muted-foreground">
+          <Link to="/admin/residents" className="font-medium text-primary no-underline hover:underline">Caseload</Link>
+          <span className="mx-1.5 text-muted-foreground/80">/</span>
+          <span className="text-foreground">{resident.internalCode}</span>
         </div>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 style={{ fontSize: '1.4rem', color: '#1a365d', fontWeight: 700, marginBottom: '0.4rem' }}>
+            <h1 className="mb-2 font-heading text-2xl font-bold text-foreground md:text-3xl">
               {resident.internalCode}
             </h1>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div className="flex flex-wrap gap-2">
               <Badge text={resident.caseStatus} color={statusColor[resident.caseStatus] ?? '#718096'} />
               <Badge text={`Risk: ${resident.currentRiskLevel}`} color={riskColor[resident.currentRiskLevel] ?? '#718096'} />
               {resident.safehouse && (
-                <span style={{ fontSize: '0.8rem', color: '#718096', alignSelf: 'center' }}>
+                <span className="self-center text-xs text-muted-foreground">
                   📍 {resident.safehouse.name}
                 </span>
               )}
@@ -124,42 +124,28 @@ export default function ResidentDetailPage() {
           </div>
           <Link
             to={`/admin/residents/${id}/edit`}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#2b6cb0',
-              color: 'white',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-            }}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground no-underline shadow-sm transition-opacity hover:opacity-90"
           >
             Edit Record
           </Link>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem' }}>
+        <div className="mb-6 flex flex-wrap border-b border-border">
           {([
             { key: 'overview', label: 'Case Overview' },
             { key: 'recordings', label: 'Process Recordings' },
             { key: 'visitations', label: 'Home Visitations' },
+            { key: 'conferences', label: 'Case Conferences' },
           ] as { key: Tab; label: string }[]).map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              style={{
-                padding: '0.65rem 1.25rem',
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                fontWeight: activeTab === tab.key ? 700 : 400,
-                color: activeTab === tab.key ? '#2b6cb0' : '#718096',
-                borderBottom: `2px solid ${activeTab === tab.key ? '#2b6cb0' : 'transparent'}`,
-                marginBottom: '-2px',
-                fontSize: '0.9rem',
-                transition: 'all 0.15s',
-              }}
+              className={`-mb-px rounded-t-md border-b-2 px-4 py-2 text-sm transition-colors ${
+                activeTab === tab.key
+                  ? 'border-primary font-semibold text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
             >
               {tab.label}
             </button>
@@ -170,6 +156,7 @@ export default function ResidentDetailPage() {
         {activeTab === 'overview' && <OverviewTab resident={resident} />}
         {activeTab === 'recordings' && <ProcessRecordingsTab residentId={resident.residentId} />}
         {activeTab === 'visitations' && <HomeVisitationsTab residentId={resident.residentId} />}
+        {activeTab === 'conferences' && <CaseConferencesTab residentId={resident.residentId} />}
       </div>
     </AdminLayout>
   );
@@ -180,7 +167,7 @@ function OverviewTab({ resident }: { resident: Resident }) {
     items.filter(([v]) => v).map(([, l]) => l).join(', ') || 'None';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+    <div className="grid gap-5 lg:grid-cols-2">
       <Section title="Demographics">
         <Field label="Sex" value={resident.sex} />
         <Field label="Date of Birth" value={resident.dateOfBirth ? new Date(resident.dateOfBirth).toLocaleDateString() : '—'} />
@@ -242,7 +229,7 @@ function OverviewTab({ resident }: { resident: Resident }) {
         <Field label="Assigned Social Worker" value={resident.assignedSocialWorker} />
       </Section>
 
-      <div style={{ gridColumn: '1 / -1' }}>
+      <div className="lg:col-span-2">
         <Section title="Reintegration">
           <Field label="Type" value={resident.reintegrationType ?? '—'} />
           <Field label="Status" value={resident.reintegrationStatus ?? '—'} />
@@ -473,6 +460,115 @@ function HomeVisitationsTab({ residentId }: { residentId: number }) {
   );
 }
 
+function CaseConferencesTab({ residentId }: { residentId: number }) {
+  const [conferences, setConferences] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState('');
+
+  const fetchConferences = async (p = 1) => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const base = getApiBase();
+      if (!base) throw new Error('API URL is not configured.');
+      const response = await fetch(
+        `${base}/caseconferences?residentId=${residentId}&page=${p}&pageSize=10`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      const total = response.headers.get('X-Total-Count');
+      setTotalCount(total ? parseInt(total, 10) : 0);
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t || `Request failed: ${response.status}`);
+      }
+      const raw = await response.text();
+      setConferences(raw ? JSON.parse(raw) : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load case conferences.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchConferences(page); }, [residentId, page]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#2d3748' }}>
+          Case Conferences ({totalCount})
+        </h3>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          style={{ padding: '0.5rem 1rem', backgroundColor: '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+        >
+          {showForm ? 'Cancel' : '+ Schedule Conference'}
+        </button>
+      </div>
+
+      {showForm && (
+        <CaseConferenceForm
+          residentId={residentId}
+          onSuccess={() => { setShowForm(false); fetchConferences(1); setPage(1); }}
+        />
+      )}
+
+      {error && <div style={{ color: '#c53030', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
+
+      {isLoading ? (
+        <div style={{ color: '#a0aec0', textAlign: 'center', padding: '2rem' }}>Loading…</div>
+      ) : conferences.length === 0 ? (
+        <div style={{ color: '#a0aec0', textAlign: 'center', padding: '2rem', backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          No case conferences logged yet.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {conferences.map((c) => (
+            <div key={c.conferenceId} style={recordCardStyle}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 700, color: '#1a365d', fontSize: '0.9rem' }}>
+                    {new Date(c.conferenceDate).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
+                  <Badge text={c.conferenceType} color="#2b6cb0" />
+                  <Badge text={c.status} color={c.status === 'Completed' ? '#38a169' : c.status === 'Cancelled' ? '#c53030' : '#805ad5'} />
+                </div>
+                <span style={{ fontSize: '0.8rem', color: '#718096' }}>Facilitator: {c.facilitator}</span>
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#4a5568', lineHeight: 1.6 }}>
+                <strong>Agenda:</strong> {c.agenda}
+              </div>
+              {c.summaryNotes && (
+                <div style={{ marginTop: '0.4rem', fontSize: '0.82rem', color: '#4a5568' }}>
+                  <strong>Summary:</strong> {c.summaryNotes}
+                </div>
+              )}
+              {c.followUpActions && (
+                <div style={{ marginTop: '0.4rem', fontSize: '0.82rem', color: '#718096' }}>
+                  <strong>Follow-up:</strong> {c.followUpActions}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {Math.ceil(totalCount / 10) > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+          <PaginationBtn label="← Prev" disabled={page <= 1} onClick={() => setPage(p => p - 1)} />
+          <span style={{ alignSelf: 'center', fontSize: '0.875rem', color: '#4a5568' }}>
+            Page {page} of {Math.ceil(totalCount / 10)}
+          </span>
+          <PaginationBtn label="Next →" disabled={page >= Math.ceil(totalCount / 10)} onClick={() => setPage(p => p + 1)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProcessRecordingForm({ residentId, onSuccess }: { residentId: number; onSuccess: () => void }) {
   const [form, setForm] = useState({
     sessionDate: new Date().toISOString().split('T')[0],
@@ -642,10 +738,99 @@ function HomeVisitationForm({ residentId, onSuccess }: { residentId: number; onS
   );
 }
 
+function CaseConferenceForm({ residentId, onSuccess }: { residentId: number; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    conferenceDate: new Date().toISOString().split('T')[0],
+    conferenceType: 'Case Conference',
+    status: 'Planned',
+    facilitator: '',
+    agenda: '',
+    summaryNotes: '',
+    followUpActions: '',
+    nextConferenceDate: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.facilitator.trim() || !form.agenda.trim()) {
+      setError('Facilitator and agenda are required.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post('/caseconferences', {
+        residentId,
+        conferenceDate: form.conferenceDate,
+        conferenceType: form.conferenceType,
+        status: form.status,
+        facilitator: form.facilitator,
+        agenda: form.agenda,
+        summaryNotes: form.summaryNotes || null,
+        followUpActions: form.followUpActions || null,
+        nextConferenceDate: form.nextConferenceDate || null,
+      });
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save conference.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ ...formStyle, marginBottom: '1.5rem' }}>
+      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1a365d', marginBottom: '1rem' }}>Schedule Case Conference</h4>
+      {error && <div style={errorStyle}>{error}</div>}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <FormField label="Conference Date*" type="date" value={form.conferenceDate} onChange={(v) => setForm(f => ({ ...f, conferenceDate: v }))} />
+        <div>
+          <label style={labelStyle}>Type</label>
+          <select value={form.conferenceType} onChange={(e) => setForm(f => ({ ...f, conferenceType: e.target.value }))} style={selectStyle}>
+            <option>Case Conference</option>
+            <option>Multidisciplinary Review</option>
+            <option>Family Conference</option>
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>Status</label>
+          <select value={form.status} onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))} style={selectStyle}>
+            <option>Planned</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <FormField label="Facilitator*" type="text" value={form.facilitator} onChange={(v) => setForm(f => ({ ...f, facilitator: v }))} />
+        <FormField label="Next Conference Date" type="date" value={form.nextConferenceDate} onChange={(v) => setForm(f => ({ ...f, nextConferenceDate: v }))} />
+      </div>
+      <div style={{ marginBottom: '0.75rem' }}>
+        <label style={labelStyle}>Agenda*</label>
+        <textarea value={form.agenda} onChange={(e) => setForm(f => ({ ...f, agenda: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <div>
+          <label style={labelStyle}>Summary Notes</label>
+          <textarea value={form.summaryNotes} onChange={(e) => setForm(f => ({ ...f, summaryNotes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+        </div>
+        <div>
+          <label style={labelStyle}>Follow-up Actions</label>
+          <textarea value={form.followUpActions} onChange={(e) => setForm(f => ({ ...f, followUpActions: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+        </div>
+      </div>
+      <button type="submit" disabled={submitting} style={submitBtnStyle(submitting)}>
+        {submitting ? 'Saving…' : 'Save Conference'}
+      </button>
+    </form>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.25rem', border: '1px solid #e2e8f0' }}>
-      <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#718096', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem' }}>{title}</h3>
+    <div className="rounded-lg border border-border bg-card p-5 card-shadow">
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">{title}</h3>
       {children}
     </div>
   );
@@ -653,9 +838,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
-      <span style={{ color: '#718096', minWidth: '140px', flexShrink: 0 }}>{label}:</span>
-      <span style={{ color: '#2d3748', fontWeight: 500 }}>{value}</span>
+    <div className="mb-1.5 flex flex-wrap gap-2 text-sm">
+      <span className="min-w-[140px] shrink-0 text-muted-foreground">{label}:</span>
+      <span className="font-medium text-foreground">{value}</span>
     </div>
   );
 }

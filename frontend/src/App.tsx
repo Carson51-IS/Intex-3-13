@@ -13,6 +13,8 @@ import PrivacyPage from './pages/PrivacyPage';
 import DonorDashboard from './pages/DonorDashboard';
 import ResidentsPage from './pages/admin/ResidentsPage';
 import ResidentDetailPage from './pages/admin/ResidentDetailPage';
+import ResidentNewPage from './pages/admin/ResidentNewPage';
+import ResidentEditPage from './pages/admin/ResidentEditPage';
 import DonorsPage from './pages/admin/DonorsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import SettingsPage from './pages/admin/SettingsPage';
@@ -66,7 +68,9 @@ function AdminRoute({ children }: { children: ReactNode }) {
 const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
   { path: '/admin', element: <AdminDashboard /> },
   { path: '/admin/residents', element: <ResidentsPage /> },
+  { path: '/admin/residents/new', element: <ResidentNewPage /> },
   { path: '/admin/residents/:id', element: <ResidentDetailPage /> },
+  { path: '/admin/residents/:id/edit', element: <ResidentEditPage /> },
   { path: '/admin/donors', element: <DonorsPage /> },
   { path: '/admin/reports', element: <ReportsPage /> },
   { path: '/admin/insights', element: <InsightsHubPage /> },

@@ -104,7 +104,7 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <div className="mx-auto mt-10 max-w-3xl rounded-xl border bg-card p-6 text-center card-shadow">
+          <div className="mx-auto mt-10 max-w-3xl p-2 text-center">
             <h3 className="font-heading text-2xl font-semibold text-foreground">Explore the Impact Dashboard</h3>
             <p className="mt-2 text-sm text-muted-foreground md:text-base">
               View donor-facing, anonymized insights on outcomes, progress, and how resources are used.

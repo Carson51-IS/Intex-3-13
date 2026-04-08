@@ -13,6 +13,14 @@ interface AdminSummary {
   recentDonationsTotal: number;
   incidentsThisMonth: number;
   riskBreakdown: { riskLevel: string; count: number }[];
+  upcomingConferences: {
+    conferenceId: number;
+    residentId: number;
+    residentCode: string;
+    conferenceDate: string;
+    status: string;
+    conferenceType: string;
+  }[];
 }
 
 const riskColors: Record<string, string> = {
@@ -114,6 +122,21 @@ export default function AdminDashboard() {
           <div className="rounded-xl border bg-card p-5 card-shadow">
             <h2 className="mb-4 font-heading text-xl font-semibold text-card-foreground">Priority Alerts</h2>
             <div className="space-y-3">
+              <div className="rounded-lg border border-info/30 bg-info/10 p-3">
+                <p className="text-sm font-semibold text-info">Upcoming Case Conferences</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {data ? (data.upcomingConferences?.length ?? 0) : 0} conference(s) scheduled.
+                </p>
+                {data && (data.upcomingConferences?.length ?? 0) > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {(data.upcomingConferences ?? []).slice(0, 3).map((c) => (
+                      <div key={c.conferenceId} className="text-xs text-foreground/80">
+                        {new Date(c.conferenceDate).toLocaleDateString()} - {c.residentCode} ({c.status})
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
                 <p className="text-sm font-semibold text-warning-foreground">Safehouse Incident Forecasts</p>
                 <p className="mt-1 text-sm text-muted-foreground">

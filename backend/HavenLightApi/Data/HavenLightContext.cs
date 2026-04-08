@@ -25,6 +25,7 @@ public class HavenLightContext : IdentityDbContext
     public DbSet<SocialMediaPost> SocialMediaPosts => Set<SocialMediaPost>();
     public DbSet<SafehouseMonthlyMetric> SafehouseMonthlyMetrics => Set<SafehouseMonthlyMetric>();
     public DbSet<PublicImpactSnapshot> PublicImpactSnapshots => Set<PublicImpactSnapshot>();
+    public DbSet<CaseConference> CaseConferences => Set<CaseConference>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -59,5 +60,11 @@ public class HavenLightContext : IdentityDbContext
             .WithMany(s => s.Residents)
             .HasForeignKey(r => r.SafehouseId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CaseConference>()
+            .HasOne(c => c.Resident)
+            .WithMany()
+            .HasForeignKey(c => c.ResidentId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

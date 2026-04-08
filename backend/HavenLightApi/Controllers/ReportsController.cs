@@ -116,7 +116,14 @@ public class ReportsController : ControllerBase
     [HttpGet("admission-trends")]
     public async Task<IActionResult> GetAdmissionTrends()
     {
-        var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-11)).AddDays(1 - DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-11)).Day);
+        var latestAdmission = await _context.Residents.MaxAsync(r => (DateOnly?)r.DateOfAdmission);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // Guard against future-dated records skewing the "last 12 months" window.
+        var anchor = latestAdmission.HasValue && latestAdmission.Value <= today
+            ? latestAdmission.Value
+            : today;
+        var anchorMonthStart = new DateOnly(anchor.Year, anchor.Month, 1);
+        var cutoff = anchorMonthStart.AddMonths(-11);
 
         var raw = await _context.Residents
             .Where(r => r.DateOfAdmission >= cutoff)
@@ -149,5 +156,103 @@ public class ReportsController : ControllerBase
             .ToListAsync();
 
         return Ok(result);
+    }
+
+    /// <summary>Monthly average education progress for the past 12 months.</summary>
+    [HttpGet("education-progress-trends")]
+    public async Task<IActionResult> GetEducationProgressTrends()
+    {
+        var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-11)).AddDays(1 - DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-11)).Day);
+
+        var raw = await _context.EducationRecords
+            .Where(r => r.RecordDate >= cutoff)
+            .Select(r => new { r.RecordDate, r.ProgressPercent })
+            .ToListAsync();
+
+        var grouped = raw
+            .GroupBy(r => new { r.RecordDate.Year, r.RecordDate.Month })
+            .Select(g => new
+            {
+                year = g.Key.Year,
+                month = g.Key.Month,
+                label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
+                avgProgress = Math.Round(g.Average(x => (double)x.ProgressPercent), 2),
+                sampleSize = g.Count()
+            })
+            .OrderBy(x => x.year).ThenBy(x => x.month)
+            .ToList();
+
+        return Ok(grouped);
+    }
+
+    /// <summary>Monthly average general health score for the past 12 months.</summary>
+    [HttpGet("health-improvement-trends")]
+    public async Task<IActionResult> GetHealthImprovementTrends()
+    {
+        var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-11)).AddDays(1 - DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-11)).Day);
+
+        var raw = await _context.HealthWellbeingRecords
+            .Where(r => r.RecordDate >= cutoff)
+            .Select(r => new { r.RecordDate, r.GeneralHealthScore })
+            .ToListAsync();
+
+        var grouped = raw
+            .GroupBy(r => new { r.RecordDate.Year, r.RecordDate.Month })
+            .Select(g => new
+            {
+                year = g.Key.Year,
+                month = g.Key.Month,
+                label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
+                avgHealth = Math.Round(g.Average(x => (double)x.GeneralHealthScore), 2),
+                sampleSize = g.Count()
+            })
+            .OrderBy(x => x.year).ThenBy(x => x.month)
+            .ToList();
+
+        return Ok(grouped);
+    }
+
+    /// <summary>AAR-style service and outcomes summary (Caring / Healing / Teaching).</summary>
+    [HttpGet("aar-summary")]
+    public async Task<IActionResult> GetAarSummary()
+    {
+        var activeResidents = await _context.Residents.CountAsync(r => r.CaseStatus == "Active");
+
+        var caringServices = await _context.HomeVisitations.CountAsync();
+        var healingServices = await _context.ProcessRecordings.CountAsync();
+        var teachingServices = await _context.EducationRecords.CountAsync();
+
+        var avgEducationProgress = await _context.EducationRecords
+            .Select(r => (double?)r.ProgressPercent)
+            .AverageAsync() ?? 0;
+        var avgHealthScore = await _context.HealthWellbeingRecords
+            .Select(r => (double?)r.GeneralHealthScore)
+            .AverageAsync() ?? 0;
+        var reintegratedResidents = await _context.Residents.CountAsync(r => r.ReintegrationStatus == "Completed");
+
+        return Ok(new
+        {
+            caring = new
+            {
+                servicesProvided = caringServices,
+                beneficiaryCount = activeResidents
+            },
+            healing = new
+            {
+                servicesProvided = healingServices,
+                beneficiaryCount = activeResidents,
+                avgHealthScore = Math.Round(avgHealthScore, 2)
+            },
+            teaching = new
+            {
+                servicesProvided = teachingServices,
+                beneficiaryCount = activeResidents,
+                avgEducationProgress = Math.Round(avgEducationProgress, 2)
+            },
+            outcomes = new
+            {
+                reintegrationCompleted = reintegratedResidents,
+            }
+        });
     }
 }

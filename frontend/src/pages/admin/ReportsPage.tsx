@@ -22,6 +22,14 @@ interface ReintegrationStats {
   byType: { type: string; count: number }[];
 }
 interface AdmissionTrend { label: string; count: number; }
+interface EducationTrend { label: string; avgProgress: number; sampleSize: number; }
+interface HealthTrend { label: string; avgHealth: number; sampleSize: number; }
+interface AarSummary {
+  caring: { servicesProvided: number; beneficiaryCount: number };
+  healing: { servicesProvided: number; beneficiaryCount: number; avgHealthScore: number };
+  teaching: { servicesProvided: number; beneficiaryCount: number; avgEducationProgress: number };
+  outcomes: { reintegrationCompleted: number };
+}
 
 export default function ReportsPage() {
   const { user } = useAuth();
@@ -31,6 +39,9 @@ export default function ReportsPage() {
   const [categories, setCategories] = useState<CaseCategory[]>([]);
   const [reintegration, setReintegration] = useState<ReintegrationStats | null>(null);
   const [admissions, setAdmissions] = useState<AdmissionTrend[]>([]);
+  const [educationTrends, setEducationTrends] = useState<EducationTrend[]>([]);
+  const [healthTrends, setHealthTrends] = useState<HealthTrend[]>([]);
+  const [aarSummary, setAarSummary] = useState<AarSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
@@ -39,13 +50,16 @@ export default function ReportsPage() {
     const fetchAll = async () => {
       setIsLoading(true);
       try {
-        const [dt, dbt, sp, cc, ri, at] = await Promise.all([
+        const [dt, dbt, sp, cc, ri, at, et, ht, aar] = await Promise.all([
           api.get<DonationTrend[]>('/reports/donation-trends'),
           api.get<DonationType[]>('/reports/donation-by-type'),
           api.get<SafehousePerf[]>('/reports/safehouse-performance'),
           api.get<CaseCategory[]>('/reports/case-categories'),
           api.get<ReintegrationStats>('/reports/reintegration-stats'),
           api.get<AdmissionTrend[]>('/reports/admission-trends'),
+          api.get<EducationTrend[]>('/reports/education-progress-trends'),
+          api.get<HealthTrend[]>('/reports/health-improvement-trends'),
+          api.get<AarSummary>('/reports/aar-summary'),
         ]);
         setDonationTrends(dt);
         setDonationTypes(dbt);
@@ -53,6 +67,9 @@ export default function ReportsPage() {
         setCategories(cc);
         setReintegration(ri);
         setAdmissions(at);
+        setEducationTrends(et);
+        setHealthTrends(ht);
+        setAarSummary(aar);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load reports');
       } finally {
@@ -119,6 +136,30 @@ export default function ReportsPage() {
               data={admissions.map(a => ({ label: a.label.split(' ')[0], value: a.count }))}
               color="#2b6cb0"
               formatValue={(v) => v.toString()}
+            />
+          </ReportCard>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <ReportCard
+            title="Education Progress Trends"
+            subtitle={educationTrends.length ? `Latest avg: ${educationTrends[educationTrends.length - 1].avgProgress.toFixed(1)}%` : undefined}
+          >
+            <BarChart
+              data={educationTrends.map(e => ({ label: e.label.split(' ')[0], value: e.avgProgress }))}
+              color="#805ad5"
+              formatValue={(v) => `${v.toFixed(0)}%`}
+            />
+          </ReportCard>
+
+          <ReportCard
+            title="Health Improvement Trends"
+            subtitle={healthTrends.length ? `Latest avg score: ${healthTrends[healthTrends.length - 1].avgHealth.toFixed(2)}` : undefined}
+          >
+            <BarChart
+              data={healthTrends.map(h => ({ label: h.label.split(' ')[0], value: h.avgHealth }))}
+              color="#2b6cb0"
+              formatValue={(v) => v.toFixed(1)}
             />
           </ReportCard>
         </div>
@@ -219,8 +260,71 @@ export default function ReportsPage() {
             </ReportCard>
           </div>
         )}
+
+        {aarSummary && (
+          <ReportCard
+            title="Annual Accomplishment Report (AAR) Snapshot"
+            subtitle="Service-grouped summary: Caring, Healing, Teaching"
+          >
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <AarTile
+                title="Caring"
+                services={aarSummary.caring.servicesProvided}
+                beneficiaries={aarSummary.caring.beneficiaryCount}
+                metricLabel="Focus"
+                metricValue="Home / field support"
+                color="text-info"
+              />
+              <AarTile
+                title="Healing"
+                services={aarSummary.healing.servicesProvided}
+                beneficiaries={aarSummary.healing.beneficiaryCount}
+                metricLabel="Avg health score"
+                metricValue={aarSummary.healing.avgHealthScore.toFixed(2)}
+                color="text-success"
+              />
+              <AarTile
+                title="Teaching"
+                services={aarSummary.teaching.servicesProvided}
+                beneficiaries={aarSummary.teaching.beneficiaryCount}
+                metricLabel="Avg education progress"
+                metricValue={`${aarSummary.teaching.avgEducationProgress.toFixed(1)}%`}
+                color="text-warning"
+              />
+            </div>
+            <div className="mt-4 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-foreground">
+              Reintegration outcomes completed: <span className="font-semibold text-success">{aarSummary.outcomes.reintegrationCompleted}</span>
+            </div>
+          </ReportCard>
+        )}
       </div>
     </AdminLayout>
+  );
+}
+
+function AarTile({
+  title,
+  services,
+  beneficiaries,
+  metricLabel,
+  metricValue,
+  color,
+}: {
+  title: string;
+  services: number;
+  beneficiaries: number;
+  metricLabel: string;
+  metricValue: string;
+  color: string;
+}) {
+  return (
+    <div className="rounded-lg border bg-card px-4 py-3">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+      <div className={`mt-1 text-2xl font-bold ${color}`}>{services}</div>
+      <div className="text-xs text-muted-foreground">services provided</div>
+      <div className="mt-2 text-sm text-foreground">Beneficiaries: <span className="font-semibold">{beneficiaries}</span></div>
+      <div className="text-sm text-muted-foreground">{metricLabel}: <span className="font-semibold text-foreground">{metricValue}</span></div>
+    </div>
   );
 }
 

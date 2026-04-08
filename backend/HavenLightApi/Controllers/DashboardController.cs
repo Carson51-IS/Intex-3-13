@@ -56,12 +56,28 @@ public class DashboardController : ControllerBase
             .Select(g => new { riskLevel = g.Key, count = g.Count() })
             .ToListAsync();
 
+        var upcomingConferences = await _context.CaseConferences
+            .Where(c => c.ConferenceDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .OrderBy(c => c.ConferenceDate)
+            .Take(5)
+            .Select(c => new
+            {
+                c.ConferenceId,
+                c.ResidentId,
+                c.ConferenceDate,
+                c.Status,
+                c.ConferenceType,
+                residentCode = c.Resident.InternalCode
+            })
+            .ToListAsync();
+
         return Ok(new
         {
             activeResidents,
             recentDonationsTotal,
             incidentsThisMonth,
-            riskBreakdown
+            riskBreakdown,
+            upcomingConferences
         });
     }
 }
