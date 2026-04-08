@@ -172,7 +172,7 @@ export default function ResidentsPage() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto w-full max-w-6xl overflow-x-hidden break-words">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="font-heading text-2xl font-bold text-foreground md:text-3xl">Caseload Inventory</h1>

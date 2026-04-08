@@ -270,7 +270,7 @@ export default function DonorsPage() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto w-full max-w-6xl overflow-x-hidden break-words">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="font-heading text-2xl font-bold text-foreground md:text-3xl">Donors & Contributions</h1>
@@ -397,7 +397,7 @@ export default function DonorsPage() {
                         </td>
                         <td className={tdCn}>
                           {s.lastDonationDate
-                            ? `${new Date(s.lastDonationDate).toLocaleDateString()} (${formatAmountWithPreference(s.lastDonationAmount ?? 0, currencyPreference)})`
+                            ? `${new Date(s.lastDonationDate).toLocaleDateString()}${s.lastDonationAmount != null ? ` (${formatAmountWithPreference(s.lastDonationAmount, currencyPreference)})` : ''}`
                             : '—'}
                         </td>
                         <td className={`${tdCn} font-semibold text-success`}>

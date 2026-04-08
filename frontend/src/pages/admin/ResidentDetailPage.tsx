@@ -98,7 +98,7 @@ export default function ResidentDetailPage() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto w-full max-w-5xl">
+      <div className="mx-auto w-full max-w-5xl overflow-x-hidden break-words">
         {/* Breadcrumb */}
         <div className="mb-4 text-sm text-muted-foreground">
           <Link to="/admin/residents" className="font-medium text-primary no-underline hover:underline">Caseload</Link>
