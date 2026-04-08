@@ -24,7 +24,7 @@ export default function PrivacyPage() {
             <li><strong>General contact:</strong> info@havenlight.ph</li>
             <li><strong>Phone:</strong> +63 (2) 8123-4567</li>
             <li><strong>Address:</strong> Metro Manila, Philippines</li>
-            <li><strong>Data protection contact (DPO/Privacy lead):</strong> [Name/Title]</li>
+            <li><strong>Data protection contact (DPO/Privacy lead):</strong> Carson Hendrix (CIO)</li>
           </ul>
 
           <h2 className="mt-8 border-l-4 border-primary pl-3 font-heading text-2xl font-semibold">
