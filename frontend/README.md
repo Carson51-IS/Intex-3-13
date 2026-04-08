@@ -11,6 +11,13 @@ The .NET API creates this admin on first startup if it does not already exist (`
 
 If login fails, the account may already exist with a different password, or the API/DB may not be reachable. For INTEX submission, also set up the grader accounts required in the case (admin without MFA, donor without MFA, one account with MFA).
 
+## Admin/Staff login (Yes MFA)
+
+| | |
+|---|---|
+| **Email** | `staff@havenlight.ph` |
+| **Password** | `Thisis@beautifulwOrk` |
+
 ## Donor login (No MFA)
 
 
