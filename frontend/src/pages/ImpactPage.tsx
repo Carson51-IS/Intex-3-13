@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 
 interface PublicImpact {
@@ -46,19 +45,6 @@ export default function ImpactPage() {
           </p>
         </section>
       )}
-
-      <section className="mx-6 mb-10 rounded-2xl border border-info/30 bg-info/10 px-6 py-10 text-center">
-        <h2 className="font-heading text-2xl font-semibold text-foreground">Explore Our Data-Driven Strategy</h2>
-        <p className="mx-auto mb-6 mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
-          See how we use machine learning to optimize social media outreach and maximize the impact of every post.
-        </p>
-        <Link
-          to="/insights"
-          className="inline-block rounded-md bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground no-underline transition-opacity hover:opacity-90"
-        >
-          View Social Media Insights
-        </Link>
-      </section>
     </div>
   );
 }

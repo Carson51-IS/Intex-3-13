@@ -24,8 +24,7 @@ export default function Footer() {
           <div>
             <h4 className="mb-3 font-heading font-semibold text-primary-foreground">Quick Links</h4>
             <div className="space-y-2">
-              <FooterLink to="/impact">Impact</FooterLink>
-              <FooterLink to="/insights">Insights</FooterLink>
+              <FooterAnchor href="/#impact">Impact</FooterAnchor>
               <FooterLink to="/privacy">Privacy Policy</FooterLink>
             </div>
           </div>
@@ -46,5 +45,13 @@ function FooterLink({ to, children }: { to: string; children: React.ReactNode })
     >
       {children}
     </Link>
+  );
+}
+
+function FooterAnchor({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} className="block transition-colors hover:text-primary-foreground">
+      {children}
+    </a>
   );
 }
