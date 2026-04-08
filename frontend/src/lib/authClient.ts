@@ -299,6 +299,28 @@ export async function loginUser(
   localStorage.setItem('token', accessToken);
 }
 
+/**
+ * After Google sign-in the API sets a session cookie. This endpoint exchanges that
+ * cookie for a Bearer JWT and stores it in localStorage, so all subsequent API
+ * calls use the same token-based auth as email/password login.
+ */
+export async function exchangeCookieForToken(): Promise<void> {
+  const res = await fetch(apiUrl('/auth/exchange-cookie-for-token'), {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'Failed to exchange cookie for token'));
+  }
+
+  const json: unknown = await res.json().catch(() => null);
+  const accessToken = readAccessTokenFromJson(json);
+  if (accessToken) {
+    localStorage.setItem('token', accessToken);
+  }
+}
+
 export function buildExternalLoginUrl(provider: string, returnPath: string): string {
   const safePath =
     returnPath.startsWith('/') && !returnPath.startsWith('//') ? returnPath : '/';

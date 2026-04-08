@@ -7,7 +7,7 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
-import { getAuthSession, loginUser } from '../lib/AuthAPI';
+import { getAuthSession, loginUser, exchangeCookieForToken } from '../lib/AuthAPI';
 import type { AuthSession } from '../types/AuthSession';
 import { getAccountPreferences, saveAccountPreferences } from '../lib/accountPreferences';
 
@@ -104,6 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const qs = params.toString();
           const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`;
           window.history.replaceState({}, '', newUrl);
+
+          // Google sign-in set a cookie on the API. Exchange it for a Bearer JWT
+          // so all subsequent API calls use the same token flow as email/password.
+          // Cross-site cookies are unreliable; Bearer tokens always work.
+          try {
+            await exchangeCookieForToken();
+          } catch {
+            // Cookie exchange failed — session will fall back to cookie-only
+          }
         }
       }
       if (!cancelled) await refreshAuthSession();

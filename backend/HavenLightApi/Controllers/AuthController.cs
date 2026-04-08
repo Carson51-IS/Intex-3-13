@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using HavenLightApi.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -270,6 +271,27 @@ public class AuthController(
             : NormalizeReturnPath(returnPath);
 
         return Redirect(BuildFrontendSuccessUrl(effectiveReturnPath));
+    }
+
+    /// <summary>
+    /// Exchanges the cookie session (set by Google sign-in) for a Bearer JWT so the SPA
+    /// can use the same localStorage token flow as email/password login.
+    /// Cross-site cookies are unreliable (browser restrictions); Bearer tokens are not.
+    /// </summary>
+    [HttpPost("exchange-cookie-for-token")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ExchangeCookieForToken()
+    {
+        var cookieResult = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        if (cookieResult.Succeeded != true)
+            return Unauthorized(new { message = "No valid session cookie." });
+
+        var user = await userManager.GetUserAsync(cookieResult.Principal);
+        if (user is null)
+            return Unauthorized(new { message = "User not found." });
+
+        var principal = await signInManager.CreateUserPrincipalAsync(user);
+        return SignIn(principal, IdentityConstants.BearerScheme);
     }
 
     private bool IsGoogleConfigured() => GoogleConfigurationReader.IsFullyConfigured(configuration);
