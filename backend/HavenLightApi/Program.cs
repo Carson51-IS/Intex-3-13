@@ -33,7 +33,10 @@ var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecr
 
 
 builder.Services.AddDbContext<AuthIdentityDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("AuthIdentityConnection")));
+{
+    options.UseSqlite(builder.Configuration.GetConnectionString("AuthIdentityConnection"));
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 
 builder.Services.ConfigureApplicationCookie(options => 
 {
@@ -145,6 +148,7 @@ using (var scope = app.Services.CreateScope())
 {
     var authIdentity = scope.ServiceProvider.GetRequiredService<AuthIdentityDbContext>();
     await authIdentity.Database.MigrateAsync();
+    await EnsureAuthProfileColumnsAsync(authIdentity);
 
     var context = scope.ServiceProvider.GetRequiredService<HavenLightContext>();
     await context.Database.MigrateAsync();
@@ -179,6 +183,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseStaticFiles();
 app.UseRouting();
 
 // CORS must run early (after routing, before auth) so OPTIONS preflight gets correct headers.
@@ -207,3 +212,32 @@ app.MapControllers();
 app.MapGroup("/api/auth").MapIdentityApi<ApplicationUser>();
 
 app.Run();
+
+static async Task EnsureAuthProfileColumnsAsync(AuthIdentityDbContext authIdentity)
+{
+    if (!await HasAspNetUsersColumnAsync(authIdentity, "DisplayName"))
+        await authIdentity.Database.ExecuteSqlRawAsync("ALTER TABLE AspNetUsers ADD COLUMN DisplayName TEXT NULL;");
+    if (!await HasAspNetUsersColumnAsync(authIdentity, "CurrencyPreference"))
+        await authIdentity.Database.ExecuteSqlRawAsync("ALTER TABLE AspNetUsers ADD COLUMN CurrencyPreference TEXT NOT NULL DEFAULT 'PHP';");
+    if (!await HasAspNetUsersColumnAsync(authIdentity, "ProfileImageUrl"))
+        await authIdentity.Database.ExecuteSqlRawAsync("ALTER TABLE AspNetUsers ADD COLUMN ProfileImageUrl TEXT NULL;");
+}
+
+static async Task<bool> HasAspNetUsersColumnAsync(AuthIdentityDbContext authIdentity, string columnName)
+{
+    await using var connection = authIdentity.Database.GetDbConnection();
+    if (connection.State != System.Data.ConnectionState.Open)
+        await connection.OpenAsync();
+
+    await using var command = connection.CreateCommand();
+    command.CommandText = "PRAGMA table_info('AspNetUsers');";
+    await using var reader = await command.ExecuteReaderAsync();
+    while (await reader.ReadAsync())
+    {
+        var name = reader.GetString(1);
+        if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+            return true;
+    }
+
+    return false;
+}

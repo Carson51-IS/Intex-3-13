@@ -14,7 +14,8 @@ namespace HavenLightApi.Controllers;
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    IConfiguration configuration) : ControllerBase
+    IConfiguration configuration,
+    IWebHostEnvironment environment) : ControllerBase
 {
     [HttpGet("me")]
     [AllowAnonymous]
@@ -48,10 +49,116 @@ public class AuthController(
         return Ok(new
         {
             isAuthenticated = true,
-            userName = user.UserName ?? User.Identity?.Name,
+            userName = user.DisplayName ?? user.UserName ?? User.Identity?.Name,
             email = user.Email,
+            phoneNumber = user.PhoneNumber,
+            currencyPreference = string.IsNullOrWhiteSpace(user.CurrencyPreference) ? "PHP" : user.CurrencyPreference,
+            profileImageUrl = BuildAbsoluteProfileImageUrl(user.ProfileImageUrl),
             roles
         });
+    }
+
+    [HttpGet("profile")]
+    [Authorize]
+    public async Task<IActionResult> GetProfile()
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user is null) return Unauthorized();
+
+        return Ok(new
+        {
+            displayName = user.DisplayName ?? user.UserName ?? user.Email,
+            email = user.Email,
+            phoneNumber = user.PhoneNumber,
+            currencyPreference = string.IsNullOrWhiteSpace(user.CurrencyPreference) ? "PHP" : user.CurrencyPreference,
+            profileImageUrl = BuildAbsoluteProfileImageUrl(user.ProfileImageUrl),
+        });
+    }
+
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user is null) return Unauthorized();
+
+        var currency = dto.CurrencyPreference?.Trim().ToUpperInvariant();
+        if (currency is not ("PHP" or "USD"))
+            return BadRequest(new { message = "Currency preference must be PHP or USD." });
+
+        user.DisplayName = string.IsNullOrWhiteSpace(dto.DisplayName) ? user.DisplayName : dto.DisplayName.Trim();
+        user.PhoneNumber = dto.PhoneNumber?.Trim() ?? string.Empty;
+        user.CurrencyPreference = currency;
+
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            var msg = string.Join(' ', result.Errors.Select(e => e.Description));
+            return BadRequest(new { message = string.IsNullOrWhiteSpace(msg) ? "Failed to update profile." : msg });
+        }
+
+        return Ok(new
+        {
+            message = "Profile updated.",
+            displayName = user.DisplayName ?? user.UserName ?? user.Email,
+            email = user.Email,
+            phoneNumber = user.PhoneNumber,
+            currencyPreference = user.CurrencyPreference,
+            profileImageUrl = BuildAbsoluteProfileImageUrl(user.ProfileImageUrl),
+        });
+    }
+
+    [HttpPost("profile-image")]
+    [Authorize]
+    [RequestSizeLimit(2 * 1024 * 1024)]
+    public async Task<IActionResult> UploadProfileImage(IFormFile? file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { message = "Please choose an image file." });
+        if (file.Length > 2 * 1024 * 1024)
+            return BadRequest(new { message = "Image must be 2MB or less." });
+        if (string.IsNullOrWhiteSpace(file.ContentType) || !file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Only image uploads are allowed." });
+
+        var user = await userManager.GetUserAsync(User);
+        if (user is null) return Unauthorized();
+
+        var uploadsDir = Path.Combine(environment.WebRootPath ?? Path.Combine(environment.ContentRootPath, "wwwroot"), "profile-images");
+        Directory.CreateDirectory(uploadsDir);
+
+        var ext = Path.GetExtension(file.FileName);
+        if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
+        var safeExt = ext.Length > 8 ? ".jpg" : ext.ToLowerInvariant();
+        var fileName = $"{user.Id}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}{safeExt}";
+        var fullPath = Path.Combine(uploadsDir, fileName);
+
+        await using (var stream = System.IO.File.Create(fullPath))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        if (!string.IsNullOrWhiteSpace(user.ProfileImageUrl))
+        {
+            var oldRelativePath = user.ProfileImageUrl;
+            if (Uri.TryCreate(oldRelativePath, UriKind.Absolute, out var oldUri))
+                oldRelativePath = oldUri.AbsolutePath;
+            var oldFile = oldRelativePath.Replace("/profile-images/", "", StringComparison.OrdinalIgnoreCase);
+            var oldPath = Path.Combine(uploadsDir, oldFile);
+            if (System.IO.File.Exists(oldPath))
+            {
+                try { System.IO.File.Delete(oldPath); } catch { /* ignore old cleanup failures */ }
+            }
+        }
+
+        user.ProfileImageUrl = $"/profile-images/{fileName}";
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            var msg = string.Join(' ', result.Errors.Select(e => e.Description));
+            return BadRequest(new { message = string.IsNullOrWhiteSpace(msg) ? "Failed to save profile image." : msg });
+        }
+
+        return Ok(new { profileImageUrl = BuildAbsoluteProfileImageUrl(user.ProfileImageUrl) });
     }
 
     [HttpGet("users")]
@@ -234,6 +341,19 @@ public class AuthController(
         var baseUrl = (configuration["Frontend:BaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
         return QueryHelpers.AddQueryString($"{baseUrl}/login", "error", message);
     }
+
+    private string? BuildAbsoluteProfileImageUrl(string? imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl)) return null;
+        if (Uri.TryCreate(imageUrl, UriKind.Absolute, out _)) return imageUrl;
+        return $"{Request.Scheme}://{Request.Host}{imageUrl}";
+    }
 }
+
+public record UpdateProfileDto(
+    string? DisplayName,
+    string? PhoneNumber,
+    string? CurrencyPreference
+);
 
 

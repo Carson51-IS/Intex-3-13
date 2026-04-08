@@ -7,4 +7,6 @@ export {
   LoginRequiresTwoFactorError,
   getExternalAuthProviders,
   buildExternalLoginUrl,
+  updateMyProfile,
+  uploadMyProfileImage,
 } from './authClient';

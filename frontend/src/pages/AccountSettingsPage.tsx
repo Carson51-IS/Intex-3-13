@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { updateMyProfile, uploadMyProfileImage } from '../lib/AuthAPI';
 import {
   getAccountPreferences,
   saveAccountPreferences,
@@ -8,7 +9,7 @@ import {
 } from '../lib/accountPreferences';
 
 export default function AccountSettingsPage() {
-  const { user } = useAuth();
+  const { user, refreshAuthSession } = useAuth();
   const defaultName = user ? user.userName?.trim() || user.email.split('@')[0] || user.email : '';
   const emailKey = user?.email ?? 'anonymous';
 
@@ -19,17 +20,48 @@ export default function AccountSettingsPage() {
 
   const [form, setForm] = useState(initial);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     setForm(initial);
   }, [initial]);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    saveAccountPreferences(emailKey, form);
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 1800);
+    setSaveError('');
+    setSaving(true);
+    try {
+      const profile = await updateMyProfile({
+        displayName: form.displayName,
+        phoneNumber: form.phone,
+        currencyPreference: form.currency,
+      });
+
+      let nextImageUrl = profile.profileImageUrl ?? form.profileImageDataUrl ?? '';
+      if (imageFile) {
+        const uploadResult = await uploadMyProfileImage(imageFile);
+        nextImageUrl = uploadResult.profileImageUrl ?? '';
+      }
+
+      saveAccountPreferences(emailKey, {
+        displayName: profile.displayName || form.displayName,
+        phone: profile.phoneNumber || form.phone,
+        currency: profile.currencyPreference === 'USD' ? 'USD' : 'PHP',
+        profileImageDataUrl: nextImageUrl,
+      });
+
+      await refreshAuthSession();
+      setImageFile(null);
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 1800);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save profile settings.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onImageChange = (file: File | null) => {
@@ -47,6 +79,7 @@ export default function AccountSettingsPage() {
     reader.onload = () => {
       const result = typeof reader.result === 'string' ? reader.result : '';
       setForm((f) => ({ ...f, profileImageDataUrl: result }));
+      setImageFile(file);
     };
     reader.readAsDataURL(file);
   };
@@ -107,7 +140,10 @@ export default function AccountSettingsPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setForm((f) => ({ ...f, profileImageDataUrl: '' }))}
+                  onClick={() => {
+                    setForm((f) => ({ ...f, profileImageDataUrl: '' }));
+                    setImageFile(null);
+                  }}
                   className="mt-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
                 >
                   Remove image
@@ -132,9 +168,10 @@ export default function AccountSettingsPage() {
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               type="submit"
+              disabled={saving}
               className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Save settings
+              {saving ? 'Saving...' : 'Save settings'}
             </button>
             <Link
               to="/manage-mfa"
@@ -143,6 +180,7 @@ export default function AccountSettingsPage() {
               Manage MFA
             </Link>
             {saved ? <span className="text-sm font-medium text-success">Saved</span> : null}
+            {saveError ? <span className="text-sm font-medium text-destructive">{saveError}</span> : null}
           </div>
         </form>
       </div>

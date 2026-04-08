@@ -9,10 +9,14 @@ import {
 import type { ReactNode } from 'react';
 import { getAuthSession, loginUser } from '../lib/AuthAPI';
 import type { AuthSession } from '../types/AuthSession';
+import { getAccountPreferences, saveAccountPreferences } from '../lib/accountPreferences';
 
 export interface AuthUser {
   email: string;
   userName: string | null;
+  phoneNumber: string | null;
+  currencyPreference: 'PHP' | 'USD';
+  profileImageUrl: string | null;
   roles: string[];
 }
 
@@ -50,6 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const session = await getAuthSession();
       setAuthSession(session);
+      if (session.isAuthenticated && session.email) {
+        const fallbackName = session.userName?.trim() || session.email.split('@')[0] || session.email;
+        const existing = getAccountPreferences(session.email, fallbackName);
+        saveAccountPreferences(session.email, {
+          displayName: fallbackName || existing.displayName,
+          phone: session.phoneNumber ?? existing.phone,
+          currency: session.currencyPreference === 'USD' ? 'USD' : 'PHP',
+          // Preserve existing image until server returns one.
+          profileImageDataUrl: session.profileImageUrl?.trim() || existing.profileImageDataUrl || '',
+        });
+      }
       return session;
     } catch {
       setAuthSession(anonymousAuthSession);
@@ -87,6 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {
       email,
       userName: authSession.userName,
+      phoneNumber: authSession.phoneNumber ?? null,
+      currencyPreference: authSession.currencyPreference === 'USD' ? 'USD' : 'PHP',
+      profileImageUrl: authSession.profileImageUrl ?? null,
       roles: authSession.roles,
     };
   }, [authSession]);

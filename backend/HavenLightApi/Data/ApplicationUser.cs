@@ -4,5 +4,7 @@ namespace HavenLightApi.Data;
 
 public class ApplicationUser : IdentityUser
 {
-    // add other info 
+    public string? DisplayName { get; set; }
+    public string CurrencyPreference { get; set; } = "PHP";
+    public string? ProfileImageUrl { get; set; }
 }

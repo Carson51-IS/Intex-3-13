@@ -138,8 +138,12 @@ function parseAuthSessionPayload(body: unknown): AuthSession {
   const isAuthenticated = o.isAuthenticated === true;
   const userName = toStringOrNull(o.userName);
   const email = toStringOrNull(o.email);
+  const phoneNumber = toStringOrNull(o.phoneNumber);
+  const currencyRaw = toStringOrNull(o.currencyPreference);
+  const currencyPreference = currencyRaw === 'USD' ? 'USD' : currencyRaw === 'PHP' ? 'PHP' : null;
+  const profileImageUrl = toStringOrNull(o.profileImageUrl);
   const roles = Array.isArray(o.roles) ? o.roles.filter((r): r is string => typeof r === 'string') : [];
-  return { isAuthenticated, userName, email, roles };
+  return { isAuthenticated, userName, email, phoneNumber, currencyPreference, profileImageUrl, roles };
 }
 
 export async function getAuthSession(): Promise<AuthSession> {
@@ -301,4 +305,52 @@ export async function getExternalAuthProviders(): Promise<ExternalAuthProvider[]
 
 export async function externalLogin(provider: string, returnPath: string): Promise<void> {
   window.location.href = buildExternalLoginUrl(provider, returnPath);
+}
+
+export interface UserProfilePayload {
+  displayName: string;
+  email: string;
+  phoneNumber: string;
+  currencyPreference: 'PHP' | 'USD';
+  profileImageUrl: string | null;
+}
+
+export async function updateMyProfile(payload: {
+  displayName: string;
+  phoneNumber: string;
+  currencyPreference: 'PHP' | 'USD';
+}): Promise<UserProfilePayload> {
+  const stored = localStorage.getItem('token');
+  const response = await fetch(apiUrl('/auth/profile'), {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(stored ? { Authorization: `Bearer ${stored}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Failed to update profile'));
+  }
+
+  return response.json() as Promise<UserProfilePayload>;
+}
+
+export async function uploadMyProfileImage(file: File): Promise<{ profileImageUrl: string | null }> {
+  const stored = localStorage.getItem('token');
+  const form = new FormData();
+  form.append('file', file);
+
+  const response = await fetch(apiUrl('/auth/profile-image'), {
+    method: 'POST',
+    headers: stored ? { Authorization: `Bearer ${stored}` } : undefined,
+    body: form,
+  });
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Failed to upload profile image'));
+  }
+
+  return response.json() as Promise<{ profileImageUrl: string | null }>;
 }
