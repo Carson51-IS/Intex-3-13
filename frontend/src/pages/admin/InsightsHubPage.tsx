@@ -18,6 +18,14 @@ export default function InsightsHubPage() {
         <p className="mb-6 text-sm text-muted-foreground">
           Centralized access to all predictive analytics for donors and residents.
         </p>
+        <section className="mb-8 rounded-xl border border-info/30 bg-info/10 p-4 sm:p-6">
+          <h2 className="font-heading text-lg font-semibold text-info">What you’ll see</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+            <li>Each dashboard combines <strong>predictions</strong>, <strong>threshold-based flags</strong>, and <strong>explanatory legends</strong> to help you act quickly.</li>
+            <li>Summary counts (like “at risk” or “flagged”) typically use a <strong>50%</strong> cutoff where applicable.</li>
+            <li>These are <strong>decision-support tools</strong>; confirm with underlying records before taking action.</li>
+          </ul>
+        </section>
 
         <div className="grid gap-4 md:grid-cols-2">
           <InsightLinkCard

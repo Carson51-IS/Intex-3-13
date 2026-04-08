@@ -26,6 +26,16 @@ export default function ResidentInsightsPage() {
           ML-powered resident analytics: reintegration readiness assessment and safehouse incident forecasting.
         </p>
 
+        <section className="mb-10 rounded-xl border border-info/30 bg-info/10 p-4 sm:p-6">
+          <h2 className="font-heading text-lg font-semibold text-info">How to read this page</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+            <li><strong>Predicted status</strong> is the most likely reintegration outcome based on the probability breakdown.</li>
+            <li><strong>Probability bars</strong> sum to 100% (hover segments to see exact percentages).</li>
+            <li><strong>Match</strong> compares the prediction to the current recorded status; mismatches are a review prompt, not an error.</li>
+            <li><strong>Incident forecasts</strong> are decision-support signals for staffing/safety planning, not guarantees.</li>
+          </ul>
+        </section>
+
         <div className="mb-10 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Object.entries(statusCounts).map(([status, count]) => (
             <div
@@ -60,6 +70,13 @@ export default function ResidentInsightsPage() {
             health scores, intervention plans, and behavioral incidents. These predictions support, but never replace,
             staff decision-making.
           </p>
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-semibold uppercase tracking-wide text-muted-foreground">Legend</span>
+            <span className="text-muted-foreground/70">•</span>
+            <span>Stacked bar = probability distribution</span>
+            <span className="text-muted-foreground/70">•</span>
+            <span>Colors match the status labels</span>
+          </div>
           <div className="-mx-1 overflow-x-auto min-w-0 rounded-xl border bg-card card-shadow sm:mx-0">
             <table className="min-w-[680px] w-full border-collapse text-sm">
             <thead>
@@ -172,6 +189,23 @@ export default function ResidentInsightsPage() {
           Monthly incident volume predictions per safehouse using a Random Forest model.
           Forecasts help inform staffing decisions and proactive safety measures.
           </p>
+          <div className="mb-4 flex flex-col gap-2 rounded-lg border bg-card p-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold uppercase tracking-wide text-muted-foreground">Legend</span>
+              <span className="text-muted-foreground/70">•</span>
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" style={{ width: '10px', height: '10px', borderRadius: '999px', backgroundColor: '#dd6b20' }} />
+                Predicted incidents &gt; 0
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" style={{ width: '10px', height: '10px', borderRadius: '999px', backgroundColor: '#e2e8f0' }} />
+                0 predicted incidents
+              </span>
+            </div>
+            <div className="text-muted-foreground/80">
+              Scale: mini-bars are <strong>relative to each safehouse’s peak</strong>. Units shown as <strong>predicted incidents/month</strong>.
+            </div>
+          </div>
           <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {forecasts.map(f => {
             const isFlagged = f.maxPredicted > 0;
@@ -200,13 +234,13 @@ export default function ResidentInsightsPage() {
 
                   <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <div className="text-xs text-muted-foreground">Peak Forecast</div>
+                      <div className="text-xs text-muted-foreground">Peak Forecast (incidents/mo)</div>
                       <div style={{ color: isFlagged ? '#dd6b20' : '#38a169' }} className="text-xl font-bold">
                       {f.maxPredicted.toFixed(2)}
                       </div>
                     </div>
                   <div>
-                      <div className="text-xs text-muted-foreground">Avg Forecast</div>
+                      <div className="text-xs text-muted-foreground">Avg Forecast (incidents/mo)</div>
                       <div className="text-xl font-bold text-foreground">
                       {f.avgPredicted.toFixed(3)}
                       </div>

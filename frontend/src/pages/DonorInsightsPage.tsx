@@ -61,6 +61,33 @@ export default function DonorInsightsPage() {
         ML-powered donor analytics: churn risk detection and donation likelihood forecasting
       </p>
 
+        <section className="mb-10 rounded-xl border border-info/30 bg-info/10 p-4 sm:p-6">
+          <h2 className="font-heading text-lg font-semibold text-info">How to read this page</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+            <li><strong>Probabilities</strong> are the model’s estimate of an outcome (not a guarantee).</li>
+            <li><strong>At-risk / likely</strong> summaries use a <strong>50%</strong> threshold (see Model Details).</li>
+            <li><strong>Use these lists for prioritization</strong> (outreach, check-ins), then confirm with the donor’s record.</li>
+          </ul>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Legend: Churn probability bar</div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <LegendSwatch color="#c53030" label="High (≥ 60%)" />
+                <LegendSwatch color="#d69e2e" label="Medium (45–59%)" />
+                <LegendSwatch color="#38a169" label="Low (< 45%)" />
+              </div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Legend: 90-day donation probability bar</div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <LegendSwatch color="#38a169" label="Higher likelihood (≥ 50%)" />
+                <LegendSwatch color="#d69e2e" label="Possible (20–49%)" />
+                <LegendSwatch color="#a0aec0" label="Unlikely (< 20%)" />
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="mb-10 grid min-w-0 gap-3 sm:gap-4 md:grid-cols-3">
         <SummaryCard
           label="At-Risk Donors"
@@ -265,6 +292,18 @@ export default function DonorInsightsPage() {
       </section>
       </div>
     </AdminLayout>
+  );
+}
+
+function LegendSwatch({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border bg-background px-2 py-1">
+      <span
+        aria-hidden="true"
+        style={{ width: '10px', height: '10px', borderRadius: '999px', backgroundColor: color }}
+      />
+      <span>{label}</span>
+    </span>
   );
 }
 
