@@ -111,6 +111,10 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AuthIdentityDbContext>();
 
+// On every authenticated request, replace cookie/token role claims with current DB roles so
+// [Authorize(Roles = "Admin")] always reflects the latest role assignments.
+builder.Services.AddScoped<IClaimsTransformation, RoleClaimsTransformation>();
+
 // Enforce password policy after Identity registers its defaults.
 builder.Services.PostConfigure<IdentityOptions>(options =>
 {
