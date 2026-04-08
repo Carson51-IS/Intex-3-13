@@ -44,8 +44,20 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.message ?? `Request failed: ${res.status}`);
+    const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    const msgFromErrors =
+      body?.errors && typeof body.errors === 'object'
+        ? Object.entries(body.errors as Record<string, string[] | string>)
+            .flatMap(([k, v]) => (Array.isArray(v) ? v.map((x) => `${k}: ${x}`) : [`${k}: ${v}`]))
+            .join(' ')
+        : '';
+    const message =
+      (typeof body?.message === 'string' && body.message) ||
+      (typeof body?.title === 'string' && body.title && msgFromErrors ? `${body.title} — ${msgFromErrors}` : '') ||
+      (typeof body?.title === 'string' && body.title) ||
+      msgFromErrors ||
+      `Request failed: ${res.status}`;
+    throw new Error(message);
   }
 
   if (res.status === 204) return undefined as T;

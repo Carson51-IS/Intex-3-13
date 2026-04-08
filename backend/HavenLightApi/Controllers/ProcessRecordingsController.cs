@@ -53,10 +53,39 @@ public class ProcessRecordingsController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ProcessRecording>> Create([FromBody] ProcessRecording recording)
+    public async Task<ActionResult<ProcessRecording>> Create([FromBody] ProcessRecordingCreateDto dto)
     {
-        if (!await _context.Residents.AnyAsync(r => r.ResidentId == recording.ResidentId))
+        if (!await _context.Residents.AnyAsync(r => r.ResidentId == dto.ResidentId))
             return BadRequest(new { message = "Resident not found." });
+        if (string.IsNullOrWhiteSpace(dto.SocialWorker))
+            return BadRequest(new { message = "Social worker is required." });
+        if (string.IsNullOrWhiteSpace(dto.SessionNarrative))
+            return BadRequest(new { message = "Session narrative is required." });
+        if (dto.SessionDurationMinutes <= 0)
+            return BadRequest(new { message = "Session duration must be greater than zero." });
+
+        // CSV seed assigns explicit recording_id values; the Postgres identity sequence can lag.
+        // Match Donations/Residents pattern so new rows always get a fresh PK.
+        var nextId = (await _context.ProcessRecordings.MaxAsync(r => (int?)r.RecordingId) ?? 0) + 1;
+
+        var recording = new ProcessRecording
+        {
+            RecordingId = nextId,
+            ResidentId = dto.ResidentId,
+            SessionDate = dto.SessionDate,
+            SocialWorker = dto.SocialWorker.Trim(),
+            SessionType = string.IsNullOrWhiteSpace(dto.SessionType) ? "Individual" : dto.SessionType.Trim(),
+            SessionDurationMinutes = dto.SessionDurationMinutes,
+            EmotionalStateObserved = dto.EmotionalStateObserved.Trim(),
+            EmotionalStateEnd = dto.EmotionalStateEnd.Trim(),
+            SessionNarrative = dto.SessionNarrative.Trim(),
+            InterventionsApplied = (dto.InterventionsApplied ?? string.Empty).Trim(),
+            FollowUpActions = (dto.FollowUpActions ?? string.Empty).Trim(),
+            ProgressNoted = dto.ProgressNoted,
+            ConcernsFlagged = dto.ConcernsFlagged,
+            ReferralMade = dto.ReferralMade,
+            NotesRestricted = string.IsNullOrWhiteSpace(dto.NotesRestricted) ? null : dto.NotesRestricted.Trim(),
+        };
 
         _context.ProcessRecordings.Add(recording);
         await _context.SaveChangesAsync();
