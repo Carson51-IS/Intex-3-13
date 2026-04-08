@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
@@ -50,6 +50,7 @@ export default function ResidentsPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const residentsFetchId = useRef(0);
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const pageSize = 20;
@@ -57,8 +58,10 @@ export default function ResidentsPage() {
   const riskFilter = searchParams.get('riskLevel') ?? '';
   const categoryFilter = searchParams.get('category') ?? '';
   const safehouseFilter = searchParams.get('safehouseId') ?? '';
+  const caseNoFilter = searchParams.get('caseNo') ?? '';
 
   const fetchResidents = useCallback(async () => {
+    const fetchId = ++residentsFetchId.current;
     setIsLoading(true);
     try {
       const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
@@ -66,14 +69,18 @@ export default function ResidentsPage() {
       if (riskFilter) params.set('riskLevel', riskFilter);
       if (categoryFilter) params.set('category', categoryFilter);
       if (safehouseFilter) params.set('safehouseId', safehouseFilter);
+      const trimmedCaseNo = caseNoFilter.trim();
+      if (trimmedCaseNo) params.set('caseNo', trimmedCaseNo);
 
       const base = getApiBase();
       if (!base) throw new Error('API URL is not configured.');
-      const response = await fetch(`${base}/residents?${params}`, {
+      const response = await fetch(`${base}/residents?${params.toString()}`, {
+        cache: 'no-store',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      if (fetchId !== residentsFetchId.current) return;
       const total = response.headers.get('X-Total-Count');
       setTotalCount(total ? parseInt(total, 10) : 0);
       if (!response.ok) {
@@ -81,13 +88,17 @@ export default function ResidentsPage() {
         throw new Error(t || `Request failed: ${response.status}`);
       }
       const raw = await response.text();
+      if (fetchId !== residentsFetchId.current) return;
       setResidents(raw ? JSON.parse(raw) : []);
     } catch (err) {
+      if (fetchId !== residentsFetchId.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load residents');
     } finally {
-      setIsLoading(false);
+      if (fetchId === residentsFetchId.current) {
+        setIsLoading(false);
+      }
     }
-  }, [page, statusFilter, riskFilter, categoryFilter, safehouseFilter]);
+  }, [page, statusFilter, riskFilter, categoryFilter, safehouseFilter, caseNoFilter]);
 
   useEffect(() => {
     fetchResidents();
@@ -101,7 +112,9 @@ export default function ResidentsPage() {
     } else {
       next.delete(key);
     }
-    next.set('page', '1');
+    if (key !== 'page') {
+      next.set('page', '1');
+    }
     setSearchParams(next);
   };
 
@@ -132,7 +145,20 @@ export default function ResidentsPage() {
         </div>
 
         {/* Filters */}
-        <div className="mb-4 flex flex-wrap gap-3 rounded-lg border border-border bg-card p-4 shadow-[var(--card-shadow)]">
+        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4 shadow-[var(--card-shadow)]">
+          <div className="min-w-[min(100%,16rem)] flex-1">
+            <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+              Search by case no.
+            </label>
+            <input
+              type="search"
+              value={caseNoFilter}
+              onChange={(e) => setFilter('caseNo', e.target.value)}
+              placeholder="Case control number…"
+              className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              autoComplete="off"
+            />
+          </div>
           <FilterSelect
             label="Status"
             value={statusFilter}
@@ -157,7 +183,7 @@ export default function ResidentsPage() {
             options={safehouses.map(s => ({ value: s.safehouseId.toString(), label: s.name }))}
             onChange={(v) => setFilter('safehouseId', v)}
           />
-          {(statusFilter || riskFilter || categoryFilter || safehouseFilter) && (
+          {(statusFilter || riskFilter || categoryFilter || safehouseFilter || caseNoFilter.trim()) && (
             <button
               onClick={() => setSearchParams(new URLSearchParams({ page: '1' }))}
               className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/80"

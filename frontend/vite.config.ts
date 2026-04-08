@@ -11,6 +11,11 @@ export default defineConfig({
         target: 'http://localhost:5055',
         changeOrigin: true,
       },
+      // Static profile images live on the API host, not under /api
+      '/profile-images': {
+        target: 'http://localhost:5055',
+        changeOrigin: true,
+      },
     },
   },
 });

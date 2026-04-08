@@ -6,6 +6,7 @@ import {
   ACCOUNT_PREFERENCES_UPDATED_EVENT,
   getAccountPreferences,
 } from '../lib/accountPreferences';
+import { resolveProfileImageSrc } from '../lib/profileImage';
 
 const mlInsightsPaths = [
   '/admin/insights',
@@ -77,7 +78,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
     const prefs = getAccountPreferences(user.email, fallbackName);
     setDisplayName(prefs.displayName || fallbackName);
-    setProfileImageDataUrl(prefs.profileImageDataUrl);
+    const raw = user.profileImageUrl?.trim() || prefs.profileImageDataUrl || '';
+    setProfileImageDataUrl(raw);
   };
 
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadProfilePrefs();
-  }, [user?.email, user?.userName]);
+  }, [user]);
 
   useEffect(() => {
     const onPrefsUpdated = () => loadProfilePrefs();
@@ -111,7 +113,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       window.removeEventListener(ACCOUNT_PREFERENCES_UPDATED_EVENT, onPrefsUpdated);
       window.removeEventListener('focus', onPrefsUpdated);
     };
-  }, [user?.email, user?.userName]);
+  }, [user]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -165,7 +167,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-3 rounded-md bg-sidebar-accent/60 p-3">
             {profileImageDataUrl ? (
               <img
-                src={profileImageDataUrl}
+                src={resolveProfileImageSrc(profileImageDataUrl)}
                 alt="Profile"
                 className="h-9 w-9 rounded-full object-cover"
               />
@@ -200,7 +202,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               >
                 {profileImageDataUrl ? (
                   <img
-                    src={profileImageDataUrl}
+                    src={resolveProfileImageSrc(profileImageDataUrl)}
                     alt="Account"
                     className="h-9 w-9 rounded-full object-cover"
                   />

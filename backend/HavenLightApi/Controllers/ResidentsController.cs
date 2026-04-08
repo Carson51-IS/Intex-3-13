@@ -18,12 +18,24 @@ public class ResidentsController : ControllerBase
         _context = context;
     }
 
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        foreach (var v in values)
+        {
+            if (!string.IsNullOrWhiteSpace(v))
+                return v.Trim();
+        }
+
+        return null;
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Resident>>> GetAll(
         [FromQuery] string? status,
         [FromQuery] int? safehouseId,
         [FromQuery] string? riskLevel,
         [FromQuery] string? category,
+        [FromQuery] string? caseNo,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -37,6 +49,14 @@ public class ResidentsController : ControllerBase
             query = query.Where(r => r.CurrentRiskLevel == riskLevel);
         if (!string.IsNullOrEmpty(category))
             query = query.Where(r => r.CaseCategory == category);
+        var caseFilter = FirstNonEmpty(caseNo, Request.Query["caseNo"].ToString(), Request.Query["caseSearch"].ToString());
+        if (!string.IsNullOrWhiteSpace(caseFilter))
+        {
+            var term = caseFilter.Trim().ToLowerInvariant();
+            query = query.Where(r =>
+                r.CaseControlNo.ToLower().Contains(term)
+                || r.InternalCode.ToLower().Contains(term));
+        }
 
         var total = await query.CountAsync();
         var items = await query

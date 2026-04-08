@@ -18,10 +18,22 @@ public class SupportersController : ControllerBase
         _context = context;
     }
 
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        foreach (var v in values)
+        {
+            if (!string.IsNullOrWhiteSpace(v))
+                return v.Trim();
+        }
+
+        return null;
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Supporter>>> GetAll(
         [FromQuery] string? type,
         [FromQuery] string? status,
+        [FromQuery(Name = "supporterName")] string? supporterName,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -31,6 +43,18 @@ public class SupportersController : ControllerBase
             query = query.Where(s => s.SupporterType == type);
         if (!string.IsNullOrEmpty(status))
             query = query.Where(s => s.Status == status);
+
+        // Read from query explicitly — avoids rare model-binding issues with short param names like "name".
+        var nameFilter = FirstNonEmpty(supporterName, Request.Query["supporterName"].ToString(), Request.Query["name"].ToString(), Request.Query["search"].ToString());
+        if (!string.IsNullOrWhiteSpace(nameFilter))
+        {
+            var term = nameFilter.Trim().ToLowerInvariant();
+            query = query.Where(s =>
+                s.DisplayName.ToLower().Contains(term)
+                || (s.FirstName != null && s.FirstName.ToLower().Contains(term))
+                || (s.LastName != null && s.LastName.ToLower().Contains(term))
+                || (s.OrganizationName != null && s.OrganizationName.ToLower().Contains(term)));
+        }
 
         var total = await query.CountAsync();
         var items = await query

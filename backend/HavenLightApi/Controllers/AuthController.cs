@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-
 namespace HavenLightApi.Controllers;
 
 [ApiController]
@@ -48,6 +46,7 @@ public class AuthController(
 
         return Ok(new
         {
+            userId = user.Id,
             isAuthenticated = true,
             userName = user.DisplayName ?? user.UserName ?? User.Identity?.Name,
             email = user.Email,
@@ -159,43 +158,6 @@ public class AuthController(
         }
 
         return Ok(new { profileImageUrl = BuildAbsoluteProfileImageUrl(user.ProfileImageUrl) });
-    }
-
-    [HttpGet("users")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetUsers()
-    {
-        var users = await userManager.Users
-            .OrderBy(u => u.Email ?? u.UserName)
-            .Select(u => new
-            {
-                id = u.Id,
-                userName = u.UserName,
-                email = u.Email,
-                lockoutEnabled = u.LockoutEnabled,
-                lockoutEnd = u.LockoutEnd
-            })
-            .ToListAsync();
-
-        var result = new List<object>(users.Count);
-        foreach (var user in users)
-        {
-            var userEntity = await userManager.FindByIdAsync(user.id);
-            var roles = userEntity is null
-                ? Array.Empty<string>()
-                : (await userManager.GetRolesAsync(userEntity)).OrderBy(r => r).ToArray();
-
-            result.Add(new
-            {
-                user.id,
-                user.userName,
-                user.email,
-                roles,
-                status = user.lockoutEnd is not null && user.lockoutEnd > DateTimeOffset.UtcNow ? "Locked" : "Active"
-            });
-        }
-
-        return Ok(result);
     }
 
     [HttpGet("providers")]
@@ -342,11 +304,19 @@ public class AuthController(
         return QueryHelpers.AddQueryString($"{baseUrl}/login", "error", message);
     }
 
+    /// <summary>Returns a path the SPA can resolve: prefer /profile-images/... so the client can attach the correct API origin (avoids wrong Host behind Vite proxy).</summary>
     private string? BuildAbsoluteProfileImageUrl(string? imageUrl)
     {
         if (string.IsNullOrWhiteSpace(imageUrl)) return null;
-        if (Uri.TryCreate(imageUrl, UriKind.Absolute, out _)) return imageUrl;
-        return $"{Request.Scheme}://{Request.Host}{imageUrl}";
+        var t = imageUrl.Trim();
+        if (Uri.TryCreate(t, UriKind.Absolute, out var uri))
+        {
+            if (uri.AbsolutePath.StartsWith("/profile-images/", StringComparison.OrdinalIgnoreCase))
+                return uri.AbsolutePath;
+            return t;
+        }
+
+        return t.StartsWith('/') ? t : "/" + t;
     }
 }
 
@@ -355,5 +325,4 @@ public record UpdateProfileDto(
     string? PhoneNumber,
     string? CurrencyPreference
 );
-
 

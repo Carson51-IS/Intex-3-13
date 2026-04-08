@@ -12,6 +12,7 @@ import type { AuthSession } from '../types/AuthSession';
 import { getAccountPreferences, saveAccountPreferences } from '../lib/accountPreferences';
 
 export interface AuthUser {
+  userId: string | null;
   email: string;
   userName: string | null;
   phoneNumber: string | null;
@@ -38,6 +39,7 @@ interface AuthContextValue {
 }
 
 const anonymousAuthSession: AuthSession = {
+  userId: null,
   isAuthenticated: false,
   userName: null,
   email: null,
@@ -100,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const email = authSession.email ?? authSession.userName ?? '';
     if (!email) return null;
     return {
+      userId: authSession.userId ?? null,
       email,
       userName: authSession.userName,
       phoneNumber: authSession.phoneNumber ?? null,

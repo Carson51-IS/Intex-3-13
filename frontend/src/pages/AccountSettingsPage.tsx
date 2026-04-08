@@ -7,6 +7,7 @@ import {
   saveAccountPreferences,
   type CurrencyPreference,
 } from '../lib/accountPreferences';
+import { resolveProfileImageSrc } from '../lib/profileImage';
 
 export default function AccountSettingsPage() {
   const { user, refreshAuthSession } = useAuth();
@@ -120,7 +121,7 @@ export default function AccountSettingsPage() {
             <div className="flex items-center gap-3 rounded-md border border-border bg-background p-3">
               {form.profileImageDataUrl ? (
                 <img
-                  src={form.profileImageDataUrl}
+                  src={resolveProfileImageSrc(form.profileImageDataUrl)}
                   alt="Profile preview"
                   className="h-12 w-12 rounded-full object-cover"
                 />

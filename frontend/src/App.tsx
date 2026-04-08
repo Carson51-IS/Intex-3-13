@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
@@ -208,9 +208,7 @@ function NotFound() {
 function AppProviders({ children }: { children: ReactNode }) {
   return (
     <CookieConsentProvider>
-      <AuthProvider>
-        <BrowserRouter>{children}</BrowserRouter>
-      </AuthProvider>
+      <BrowserRouter>{children}</BrowserRouter>
     </CookieConsentProvider>
   );
 }

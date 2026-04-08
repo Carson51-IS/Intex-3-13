@@ -20,13 +20,13 @@ public class DonationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Donation>>> GetAll(
+    public async Task<IActionResult> GetAll(
         [FromQuery] int? supporterId,
         [FromQuery] string? donationType,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var query = _context.Donations.Include(d => d.Supporter).AsQueryable();
+        var query = _context.Donations.AsQueryable();
 
         if (supporterId.HasValue)
             query = query.Where(d => d.SupporterId == supporterId.Value);
@@ -34,10 +34,24 @@ public class DonationsController : ControllerBase
             query = query.Where(d => d.DonationType == donationType);
 
         var total = await query.CountAsync();
+        // Project to avoid JSON cycles (Donation ↔ Supporter ↔ Donations).
         var items = await query
             .OrderByDescending(d => d.DonationDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(d => new
+            {
+                d.DonationId,
+                d.SupporterId,
+                d.DonationType,
+                d.DonationDate,
+                d.Amount,
+                d.CurrencyCode,
+                d.CampaignName,
+                d.ChannelSource,
+                d.IsRecurring,
+                supporter = new { displayName = d.Supporter.DisplayName }
+            })
             .ToListAsync();
 
         Response.Headers.Append("X-Total-Count", total.ToString());

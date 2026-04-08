@@ -5,6 +5,7 @@ import {
   ACCOUNT_PREFERENCES_UPDATED_EVENT,
   getAccountPreferences,
 } from '../lib/accountPreferences';
+import { resolveProfileImageSrc } from '../lib/profileImage';
 import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 
 export default function Navbar() {
@@ -21,7 +22,8 @@ export default function Navbar() {
     const defaultName = user.userName?.trim() || user.email.split('@')[0] || user.email;
     const prefs = getAccountPreferences(user.email, defaultName);
     setDisplayName(prefs.displayName);
-    setProfileImageDataUrl(prefs.profileImageDataUrl);
+    const raw = user.profileImageUrl?.trim() || prefs.profileImageDataUrl || '';
+    setProfileImageDataUrl(raw);
   };
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export default function Navbar() {
                     >
                       {profileImageDataUrl ? (
                         <img
-                          src={profileImageDataUrl}
+                          src={resolveProfileImageSrc(profileImageDataUrl)}
                           alt="Account"
                           className="h-9 w-9 rounded-full object-cover"
                         />

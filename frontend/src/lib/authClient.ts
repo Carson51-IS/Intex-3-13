@@ -136,6 +136,7 @@ function parseAuthSessionPayload(body: unknown): AuthSession {
   }
   const o = body as Record<string, unknown>;
   const isAuthenticated = o.isAuthenticated === true;
+  const userId = toStringOrNull(o.userId);
   const userName = toStringOrNull(o.userName);
   const email = toStringOrNull(o.email);
   const phoneNumber = toStringOrNull(o.phoneNumber);
@@ -143,7 +144,7 @@ function parseAuthSessionPayload(body: unknown): AuthSession {
   const currencyPreference = currencyRaw === 'USD' ? 'USD' : currencyRaw === 'PHP' ? 'PHP' : null;
   const profileImageUrl = toStringOrNull(o.profileImageUrl);
   const roles = Array.isArray(o.roles) ? o.roles.filter((r): r is string => typeof r === 'string') : [];
-  return { isAuthenticated, userName, email, phoneNumber, currencyPreference, profileImageUrl, roles };
+  return { userId, isAuthenticated, userName, email, phoneNumber, currencyPreference, profileImageUrl, roles };
 }
 
 export async function getAuthSession(): Promise<AuthSession> {

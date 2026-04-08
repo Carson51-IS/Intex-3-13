@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
@@ -41,33 +41,41 @@ const formSelectCn = `${formControlCn} cursor-pointer`;
 
 export default function DonorsPage() {
   const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState<'supporters' | 'donations'>('supporters');
   const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [supporterTotal, setSupporterTotal] = useState(0);
   const [donationTotal, setDonationTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [supportersLoading, setSupportersLoading] = useState(true);
+  const [donationsLoading, setDonationsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingSupporter, setEditingSupporter] = useState<Supporter | null>(null);
-  const [page, setPage] = useState(1);
+  const [supporterPage, setSupporterPage] = useState(1);
+  const [donationPage, setDonationPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [nameSearch, setNameSearch] = useState('');
   const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
   const pageSize = 15;
+  const supportersFetchId = useRef(0);
 
   const fetchSupporters = useCallback(async () => {
+    const fetchId = ++supportersFetchId.current;
     setError('');
-    setIsLoading(true);
+    setSupportersLoading(true);
     try {
       const base = getApiBase();
       if (!base) throw new Error('API URL is not configured.');
-      const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
+      const params = new URLSearchParams({ page: supporterPage.toString(), pageSize: pageSize.toString() });
       if (typeFilter) params.set('type', typeFilter);
       if (statusFilter) params.set('status', statusFilter);
-      const response = await fetch(`${base}/supporters?${params}`, {
+      const trimmedName = nameSearch.trim();
+      if (trimmedName) params.set('supporterName', trimmedName);
+      const response = await fetch(`${base}/supporters?${params.toString()}`, {
+        cache: 'no-store',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
+      if (fetchId !== supportersFetchId.current) return;
       const total = response.headers.get('X-Total-Count');
       setSupporterTotal(total ? parseInt(total, 10) : 0);
       if (!response.ok) {
@@ -75,21 +83,26 @@ export default function DonorsPage() {
         throw new Error(t || `Request failed: ${response.status}`);
       }
       const raw = await response.text();
+      if (fetchId !== supportersFetchId.current) return;
       setSupporters(raw ? JSON.parse(raw) : []);
     } catch (err) {
+      if (fetchId !== supportersFetchId.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load supporters');
     } finally {
-      setIsLoading(false);
+      if (fetchId === supportersFetchId.current) {
+        setSupportersLoading(false);
+      }
     }
-  }, [page, typeFilter, statusFilter]);
+  }, [supporterPage, typeFilter, statusFilter, nameSearch]);
 
   const fetchDonations = useCallback(async () => {
     setError('');
-    setIsLoading(true);
+    setDonationsLoading(true);
     try {
       const base = getApiBase();
       if (!base) throw new Error('API URL is not configured.');
-      const response = await fetch(`${base}/donations?page=${page}&pageSize=${pageSize}`, {
+      const response = await fetch(`${base}/donations?page=${donationPage}&pageSize=${pageSize}`, {
+        cache: 'no-store',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       const total = response.headers.get('X-Total-Count');
@@ -103,14 +116,17 @@ export default function DonorsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load donations');
     } finally {
-      setIsLoading(false);
+      setDonationsLoading(false);
     }
-  }, [page]);
+  }, [donationPage]);
 
   useEffect(() => {
-    if (activeSection === 'supporters') fetchSupporters();
-    else fetchDonations();
-  }, [activeSection, fetchSupporters, fetchDonations]);
+    void fetchSupporters();
+  }, [fetchSupporters]);
+
+  useEffect(() => {
+    void fetchDonations();
+  }, [fetchDonations]);
 
   useEffect(() => {
     if (!user) return;
@@ -123,10 +139,17 @@ export default function DonorsPage() {
     setError('');
     if (key === 'type') setTypeFilter(value);
     else setStatusFilter(value);
-    setPage(1);
+    setSupporterPage(1);
   };
 
-  const totalPages = Math.ceil((activeSection === 'supporters' ? supporterTotal : donationTotal) / pageSize);
+  const handleNameSearchChange = (value: string) => {
+    setError('');
+    setNameSearch(value);
+    setSupporterPage(1);
+  };
+
+  const supporterTotalPages = Math.ceil(supporterTotal / pageSize);
+  const donationTotalPages = Math.ceil(donationTotal / pageSize);
 
   return (
     <AdminLayout>
@@ -138,37 +161,17 @@ export default function DonorsPage() {
               Manage supporter profiles and track all contributions
             </p>
           </div>
-          {activeSection === 'supporters' && (
-            <button
-              type="button"
-              onClick={() => { setError(''); setEditingSupporter(null); setShowForm(!showForm); }}
-              className={
-                showForm
-                  ? 'inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted'
-                  : 'inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90'
-              }
-            >
-              {showForm ? 'Cancel' : '+ Add Supporter'}
-            </button>
-          )}
-        </div>
-
-        {/* Section Tabs */}
-        <div className="mb-6 flex gap-1 border-b border-border">
-          {(['supporters', 'donations'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => { setError(''); setActiveSection(s); setPage(1); setShowForm(false); }}
-              className={`mb-[-1px] border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-                activeSection === s
-                  ? 'border-primary font-semibold text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {s === 'supporters' ? `Supporters (${supporterTotal})` : `Donations (${donationTotal})`}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => { setError(''); setEditingSupporter(null); setShowForm(!showForm); }}
+            className={
+              showForm
+                ? 'inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted'
+                : 'inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90'
+            }
+          >
+            {showForm ? 'Cancel' : '+ Add Supporter'}
+          </button>
         </div>
 
         {showForm && (
@@ -186,16 +189,31 @@ export default function DonorsPage() {
           </div>
         )}
 
-        {/* Supporters Section */}
-        {activeSection === 'supporters' && (
-          <>
-            {/* Filters */}
-            <div className="mb-4 flex flex-wrap gap-3 rounded-lg border border-border bg-card p-4 shadow-[var(--card-shadow)]">
+        <section className="mb-10">
+          <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">
+            Supporters
+            <span className="ml-2 text-sm font-normal text-muted-foreground">({supporterTotal})</span>
+          </h2>
+            <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4 shadow-[var(--card-shadow)]">
+              <div className="min-w-[min(100%,16rem)] flex-1">
+                <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Search by name
+                </label>
+                <input
+                  type="search"
+                  value={nameSearch}
+                  onChange={(e) => handleNameSearchChange(e.target.value)}
+                  placeholder="Name…"
+                  className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  autoComplete="off"
+                />
+              </div>
               <FilterSelect label="Type" value={typeFilter} options={SUPPORTER_TYPES} onChange={(v) => handleFilterChange('type', v)} />
               <FilterSelect label="Status" value={statusFilter} options={STATUS_OPTIONS} onChange={(v) => handleFilterChange('status', v)} />
-              {(typeFilter || statusFilter) && (
+              {(typeFilter || statusFilter || nameSearch.trim()) && (
                 <button
-                  onClick={() => { setError(''); setTypeFilter(''); setStatusFilter(''); setPage(1); }}
+                  type="button"
+                  onClick={() => { setError(''); setTypeFilter(''); setStatusFilter(''); setNameSearch(''); setSupporterPage(1); }}
                   className="self-end rounded-md border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/80"
                 >
                   Clear
@@ -213,7 +231,7 @@ export default function DonorsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {isLoading ? (
+                  {supportersLoading ? (
                     <tr><td colSpan={8} className="p-12 text-center text-muted-foreground">Loading…</td></tr>
                   ) : supporters.length === 0 ? (
                     <tr><td colSpan={8} className="p-12 text-center text-muted-foreground">No supporters found.</td></tr>
@@ -243,11 +261,23 @@ export default function DonorsPage() {
                 </tbody>
               </table>
             </div>
-          </>
-        )}
 
-        {/* Donations Section */}
-        {activeSection === 'donations' && (
+          {supporterTotalPages > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <PaginationBtn label="← Prev" disabled={supporterPage <= 1} onClick={() => setSupporterPage((p) => p - 1)} />
+              <span className="px-2 text-sm text-muted-foreground">
+                Page {supporterPage} of {supporterTotalPages}
+              </span>
+              <PaginationBtn label="Next →" disabled={supporterPage >= supporterTotalPages} onClick={() => setSupporterPage((p) => p + 1)} />
+            </div>
+          )}
+        </section>
+
+        <section>
+          <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">
+            Donations
+            <span className="ml-2 text-sm font-normal text-muted-foreground">({donationTotal})</span>
+          </h2>
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
             <table className="w-full border-collapse text-sm">
               <thead>
@@ -258,7 +288,7 @@ export default function DonorsPage() {
                 </tr>
               </thead>
               <tbody>
-                {isLoading ? (
+                {donationsLoading ? (
                   <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">Loading…</td></tr>
                 ) : donations.length === 0 ? (
                   <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">No donations found.</td></tr>
@@ -280,18 +310,17 @@ export default function DonorsPage() {
               </tbody>
             </table>
           </div>
-        )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-center gap-2">
-            <PaginationBtn label="← Prev" disabled={page <= 1} onClick={() => setPage(p => p - 1)} />
-            <span className="px-2 text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <PaginationBtn label="Next →" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} />
-          </div>
-        )}
+          {donationTotalPages > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <PaginationBtn label="← Prev" disabled={donationPage <= 1} onClick={() => setDonationPage((p) => p - 1)} />
+              <span className="px-2 text-sm text-muted-foreground">
+                Page {donationPage} of {donationTotalPages}
+              </span>
+              <PaginationBtn label="Next →" disabled={donationPage >= donationTotalPages} onClick={() => setDonationPage((p) => p + 1)} />
+            </div>
+          )}
+        </section>
       </div>
     </AdminLayout>
   );
