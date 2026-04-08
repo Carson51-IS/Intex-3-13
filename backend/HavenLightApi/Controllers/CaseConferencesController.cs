@@ -56,7 +56,7 @@ public class CaseConferencesController(HavenLightContext context) : ControllerBa
 
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Create([FromBody] CaseConferenceDto dto)
+    public async Task<IActionResult> Create([FromBody] CaseConferenceWriteDto dto)
     {
         if (!await context.Residents.AnyAsync(r => r.ResidentId == dto.ResidentId))
             return BadRequest(new { message = "Resident not found." });
@@ -65,16 +65,19 @@ public class CaseConferencesController(HavenLightContext context) : ControllerBa
         if (string.IsNullOrWhiteSpace(dto.Agenda))
             return BadRequest(new { message = "Agenda is required." });
 
+        var nextId = (await context.CaseConferences.MaxAsync(c => (int?)c.ConferenceId) ?? 0) + 1;
+
         var conf = new CaseConference
         {
+            ConferenceId = nextId,
             ResidentId = dto.ResidentId,
             ConferenceDate = dto.ConferenceDate,
             ConferenceType = string.IsNullOrWhiteSpace(dto.ConferenceType) ? "Case Conference" : dto.ConferenceType.Trim(),
             Status = string.IsNullOrWhiteSpace(dto.Status) ? "Planned" : dto.Status.Trim(),
             Facilitator = dto.Facilitator.Trim(),
             Agenda = dto.Agenda.Trim(),
-            SummaryNotes = dto.SummaryNotes?.Trim(),
-            FollowUpActions = dto.FollowUpActions?.Trim(),
+            SummaryNotes = string.IsNullOrWhiteSpace(dto.SummaryNotes) ? null : dto.SummaryNotes.Trim(),
+            FollowUpActions = string.IsNullOrWhiteSpace(dto.FollowUpActions) ? null : dto.FollowUpActions.Trim(),
             NextConferenceDate = dto.NextConferenceDate,
             CreatedAt = DateTime.UtcNow
         };
@@ -86,7 +89,7 @@ public class CaseConferencesController(HavenLightContext context) : ControllerBa
 
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update(int id, [FromBody] CaseConferenceDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] CaseConferenceWriteDto dto)
     {
         var conf = await context.CaseConferences.FindAsync(id);
         if (conf is null) return NotFound();
@@ -115,16 +118,3 @@ public class CaseConferencesController(HavenLightContext context) : ControllerBa
         return NoContent();
     }
 }
-
-public record CaseConferenceDto(
-    int ResidentId,
-    DateOnly ConferenceDate,
-    string? ConferenceType,
-    string? Status,
-    string? Facilitator,
-    string? Agenda,
-    string? SummaryNotes,
-    string? FollowUpActions,
-    DateOnly? NextConferenceDate
-);
-
