@@ -15,6 +15,10 @@ See **[SEEDING.md](SEEDING.md)** — copy `.env.example` to `.env` in the repo r
 
 The .NET app talks to Postgres with **Npgsql**; you do not have to use the Supabase JS client unless you add features that need it (Auth hosted by Supabase, Realtime, Storage).
 
+### Row Level Security (RLS)
+
+Migrations under [`supabase/migrations/`](supabase/migrations/) turn on RLS for every table in schema `public`, which blocks accidental exposure via the Supabase Data API (`anon` / `authenticated`) until you add explicit policies. The .NET API normally connects as the owning database user and keeps working. See **[supabase/README.md](supabase/README.md)** for `npx supabase db push` commands.
+
 ---
 
 ## Vercel (React / Vite frontend only)
