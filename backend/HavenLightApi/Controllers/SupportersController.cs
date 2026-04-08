@@ -203,7 +203,7 @@ public class SupportersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize]
     public async Task<IActionResult> Update(int id, [FromBody] SupporterWriteDto dto)
     {
         var supporter = await _context.Supporters.FindAsync(id);
