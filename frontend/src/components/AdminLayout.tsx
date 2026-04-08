@@ -59,6 +59,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [profileImageDataUrl, setProfileImageDataUrl] = useState('');
@@ -115,9 +116,43 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <aside className="sticky top-0 flex h-screen w-[270px] shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground">
+      <button
+        type="button"
+        onClick={() => setMobileSidebarOpen((prev) => !prev)}
+        aria-label={mobileSidebarOpen ? 'Collapse admin navigation' : 'Expand admin navigation'}
+        aria-expanded={mobileSidebarOpen}
+        className="fixed left-0 top-1/2 z-50 flex h-12 w-6 -translate-y-1/2 items-center justify-center rounded-r-md border border-l-0 border-sidebar-border/80 bg-sidebar text-sidebar-foreground shadow md:hidden"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" aria-hidden="true">
+          <path
+            d={mobileSidebarOpen ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {mobileSidebarOpen ? (
+        <button
+          type="button"
+          aria-label="Close admin navigation"
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/35 md:hidden"
+        />
+      ) : null}
+
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-screen w-[270px] shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground transition-transform duration-300 md:static md:z-auto md:translate-x-0 ${
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:sticky md:top-0`}
+      >
         <div className="flex h-16 items-center border-b border-sidebar-border/70 px-5">
           <div className="flex items-center gap-2">
             <img src={havenLightLogoMark} alt="Haven Light logo mark" className="h-8 w-auto" />
@@ -184,7 +219,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background md:ml-0">
         <header className="flex h-16 shrink-0 items-center justify-end border-b border-border bg-background/90 px-6 backdrop-blur-sm md:px-8">
           <div className="flex items-center gap-4">
             <div className="text-right leading-tight">
@@ -241,7 +276,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">{children}</div>
+        <div className="flex-1 min-w-0 overflow-x-clip overflow-y-auto p-4 sm:p-6 md:p-8">{children}</div>
       </div>
     </div>
   );

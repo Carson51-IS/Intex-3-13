@@ -200,8 +200,8 @@ export default function ResidentsPage() {
         )}
 
         {/* Table */}
-        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
-          <table className="w-full border-collapse text-sm">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+          <table className="w-full min-w-[920px] border-collapse text-sm">
             <thead>
               <tr className="border-b-2 bg-muted/40">
                 {['Case No.', 'Code', 'Status', 'Risk Level', 'Category', 'Social Worker', 'Admitted', 'Actions'].map((h) => (

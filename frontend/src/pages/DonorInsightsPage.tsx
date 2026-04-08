@@ -49,19 +49,19 @@ export default function DonorInsightsPage() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="mx-auto min-w-0 w-full max-w-6xl overflow-x-hidden break-words">
       <Link
         to="/admin/insights"
           className="mb-4 inline-block text-sm font-semibold text-primary no-underline hover:underline"
       >
         ← Back to ML-Powered Insights
       </Link>
-        <h1 className="font-heading text-3xl font-bold text-foreground">Donor Intelligence</h1>
+        <h1 className="font-heading text-2xl font-bold text-foreground md:text-3xl">Donor Intelligence</h1>
         <p className="mb-8 mt-2 text-sm text-muted-foreground md:text-base">
         ML-powered donor analytics: churn risk detection and donation likelihood forecasting
       </p>
 
-        <div className="mb-10 grid gap-4 md:grid-cols-3">
+        <div className="mb-10 grid min-w-0 gap-3 sm:gap-4 md:grid-cols-3">
         <SummaryCard
           label="At-Risk Donors"
           value={atRiskCount.toString()}
@@ -86,15 +86,15 @@ export default function DonorInsightsPage() {
       </div>
 
         <section className="mb-12">
-          <h2 className="mb-4 border-l-4 border-destructive pl-3 font-heading text-2xl font-semibold text-foreground">
+          <h2 className="mb-4 border-l-4 border-destructive pl-3 font-heading text-xl font-semibold text-foreground md:text-2xl">
           Donor Churn Risk
         </h2>
           <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
           Identifies donors at risk of lapsing (no donation within 6 months). Higher probability means higher risk of losing the donor.
           Proactive outreach to high-risk donors can significantly improve retention.
         </p>
-          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
-            <table className="w-full border-collapse text-sm">
+          <div className="-mx-1 overflow-x-auto min-w-0 rounded-xl border bg-card card-shadow sm:mx-0">
+            <table className="min-w-[680px] w-full border-collapse text-sm">
             <thead>
                 <tr className="border-b bg-muted/40">
                   <th className={`${thCn} cursor-pointer`} onClick={() => toggleSort(churnSort, 'id', setChurnSort)}>
@@ -171,15 +171,15 @@ export default function DonorInsightsPage() {
       </section>
 
         <section>
-          <h2 className="mb-4 border-l-4 border-success pl-3 font-heading text-2xl font-semibold text-foreground">
+          <h2 className="mb-4 border-l-4 border-success pl-3 font-heading text-xl font-semibold text-foreground md:text-2xl">
           90-Day Donation Forecast
         </h2>
           <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
           Predicts which supporters are most likely to donate within the next 90 days.
           Use this to prioritize engagement outreach and personalize communications.
         </p>
-          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
-            <table className="w-full border-collapse text-sm">
+          <div className="-mx-1 overflow-x-auto min-w-0 rounded-xl border bg-card card-shadow sm:mx-0">
+            <table className="min-w-[680px] w-full border-collapse text-sm">
             <thead>
                 <tr className="border-b bg-muted/40">
                   <th className={`${thCn} cursor-pointer`} onClick={() => toggleSort(donationSort, 'id', setDonationSort)}>
@@ -253,7 +253,7 @@ export default function DonorInsightsPage() {
         </div>
       </section>
 
-        <section className="mt-10 rounded-xl border border-info/30 bg-info/10 p-6">
+        <section className="mt-10 rounded-xl border border-info/30 bg-info/10 p-4 sm:p-6">
           <h3 className="mb-2 font-heading text-lg font-semibold text-info">Model Details</h3>
           <p className="m-0 text-sm leading-relaxed text-foreground/80">
           <strong>Donor Churn:</strong> Logistic Regression & Random Forest models trained on donation history features
@@ -272,9 +272,9 @@ function SummaryCard({ label, value, subtitle, color, bgColor }: {
   label: string; value: string; subtitle: string; color: string; bgColor: string;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-6 card-shadow" style={{ borderLeft: `4px solid ${color}` }}>
+    <div className="min-w-0 min-w-0 rounded-xl border bg-card p-4 sm:p-6 card-shadow" style={{ borderLeft: `4px solid ${color}` }}>
       <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div style={{ color }} className="text-3xl font-bold leading-none">{value}</div>
+      <div style={{ color }} className="text-2xl font-bold leading-none sm:text-3xl">{value}</div>
       <div style={{
         marginTop: '0.5rem',
         backgroundColor: bgColor,

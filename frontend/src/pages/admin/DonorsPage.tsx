@@ -221,8 +221,8 @@ export default function DonorsPage() {
               )}
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
-              <table className="w-full border-collapse text-sm">
+            <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+              <table className="w-full min-w-[900px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b-2 bg-muted/40">
                     {['Name', 'Type', 'Relationship', 'Email', 'Country', 'Status', 'First Donation', 'Actions'].map(h => (
@@ -278,8 +278,8 @@ export default function DonorsPage() {
             Donations
             <span className="ml-2 text-sm font-normal text-muted-foreground">({donationTotal})</span>
           </h2>
-          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
-            <table className="w-full border-collapse text-sm">
+          <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+            <table className="w-full min-w-[820px] border-collapse text-sm">
               <thead>
                 <tr className="border-b-2 bg-muted/40">
                   {['Date', 'Supporter', 'Type', 'Amount', 'Campaign', 'Channel', 'Recurring'].map(h => (
