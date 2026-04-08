@@ -128,6 +128,15 @@ export default function Navbar() {
                       Donations
                     </Link>
                   )}
+                  {user ? (
+                    <Link
+                      to="/impact"
+                      onClick={() => setMobileNavOpen(false)}
+                      className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted"
+                    >
+                      Impact Dashboard
+                    </Link>
+                  ) : null}
                   {!user ? (
                     <Link
                       to="/login"
@@ -192,6 +201,12 @@ export default function Navbar() {
                     className="text-sm font-semibold text-primary no-underline transition-colors hover:underline"
                   >
                     Donations
+                  </Link>
+                  <Link
+                    to="/impact"
+                    className="text-sm font-semibold text-primary no-underline transition-colors hover:underline"
+                  >
+                    Impact Dashboard
                   </Link>
                 </div>
                 <div className="flex items-center gap-2">
