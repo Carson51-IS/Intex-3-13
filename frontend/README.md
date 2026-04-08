@@ -23,8 +23,8 @@ If login fails, the account may already exist with a different password, or the 
 
 | | |
 |---|---|
-| **Email** | `isaacc@example.com` |
-| **Password** | `Password123456789!` |
+| **Email** | `johndonor@example.com` |
+| **Password** | `Wel0vetoh&lp0thers` |
 
 ---
 
