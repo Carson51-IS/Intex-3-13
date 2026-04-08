@@ -90,6 +90,7 @@ async function postTwoFactorRequest(payload: object): Promise<TwoFactorStatus> {
   const stored = localStorage.getItem('token');
   const response = await fetch(apiUrl('/auth/manage/2fa'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(stored ? { Authorization: `Bearer ${stored}` } : {}),
@@ -149,22 +150,40 @@ function parseAuthSessionPayload(body: unknown): AuthSession {
 
 export async function getAuthSession(): Promise<AuthSession> {
   const stored = localStorage.getItem('token');
-  const sessionRes = await fetch(apiUrl('/auth/me'), {
-    headers: stored ? { Authorization: `Bearer ${stored}` } : undefined,
-  });
+  const fetchMe = (sendBearer: boolean) =>
+    fetch(apiUrl('/auth/me'), {
+      credentials: 'include',
+      headers: sendBearer && stored ? { Authorization: `Bearer ${stored}` } : undefined,
+    });
+
+  let sessionRes = await fetchMe(!!stored);
 
   if (!sessionRes.ok) {
     throw new Error(await readApiError(sessionRes, 'Failed to get auth session'));
   }
 
-  const sessionJson: unknown = await sessionRes.json();
-  return parseAuthSessionPayload(sessionJson);
+  let sessionJson: unknown = await sessionRes.json();
+  let session = parseAuthSessionPayload(sessionJson);
+
+  // Stale JWT in localStorage forces the API to authenticate with Bearer only; retry cookie-only (e.g. Google sign-in).
+  if (!session.isAuthenticated && stored) {
+    localStorage.removeItem('token');
+    sessionRes = await fetchMe(false);
+    if (!sessionRes.ok) {
+      throw new Error(await readApiError(sessionRes, 'Failed to get auth session'));
+    }
+    sessionJson = await sessionRes.json();
+    session = parseAuthSessionPayload(sessionJson);
+  }
+
+  return session;
 }
 
 export async function registerUser(email: string, password: string): Promise<void> {
   const registerBody = JSON.stringify({ email, password });
   const registerRes = await fetch(apiUrl('/auth/register'), {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: registerBody,
   });
@@ -239,6 +258,7 @@ export async function loginUser(
     `${apiUrl('/auth/login')}?${searchParams.toString()}`,
     {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(loginBody),
     },
@@ -324,6 +344,7 @@ export async function updateMyProfile(payload: {
   const stored = localStorage.getItem('token');
   const response = await fetch(apiUrl('/auth/profile'), {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(stored ? { Authorization: `Bearer ${stored}` } : {}),
@@ -345,6 +366,7 @@ export async function uploadMyProfileImage(file: File): Promise<{ profileImageUr
 
   const response = await fetch(apiUrl('/auth/profile-image'), {
     method: 'POST',
+    credentials: 'include',
     headers: stored ? { Authorization: `Bearer ${stored}` } : undefined,
     body: form,
   });

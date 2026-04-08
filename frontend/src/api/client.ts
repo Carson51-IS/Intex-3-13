@@ -25,6 +25,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   try {
     res = await fetch(url, {
       ...options,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),

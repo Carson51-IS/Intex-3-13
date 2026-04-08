@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.WebUtilities;
 namespace HavenLightApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,

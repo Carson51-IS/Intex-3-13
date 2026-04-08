@@ -1,6 +1,8 @@
 using DotNetEnv;
 using Npgsql;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -49,13 +51,24 @@ builder.Services.AddDbContext<AuthIdentityDbContext>(options =>
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
+// SPA on a different origin (e.g. Vercel) needs SameSite=None so fetch(..., credentials:'include') sends auth cookies to the API.
+var corsConfigured = !string.IsNullOrWhiteSpace(builder.Configuration["Cors:AllowedOrigins"]);
+var crossSiteSessionCookies = corsConfigured || onAzureAppService;
+var sessionSameSite = crossSiteSessionCookies ? SameSiteMode.None : SameSiteMode.Lax;
+
 builder.Services.ConfigureApplicationCookie(options => 
 {
     options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SameSite = sessionSameSite;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
     options.SlidingExpiration = true;
+});
+
+builder.Services.Configure<CookieAuthenticationOptions>(IdentityConstants.ExternalScheme, options =>
+{
+    options.Cookie.SameSite = sessionSameSite;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 
@@ -111,8 +124,10 @@ builder.Services.PostConfigure<IdentityOptions>(options =>
 
 if (!string.IsNullOrEmpty(googleClientID) && !string.IsNullOrEmpty(googleClientSecret))
 {
-    builder.Services.AddAuthentication(GoogleDefaults.AuthenticationScheme)
-        .AddGoogle(options =>
+    // Do not use AddAuthentication(GoogleDefaults.AuthenticationScheme) — that makes Google the default scheme
+    // and breaks Identity Bearer JWT for /api/auth/login + /api/auth/me.
+    builder.Services.AddAuthentication()
+        .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
         {
             options.ClientId = googleClientID;
             options.ClientSecret = googleClientSecret;
@@ -121,6 +136,25 @@ if (!string.IsNullOrEmpty(googleClientID) && !string.IsNullOrEmpty(googleClientS
         });
 }
 
+// Prefer Bearer when Authorization header is present; otherwise use the application cookie (Google / cookie sessions).
+const string policyAuthScheme = "HavenLight.AuthPolicy";
+builder.Services.AddAuthentication()
+    .AddPolicyScheme(policyAuthScheme, policyAuthScheme, options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var auth = context.Request.Headers.Authorization.ToString();
+            if (!string.IsNullOrEmpty(auth) &&
+                auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                return IdentityConstants.BearerScheme;
+            return IdentityConstants.ApplicationScheme;
+        };
+    });
+
+builder.Services.PostConfigure<AuthenticationOptions>(options =>
+{
+    options.DefaultAuthenticateScheme = policyAuthScheme;
+});
 
 // AddIdentityApiEndpoints already registers Identity.Bearer (and cookies). Do not call AddBearerToken again — it throws "Scheme already exists: Identity.Bearer".
 builder.Services.AddAuthorization(options =>
