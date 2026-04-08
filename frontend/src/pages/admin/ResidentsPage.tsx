@@ -200,12 +200,15 @@ export default function ResidentsPage() {
         )}
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+        <div className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
           <table className="w-full min-w-[920px] border-collapse text-sm">
             <thead>
               <tr className="border-b-2 bg-muted/40">
                 {['Case No.', 'Code', 'Status', 'Risk Level', 'Category', 'Social Worker', 'Admitted', 'Actions'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <th
+                    key={h}
+                    className="sticky top-0 z-10 bg-muted/40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
                     {h}
                   </th>
                 ))}

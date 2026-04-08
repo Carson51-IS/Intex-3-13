@@ -221,7 +221,7 @@ export default function DonorsPage() {
               )}
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+            <div className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
               <table className="w-full min-w-[900px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b-2 bg-muted/40">
@@ -278,7 +278,7 @@ export default function DonorsPage() {
             Donations
             <span className="ml-2 text-sm font-normal text-muted-foreground">({donationTotal})</span>
           </h2>
-          <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+          <div className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
             <table className="w-full min-w-[820px] border-collapse text-sm">
               <thead>
                 <tr className="border-b-2 bg-muted/40">
@@ -497,5 +497,5 @@ function PaginationBtn({ label, disabled, onClick }: { label: string; disabled: 
   );
 }
 
-const thCn = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+const thCn = 'sticky top-0 z-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40';
 const tdCn = 'px-4 py-3 align-middle text-foreground/85';
