@@ -221,17 +221,6 @@ public class AuthController(
             return Redirect(BuildFrontendErrorUrl("External login information was unavailable."));
         }
 
-        var signInResult = await signInManager.ExternalLoginSignInAsync(
-            info.LoginProvider,
-            info.ProviderKey,
-            isPersistent: false,
-            bypassTwoFactor: true);
-
-        if (signInResult.Succeeded)
-        {
-            return Redirect(BuildFrontendSuccessUrl(returnPath));
-        }
-
         var email = info.Principal.FindFirstValue(ClaimTypes.Email)
             ?? info.Principal.FindFirstValue("email");
 
@@ -271,8 +260,16 @@ public class AuthController(
             }
         }
 
+        // Always do a fresh SignInAsync (not ExternalLoginSignInAsync) so the cookie
+        // gets current role claims from the DB — critical after an admin promotes the user.
         await signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-        return Redirect(BuildFrontendSuccessUrl(returnPath));
+
+        var roles = await userManager.GetRolesAsync(user);
+        var effectiveReturnPath = roles.Contains(AuthRoles.Admin) ? "/admin"
+            : roles.Contains(AuthRoles.Donor) ? "/donor"
+            : NormalizeReturnPath(returnPath);
+
+        return Redirect(BuildFrontendSuccessUrl(effectiveReturnPath));
     }
 
     private bool IsGoogleConfigured() => GoogleConfigurationReader.IsFullyConfigured(configuration);
