@@ -13,24 +13,34 @@ using System.Threading;
 // Npgsql 10.x requires DateTime.Kind == Utc for timestamptz columns; CSV seed data has Kind=Unspecified.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-// Prevent duplicate local launches from crashing on "address already in use".
-using var singleInstanceMutex = new Mutex(
-    initiallyOwned: true,
-    name: @"Global\HavenLightApi_Local_5055",
-    createdNew: out var isPrimaryInstance);
-if (!isPrimaryInstance)
+// Local dev only: single instance guard (Windows). Never run on Azure — multiple workers must not exit.
+var onAzureAppService = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME"));
+Mutex? localDevSingleInstanceLock = null;
+if (!onAzureAppService)
 {
-    Console.WriteLine("[HavenLightApi] Another local instance is already running on port 5055. Reuse that process or stop it before starting a new one.");
-    return;
+    localDevSingleInstanceLock = new Mutex(
+        initiallyOwned: true,
+        name: @"Global\HavenLightApi_Local_5055",
+        createdNew: out var isPrimaryInstance);
+    if (!isPrimaryInstance)
+    {
+        Console.WriteLine("[HavenLightApi] Another local instance is already running on port 5055. Reuse that process or stop it before starting a new one.");
+        return;
+    }
 }
 
-// Repo-root .env — must load before config. Clobber so .env wins over stale machine/user env (e.g. old localhost).
-if (PathResolver.FindEnvFile() is { } envFile)
+// Repo-root .env — local/dev only. On Azure App Service use Portal Application Settings.
+// Skip DotNetEnv on Azure so a accidentally deployed .env cannot override or mask Portal secrets.
+if (!onAzureAppService && PathResolver.FindEnvFile() is { } envFile)
     Env.Load(envFile, new LoadOptions(setEnvVars: true, clobberExistingVars: true));
 
 var builder = WebApplication.CreateBuilder(args);
-var googleClientID = builder.Configuration["Authentication:Google:ClientID"];
-var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+var (googleClientID, googleClientSecret) = GoogleConfigurationReader.Resolve(builder.Configuration);
+if (onAzureAppService)
+{
+    Console.WriteLine(
+        $"[HavenLightApi] Google OAuth (lengths only): clientId={googleClientID?.Length ?? 0}, clientSecret={googleClientSecret?.Length ?? 0}");
+}
 
 
 builder.Services.AddDbContext<AuthIdentityDbContext>(options =>

@@ -275,11 +275,7 @@ public class AuthController(
         return Redirect(BuildFrontendSuccessUrl(returnPath));
     }
 
-    private bool IsGoogleConfigured()
-    {
-        return !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"])
-            && !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]);
-    }
+    private bool IsGoogleConfigured() => GoogleConfigurationReader.IsFullyConfigured(configuration);
 
     private string NormalizeReturnPath(string? returnPath)
     {

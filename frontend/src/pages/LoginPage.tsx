@@ -22,7 +22,14 @@ export default function LoginPage() {
     getExternalAuthProviders()
       .then((providers) => {
         if (!cancelled) {
-          setGoogleAvailable(providers.some((p) => p.name === 'Google'));
+          const hasGoogle = providers.some((p) => p.name === 'Google');
+          setGoogleAvailable(hasGoogle);
+          if (import.meta.env.DEV && !hasGoogle) {
+            console.info(
+              '[HavenLight] Google sign-in is hidden: /api/auth/providers returned no Google entry. ' +
+                'Set Authentication__Google__ClientId and Authentication__Google__ClientSecret in the repo-root .env, restart the API, and add redirect http://localhost:5055/signin-google in Google Cloud.',
+            );
+          }
         }
       })
       .catch(() => {
