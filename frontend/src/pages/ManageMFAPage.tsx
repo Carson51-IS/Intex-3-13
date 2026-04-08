@@ -12,7 +12,7 @@ import {
 import type { TwoFactorStatus } from '../types/TwoFactorStatus';
 
 export default function ManageMFAPage() {
-  const { authSession, isAuthenticated, isLoading } = useAuth();
+  const { authSession, isAuthenticated, isLoading, isAdmin, isDonor } = useAuth();
   const [twoFactorStatus, setTwoFactorStatus] = useState<TwoFactorStatus | null>(null);
   const [authenticationCode, setAuthenticationCode] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
@@ -124,6 +124,16 @@ export default function ManageMFAPage() {
   return (
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-8">
       <div className="w-full max-w-2xl rounded-xl border bg-card p-10 card-shadow">
+        {(isAdmin || isDonor) && (
+          <p className="mb-3 text-center">
+            <Link
+              to={isAdmin ? '/admin/settings' : '/donor'}
+              className="text-sm font-semibold text-primary no-underline hover:underline"
+            >
+              {isAdmin ? '← Back to Settings' : '← Back to donor dashboard'}
+            </Link>
+          </p>
+        )}
         <h1 className="mb-4 text-center font-heading text-2xl font-semibold text-card-foreground">
           Manage MFA
         </h1>

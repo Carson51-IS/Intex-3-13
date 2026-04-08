@@ -4,6 +4,7 @@ export {
   registerUser,
   logoutUser,
   loginUser,
+  LoginRequiresTwoFactorError,
   getExternalAuthProviders,
   buildExternalLoginUrl,
 } from './authClient';

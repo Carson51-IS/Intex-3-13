@@ -46,6 +46,12 @@ export default function Navbar() {
               </Link>
             ) : (
               <div className="flex items-center gap-3">
+                <Link
+                  to="/manage-mfa"
+                  className="hidden text-sm font-semibold text-primary no-underline transition-colors hover:underline sm:inline"
+                >
+                  MFA
+                </Link>
                 <div className="leading-tight text-right">
                   <div className="text-sm font-semibold text-foreground">
                     {user.userName?.trim() || user.email.split('@')[0] || user.email}

@@ -7,6 +7,36 @@ export interface ExternalAuthProvider{
   displayName: string;
 }
 
+/** Thrown when email/password are valid but Identity requires a 2FA or recovery code (MapIdentityApi). */
+export class LoginRequiresTwoFactorError extends Error {
+  override readonly name = 'LoginRequiresTwoFactorError';
+
+  constructor() {
+    super('This account uses two-factor authentication. Enter your authenticator code or a recovery code below.');
+  }
+}
+
+function messageFromProblemJson(data: Record<string, unknown>): string {
+  if (data.errors && typeof data.errors === 'object') {
+    const messages = Object.values(data.errors as Record<string, unknown>)
+      .flat()
+      .filter((value): value is string => typeof value === 'string' && value.length > 0);
+    if (messages.length > 0) {
+      return messages.join(' ');
+    }
+  }
+  if (typeof data.detail === 'string' && data.detail.length > 0) {
+    return data.detail;
+  }
+  if (typeof data.title === 'string' && data.title.length > 0) {
+    return data.title;
+  }
+  if (typeof data.message === 'string' && data.message.length > 0) {
+    return data.message;
+  }
+  return '';
+}
+
 function apiUrl(path: string): string {
   const base = getApiBase();
   if (!base) {
@@ -210,6 +240,28 @@ export async function loginUser(
   );
 
   if (!loginRes.ok) {
+    const contentType = loginRes.headers.get('content-type') ?? '';
+    const isJsonLike =
+      contentType.includes('application/json') || contentType.includes('+json');
+    if (isJsonLike) {
+      try {
+        const data = (await loginRes.json()) as Record<string, unknown>;
+        if (
+          loginRes.status === 401 &&
+          typeof data.detail === 'string' &&
+          data.detail === 'RequiresTwoFactor'
+        ) {
+          throw new LoginRequiresTwoFactorError();
+        }
+        const msg = messageFromProblemJson(data);
+        throw new Error(msg || 'Failed to login user');
+      } catch (e) {
+        if (e instanceof LoginRequiresTwoFactorError) {
+          throw e;
+        }
+        throw new Error('Failed to login user');
+      }
+    }
     throw new Error(await readApiError(loginRes, 'Failed to login user'));
   }
 

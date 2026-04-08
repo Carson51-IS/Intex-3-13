@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import LoginMfaPage from './pages/LoginMfaPage';
 import RegisterPage from './pages/RegisterPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/AdminDashboard';
@@ -100,12 +101,27 @@ function AppRoutes() {
               </GuestOnlyRoute>
             }
           />
+          <Route
+            path="/login/mfa"
+            element={
+              <GuestOnlyRoute>
+                <LoginMfaPage />
+              </GuestOnlyRoute>
+            }
+          />
           <Route path="/impact" element={<ImpactPage />} />
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/logout" element={<LogoutPage />} />
-          <Route path="/manage-mfa" element={<ManageMFA />} />
+          <Route
+            path="/manage-mfa"
+            element={
+              <ProtectedRoute>
+                <ManageMFA />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/cookies" element={<CookiePolicyPage />} />
           <Route
             path="/donor"
@@ -124,7 +140,7 @@ function AppRoutes() {
         </Routes>
       </main>
       {showPublicChrome && <Footer />}
-      {showPublicChrome && <CookieConsentBannerView />}
+      <CookieConsentBannerView />
     </div>
   );
 }

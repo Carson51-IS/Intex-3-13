@@ -1,7 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { buildExternalLoginUrl, getExternalAuthProviders } from '../lib/AuthAPI';
+import {
+  buildExternalLoginUrl,
+  getExternalAuthProviders,
+  LoginRequiresTwoFactorError,
+} from '../lib/AuthAPI';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,8 +15,6 @@ export default function LoginPage() {
   const [googleAvailable, setGoogleAvailable] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [recoveryCode, setRecoveryCode] = useState('');
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -41,14 +43,7 @@ export default function LoginPage() {
     setError('');
     setIsSubmitting(true);
     try {
-      const trimmedTwoFactorCode = twoFactorCode.trim();
-      const trimmedRecoveryCode = recoveryCode.trim();
-      const session = await login(
-        email,
-        password,
-        trimmedTwoFactorCode || undefined,
-        trimmedRecoveryCode || undefined,
-      );
+      const session = await login(email, password);
       if (!session.isAuthenticated) {
         setError('Sign in failed. Please check your credentials.');
         return;
@@ -58,6 +53,13 @@ export default function LoginPage() {
       const target = isAdmin ? '/admin' : isDonor ? '/donor' : '/';
       navigate(target);
     } catch (err) {
+      if (err instanceof LoginRequiresTwoFactorError) {
+        navigate('/login/mfa', {
+          replace: true,
+          state: { email: email.trim(), password },
+        });
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsSubmitting(false);
@@ -143,39 +145,6 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 className={inputCn}
               />
-            </div>
-
-            <div className="mb-4 rounded-md border border-border bg-muted/50 p-4">
-              <p className="mb-2 font-body text-xs font-semibold text-muted-foreground">Optional MFA</p>
-              <div className="mb-3">
-                <label htmlFor="twoFactorCode" className={labelCn}>Authentication Code</label>
-                <input
-                  id="twoFactorCode"
-                  type="text"
-                  value={twoFactorCode}
-                  onChange={(e) => setTwoFactorCode(e.target.value)}
-                  placeholder="6-digit code"
-                  autoComplete="one-time-code"
-                  className={inputCn}
-                />
-                <p className="mt-1 font-body text-xs text-muted-foreground">
-                  Leave blank unless MFA is enabled on your account.
-                </p>
-              </div>
-              <div>
-                <label htmlFor="recoveryCode" className={labelCn}>Recovery Code</label>
-                <input
-                  id="recoveryCode"
-                  type="text"
-                  value={recoveryCode}
-                  onChange={(e) => setRecoveryCode(e.target.value)}
-                  placeholder="Recovery code"
-                  className={inputCn}
-                />
-                <p className="mt-1 font-body text-xs text-muted-foreground">
-                  Use this instead of an authentication code if needed.
-                </p>
-              </div>
             </div>
 
             <button

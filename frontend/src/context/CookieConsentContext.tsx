@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
 const CookieConsentStorageKey = 'cookieConsent';
+const CookieConsentValue = 'acknowledged';
 
 interface CookieConsentContextValue {
     hasAcknowledgedConsent: boolean;
@@ -9,24 +10,48 @@ interface CookieConsentContextValue {
 
 const CookieConsentContext = createContext<CookieConsentContextValue | undefined>(undefined);
 
-function readInitialConsentValue() {
+/** True only after the user clicks "I understand" (persisted). New visitors have no storage → banner shows. */
+function readHasAcknowledgedConsent(): boolean {
     if (typeof window === 'undefined') {
         return false;
     }
 
-    const stored = window.localStorage.getItem(CookieConsentStorageKey);
-    return stored === 'acknowledged' || stored === 'accepted' || stored === 'declined';
+    try {
+        const stored = window.localStorage.getItem(CookieConsentStorageKey);
+        if (
+            stored === CookieConsentValue ||
+            stored === 'accepted' ||
+            stored === 'declined'
+        ) {
+            return true;
+        }
+    } catch {
+        /* private / blocked storage */
+    }
+
+    try {
+        return document.cookie
+            .split(';')
+            .map((part) => part.trim())
+            .some((part) => part === `${CookieConsentStorageKey}=${CookieConsentValue}`);
+    } catch {
+        return false;
+    }
 }
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
-    const [hasAcknowledgedConsent, setHasAcknowledgedConsent] = useState(readInitialConsentValue);
+    const [hasAcknowledgedConsent, setHasAcknowledgedConsent] = useState(() => readHasAcknowledgedConsent());
 
     const value = useMemo<CookieConsentContextValue>(
         () => ({
             hasAcknowledgedConsent,
             acknowledgeConsent() {
-                window.localStorage.setItem(CookieConsentStorageKey, 'acknowledged');
-                document.cookie = 'cookieConsent=acknowledged; path=/; max-age=31536000; SameSite=Lax';
+                try {
+                    window.localStorage.setItem(CookieConsentStorageKey, CookieConsentValue);
+                } catch {
+                    /* still set cookie + in-memory state */
+                }
+                document.cookie = `${CookieConsentStorageKey}=${CookieConsentValue}; path=/; max-age=31536000; SameSite=Lax`;
                 setHasAcknowledgedConsent(true);
             },
         }),
