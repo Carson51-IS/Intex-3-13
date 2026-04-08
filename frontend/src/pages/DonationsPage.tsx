@@ -39,7 +39,6 @@ export default function DonationsPage() {
   const { user } = useAuth();
   const [history, setHistory] = useState<MyHistoryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
@@ -206,12 +205,9 @@ export default function DonationsPage() {
 
         <button
           type="submit"
-          disabled={submitting}
-          className="rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          {submitting
-            ? 'Processing…'
-            : `Donate ${formatEnteredAmount(form.amount)}`}
+          {`Donate ${formatEnteredAmount(form.amount)}`}
         </button>
       </form>
 

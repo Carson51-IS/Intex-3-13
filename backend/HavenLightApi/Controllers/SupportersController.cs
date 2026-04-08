@@ -96,7 +96,7 @@ public class SupportersController : ControllerBase
         return Ok(items);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<Supporter>> GetById(int id)
     {
         var supporter = await _context.Supporters
@@ -105,6 +105,67 @@ public class SupportersController : ControllerBase
 
         if (supporter == null) return NotFound();
         return Ok(supporter);
+    }
+
+    [HttpGet("lapsing-candidates")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> GetLapsingCandidates([FromQuery] int days = 90)
+    {
+        if (days < 1) days = 90;
+        var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-days));
+
+        var items = await _context.Supporters
+            .Where(s => s.Status == "Active" && s.LapsingCampaignSentAt == null)
+            .Select(s => new
+            {
+                s.SupporterId,
+                s.DisplayName,
+                s.Email,
+                lastDonationDate = _context.Donations
+                    .Where(d => d.SupporterId == s.SupporterId)
+                    .Select(d => (DateOnly?)d.DonationDate)
+                    .OrderByDescending(d => d)
+                    .FirstOrDefault(),
+            })
+            .ToListAsync();
+
+        var lapsing = items
+            .Where(x => !x.lastDonationDate.HasValue || x.lastDonationDate.Value <= cutoff)
+            .OrderBy(x => x.lastDonationDate)
+            .ThenBy(x => x.DisplayName)
+            .ToList();
+
+        return Ok(new { count = lapsing.Count, days, donors = lapsing });
+    }
+
+    [HttpPost("lapsing-campaign/mock-send")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> MockSendLapsingCampaign([FromBody] LapsingCampaignSendDto dto)
+    {
+        if (dto.DonorIds == null || dto.DonorIds.Count == 0)
+            return BadRequest(new { message = "No donor recipients selected." });
+        if (string.IsNullOrWhiteSpace(dto.Subject))
+            return BadRequest(new { message = "Email subject is required." });
+        if (string.IsNullOrWhiteSpace(dto.Body))
+            return BadRequest(new { message = "Email body is required." });
+
+        var recipientCount = await _context.Supporters
+            .Where(s => dto.DonorIds.Contains(s.SupporterId))
+            .CountAsync();
+
+        var targets = await _context.Supporters
+            .Where(s => dto.DonorIds.Contains(s.SupporterId))
+            .ToListAsync();
+        foreach (var s in targets)
+            s.LapsingCampaignSentAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = $"Mock send successful. Email queued to {recipientCount} donor(s).",
+            sentCount = recipientCount,
+            imageUrl = dto.ImageUrl
+        });
     }
 
     [HttpPost]
@@ -197,4 +258,11 @@ public record SupporterWriteDto(
     string? FirstName,
     string? LastName,
     string? OrganizationName
+);
+
+public record LapsingCampaignSendDto(
+    List<int> DonorIds,
+    string Subject,
+    string Body,
+    string? ImageUrl
 );

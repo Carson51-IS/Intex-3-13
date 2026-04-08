@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
@@ -50,6 +51,9 @@ interface Safehouse {
   safehouseId: number;
   name: string;
 }
+interface LapsingSummary {
+  count: number;
+}
 
 const SUPPORTER_TYPES = ['Individual Donor', 'Corporate', 'Foundation', 'Church', 'Government', 'Volunteer', 'Skills Contributor', 'In-Kind Donor', 'Social Media Advocate'];
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Lapsed'];
@@ -78,6 +82,7 @@ export default function DonorsPage() {
   const [showContributionForm, setShowContributionForm] = useState(false);
   const [editingSupporter, setEditingSupporter] = useState<Supporter | null>(null);
   const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
+  const [lapsingCount, setLapsingCount] = useState(0);
   const [supporterPage, setSupporterPage] = useState(1);
   const [donationPage, setDonationPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState('');
@@ -206,6 +211,9 @@ export default function DonorsPage() {
 
   useEffect(() => {
     api.get<Safehouse[]>('/safehouses').then(setSafehouses).catch(() => {});
+    api.get<LapsingSummary>('/supporters/lapsing-candidates?days=90')
+      .then((x) => setLapsingCount(x.count ?? 0))
+      .catch(() => setLapsingCount(0));
   }, []);
 
   useEffect(() => {
@@ -279,6 +287,12 @@ export default function DonorsPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/admin/donors/lapsing-email"
+              className="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground no-underline shadow-[var(--card-shadow)] transition-colors hover:bg-muted"
+            >
+              Lapsing Donors ({lapsingCount})
+            </Link>
             <button
               type="button"
               onClick={() => { setError(''); setEditingSupporter(null); setShowForm(!showForm); }}

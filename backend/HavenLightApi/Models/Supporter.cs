@@ -52,5 +52,8 @@ public class Supporter
     [Column("acquisition_channel")]
     public string? AcquisitionChannel { get; set; }
 
+    [Column("lapsing_campaign_sent_at")]
+    public DateTime? LapsingCampaignSentAt { get; set; }
+
     public ICollection<Donation> Donations { get; set; } = [];
 }

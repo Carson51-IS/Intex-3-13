@@ -254,6 +254,14 @@ export default function LandingPage() {
             >
               View Impact Dashboard <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
+            <div className="mt-3">
+              <Link
+                to="/gallery"
+                className="inline-flex items-center justify-center rounded-md border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground no-underline transition-colors hover:bg-muted"
+              >
+                Visit Gallery
+              </Link>
+            </div>
           </div>
         </div>
       </section>

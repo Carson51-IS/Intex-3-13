@@ -116,17 +116,27 @@ export default function Navbar() {
                     <>
                       <a href="/#mission" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">Mission</a>
                       <a href="/#impact" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">Impact</a>
+                      <Link to="/gallery" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">Gallery</Link>
                       <a href="/#how" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">How It Works</a>
                       <a href="/#donate" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">Donate</a>
                     </>
                   ) : (
-                    <Link
-                      to="/donations"
-                      onClick={() => setMobileNavOpen(false)}
-                      className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted"
-                    >
-                      Donations
-                    </Link>
+                    <>
+                      <Link
+                        to="/donations"
+                        onClick={() => setMobileNavOpen(false)}
+                        className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted"
+                      >
+                        Donations
+                      </Link>
+                      <Link
+                        to="/gallery"
+                        onClick={() => setMobileNavOpen(false)}
+                        className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted"
+                      >
+                        Gallery
+                      </Link>
+                    </>
                   )}
                   {user ? (
                     <Link
@@ -181,6 +191,9 @@ export default function Navbar() {
                 <a href="/#how" className="text-muted-foreground transition-colors hover:text-foreground">
                   How It Works
                 </a>
+                <Link to="/gallery" className="text-muted-foreground transition-colors hover:text-foreground">
+                  Gallery
+                </Link>
                 <a href="/#donate" className="text-muted-foreground transition-colors hover:text-foreground">
                   Donate
                 </a>
@@ -201,6 +214,12 @@ export default function Navbar() {
                     className="text-sm font-semibold text-primary no-underline transition-colors hover:underline"
                   >
                     Donations
+                  </Link>
+                  <Link
+                    to="/gallery"
+                    className="text-sm font-semibold text-primary no-underline transition-colors hover:underline"
+                  >
+                    Gallery
                   </Link>
                   <Link
                     to="/impact"

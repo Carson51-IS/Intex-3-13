@@ -26,7 +26,10 @@ const navSections = [
   },
   {
     title: 'Donors Management',
-    items: [{ path: '/admin/donors', label: 'Donors & Contributions' }],
+    items: [
+      { path: '/admin/donors', label: 'Donors & Contributions' },
+      { path: '/admin/gallery', label: 'Gallery Management' },
+    ],
   },
   {
     title: 'Case Management',

@@ -34,6 +34,9 @@ import DonateConfirmPage from './pages/DonateConfirmPage';
 import DonateThankYouPage from './pages/DonateThankYouPage';
 import DonationsPage from './pages/DonationsPage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
+import GalleryPage from './pages/GalleryPage';
+import GalleryManagementPage from './pages/admin/GalleryManagementPage';
+import LapsingDonorEmailPage from './pages/admin/LapsingDonorEmailPage';
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: string }) {
   const { user, isLoading } = useAuth();
@@ -80,6 +83,8 @@ const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
   { path: '/admin/users', element: <UserManagementPage /> },
   { path: '/admin/donor-insights', element: <DonorInsightsPage /> },
   { path: '/admin/resident-insights', element: <ResidentInsightsPage /> },
+  { path: '/admin/gallery', element: <GalleryManagementPage /> },
+  { path: '/admin/donors/lapsing-email', element: <LapsingDonorEmailPage /> },
 ];
 
 function GuestOnlyRoute({ children }: { children: ReactNode }) {
@@ -153,6 +158,7 @@ function AppRoutes() {
             }
           />
           <Route path="/impact" element={<ImpactPage />} />
+          <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/register" element={<RegisterPage />} />
