@@ -291,7 +291,10 @@ public class AuthController(
     {
         var baseUrl = (configuration["Frontend:BaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
         var safeReturnPath = NormalizeReturnPath(returnPath);
-        return $"{baseUrl}{safeReturnPath}";
+        // SPA strips localStorage JWT when it sees this flag so the new cookie session wins over a stale Bearer
+        // (e.g. user was promoted to Admin after an earlier Donor/ User JWT was issued).
+        var url = $"{baseUrl}{safeReturnPath}";
+        return QueryHelpers.AddQueryString(url, "externalLogin", "1");
     }
 
     private string BuildFrontendErrorUrl(string message)

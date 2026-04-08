@@ -94,7 +94,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refreshAuthSession();
+    let cancelled = false;
+    const run = async () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('externalLogin') === '1') {
+          localStorage.removeItem('token');
+          params.delete('externalLogin');
+          const qs = params.toString();
+          const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`;
+          window.history.replaceState({}, '', newUrl);
+        }
+      }
+      if (!cancelled) await refreshAuthSession();
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, [refreshAuthSession]);
 
   const user = useMemo((): AuthUser | null => {
