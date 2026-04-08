@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useLayoutEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import heroBeach from "../assets/hero-beach.png";
 import DonationPrompt from "../components/DonationPrompt";
+import { useAuth } from "../context/AuthContext";
 
 function IconBase({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -47,7 +48,20 @@ const steps = [
 
 export default function LandingPage() {
   const [donationAmount, setDonationAmount] = useState<number | null>(1000);
+  const { user } = useAuth();
+  const location = useLocation();
   const amounts = [500, 1000, 2500, 5000];
+  const donateConfirmPath = `/donate/confirm?amount=${donationAmount ?? 1000}`;
+  const donateHref = user ? donateConfirmPath : `/login?redirect=${encodeURIComponent(donateConfirmPath)}`;
+
+  useLayoutEffect(() => {
+    if (location.pathname !== "/") return;
+    if (location.hash !== "#donate") return;
+    const el = document.getElementById("donate");
+    if (!el) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }, [location.pathname, location.hash]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,7 +149,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="donate" className="py-20">
+      <section id="donate" className="scroll-mt-24 py-20">
         <div className="container mx-auto max-w-xl px-6 text-center">
           <h2 className="mb-4 font-heading text-3xl font-bold md:text-4xl">Make a Difference Today</h2>
           <p className="mb-8 font-body text-muted-foreground">
@@ -157,7 +171,7 @@ export default function LandingPage() {
             ))}
           </div>
           <Link
-            to="/impact"
+            to={donateHref}
             className="inline-flex w-full items-center justify-center rounded-md bg-accent px-6 py-3 text-base font-semibold text-accent-foreground transition hover:opacity-90"
           >
             Donate ₱{donationAmount?.toLocaleString() ?? "—"} <Heart className="ml-2 h-4 w-4" />

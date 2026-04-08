@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -27,9 +27,12 @@ import ManageMFA from './pages/ManageMFAPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import CookieConsentBannerView from './components/CookieConsentBannerView';
 import { CookieConsentProvider } from './context/CookieConsentContext';
+import DonateConfirmPage from './pages/DonateConfirmPage';
+import DonateThankYouPage from './pages/DonateThankYouPage';
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: string }) {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -38,7 +41,10 @@ function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requi
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    const redirect = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect=${redirect}`} replace />;
+  }
   if (requiredRole && !user.roles.includes(requiredRole)) {
     const adminMayAccessDonor = requiredRole === 'Donor' && user.roles.includes('Admin');
     if (!adminMayAccessDonor) {
@@ -70,9 +76,14 @@ const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
 
 function GuestOnlyRoute({ children }: { children: ReactNode }) {
   const { user, isLoading, isAdmin, isDonor } = useAuth();
+  const [searchParams] = useSearchParams();
 
   if (isLoading) return <div style={{ padding: '2rem' }}>Loading...</div>;
   if (user) {
+    const redirect = searchParams.get('redirect');
+    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+      return <Navigate to={redirect} replace />;
+    }
     const target = isAdmin ? '/admin' : isDonor ? '/donor' : '/';
     return <Navigate to={target} replace />;
   }
@@ -107,6 +118,22 @@ function AppRoutes() {
               <GuestOnlyRoute>
                 <LoginMfaPage />
               </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/donate/confirm"
+            element={
+              <ProtectedRoute>
+                <DonateConfirmPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/donate/thank-you"
+            element={
+              <ProtectedRoute>
+                <DonateThankYouPage />
+              </ProtectedRoute>
             }
           />
           <Route path="/impact" element={<ImpactPage />} />

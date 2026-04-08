@@ -48,6 +48,11 @@ export default function LoginPage() {
         setError('Sign in failed. Please check your credentials.');
         return;
       }
+      const redirect = searchParams.get('redirect');
+      if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+        navigate(redirect);
+        return;
+      }
       const isAdmin = session.roles.includes('Admin');
       const isDonor = session.roles.includes('Donor');
       const target = isAdmin ? '/admin' : isDonor ? '/donor' : '/';
@@ -70,12 +75,26 @@ export default function LoginPage() {
     'w-full rounded-md border border-input bg-card px-3 py-2.5 font-body text-base text-foreground outline-none ring-ring focus:ring-2';
   const labelCn = 'mb-1.5 block font-body text-sm font-medium text-muted-foreground';
 
+  const postLoginReturnPath = (() => {
+    const redirect = searchParams.get('redirect');
+    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+      return redirect;
+    }
+    return '/';
+  })();
+
+  const donationLoginFlow = postLoginReturnPath.startsWith('/donate');
+
   return (
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-8">
       <div className="relative z-10 w-full max-w-md overflow-hidden rounded-xl border border-white/20 bg-card/95 card-shadow backdrop-blur-sm">
         <div className="bg-primary px-6 py-5 text-primary-foreground">
-          <h1 className="font-heading text-2xl font-bold">Staff Login</h1>
-          <p className="mt-1 font-body text-sm text-primary-foreground/85">Sign in to continue to Haven Light.</p>
+          <h1 className="font-heading text-2xl font-bold">Sign in</h1>
+          <p className="mt-1 font-body text-sm text-primary-foreground/85">
+            {donationLoginFlow
+              ? 'Sign in to confirm your donation and see your impact.'
+              : 'Sign in to continue to Haven Light.'}
+          </p>
         </div>
 
         <div className="p-6">
@@ -90,7 +109,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = buildExternalLoginUrl('Google', '/');
+                  window.location.href = buildExternalLoginUrl('Google', postLoginReturnPath);
                 }}
                 className="mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 font-body text-base font-semibold text-foreground transition-colors hover:bg-muted"
               >
