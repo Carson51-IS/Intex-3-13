@@ -55,6 +55,19 @@ export default function DonateThankYouPage() {
           </p>
         </div>
         <div className="space-y-5 px-8 py-8 text-foreground">
+          <div className="overflow-hidden rounded-lg border border-border bg-background">
+            <video
+              className="h-auto w-full"
+              controls
+              autoPlay
+              muted
+              playsInline
+              preload="metadata"
+            >
+              <source src="/ThankYouVideo.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
           <p className="leading-relaxed text-muted-foreground">
             Donations like yours help us keep our safe houses running around the clock: nutritious meals, trauma-informed
             counseling, school fees, medical care, and loving staff who walk alongside each girl on her healing journey.

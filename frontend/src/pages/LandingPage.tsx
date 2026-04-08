@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import heroBeach from "../assets/hero-beach.png";
 import DonationPrompt from "../components/DonationPrompt";
@@ -46,8 +46,59 @@ const steps = [
   },
 ];
 
+const volumeAnimationByVideo = new WeakMap<HTMLVideoElement, number>();
+
+function fadeVideoMute(video: HTMLVideoElement, shouldMute: boolean, durationMs = 240) {
+  const existingAnimation = volumeAnimationByVideo.get(video);
+  if (existingAnimation != null) {
+    cancelAnimationFrame(existingAnimation);
+    volumeAnimationByVideo.delete(video);
+  }
+
+  if (shouldMute) {
+    const startVolume = Math.max(0, Math.min(1, video.volume || 1));
+    if (startVolume <= 0.01 || video.muted) {
+      video.muted = true;
+      video.volume = 0;
+      return;
+    }
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min((now - startedAt) / durationMs, 1);
+      video.volume = startVolume * (1 - t);
+      if (t < 1) {
+        volumeAnimationByVideo.set(video, requestAnimationFrame(tick));
+        return;
+      }
+      video.muted = true;
+      video.volume = 0;
+      volumeAnimationByVideo.delete(video);
+    };
+    volumeAnimationByVideo.set(video, requestAnimationFrame(tick));
+    return;
+  }
+
+  video.muted = false;
+  const startVolume = Math.max(0, Math.min(1, video.volume || 0));
+  const startedAt = performance.now();
+  const tick = (now: number) => {
+    const t = Math.min((now - startedAt) / durationMs, 1);
+    video.volume = startVolume + (1 - startVolume) * t;
+    if (t < 1) {
+      volumeAnimationByVideo.set(video, requestAnimationFrame(tick));
+      return;
+    }
+    video.volume = 1;
+    volumeAnimationByVideo.delete(video);
+  };
+  volumeAnimationByVideo.set(video, requestAnimationFrame(tick));
+}
+
 export default function LandingPage() {
   const [donationAmount, setDonationAmount] = useState<number | null>(1000);
+  const [needsSoundTap, setNeedsSoundTap] = useState(false);
+  const missionVideoRef = useRef<HTMLVideoElement | null>(null);
+  const missionVideoStartedRef = useRef(false);
   const { user } = useAuth();
   const location = useLocation();
   const amounts = [500, 1000, 2500, 5000];
@@ -62,6 +113,94 @@ export default function LandingPage() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   }, [location.pathname, location.hash]);
+
+  useEffect(() => {
+    const video = missionVideoRef.current;
+    if (!video) return;
+    let pendingUserGestureRetry = false;
+
+    const tryPlayWithAudio = async () => {
+      if (video.readyState >= 1 && video.currentTime < 1) {
+        video.currentTime = 1;
+      }
+      video.muted = false;
+      video.volume = 1;
+      try {
+        await video.play();
+        pendingUserGestureRetry = false;
+        setNeedsSoundTap(false);
+      } catch {
+        // Browser blocked unmuted autoplay; start muted immediately so it's not a black frame.
+        try {
+          video.muted = true;
+          await video.play();
+        } catch {
+          // Ignore secondary failure.
+        }
+        pendingUserGestureRetry = true;
+        setNeedsSoundTap(true);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        const ratio = entry?.intersectionRatio ?? 0;
+        // Mute whenever the video is mostly out of view.
+        if (!entry?.isIntersecting || ratio < 0.25) {
+          fadeVideoMute(video, true);
+          return;
+        }
+        if (!missionVideoStartedRef.current) {
+          missionVideoStartedRef.current = true;
+          void tryPlayWithAudio();
+          return;
+        }
+        // Re-entering viewport: resume and try to restore audio.
+        void tryPlayWithAudio();
+      },
+      { threshold: [0, 0.25, 0.6, 1] },
+    );
+
+    observer.observe(video);
+
+    const keepPlaying = () => {
+      if (!missionVideoStartedRef.current) return;
+      if (video.ended) return;
+      void video.play().catch(() => {});
+    };
+    video.addEventListener("pause", keepPlaying);
+    const onVisibilityChange = () => {
+      if (document.hidden) fadeVideoMute(video, true);
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    const retryAfterGesture = (event?: Event) => {
+      // Don't override explicit mute/unmute gestures on the video itself.
+      const target = event?.target as Node | null;
+      const path = (event as Event & { composedPath?: () => EventTarget[] })?.composedPath?.();
+      if ((target && video.contains(target)) || (path && path.includes(video))) return;
+      
+      // Only retry if browser policy previously blocked unmuted autoplay.
+      if (pendingUserGestureRetry) {
+        void tryPlayWithAudio();
+      }
+    };
+    window.addEventListener("pointerdown", retryAfterGesture);
+    window.addEventListener("click", retryAfterGesture);
+    window.addEventListener("keydown", retryAfterGesture);
+    window.addEventListener("touchstart", retryAfterGesture);
+
+    return () => {
+      observer.disconnect();
+      video.removeEventListener("pause", keepPlaying);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pointerdown", retryAfterGesture);
+      window.removeEventListener("click", retryAfterGesture);
+      window.removeEventListener("keydown", retryAfterGesture);
+      window.removeEventListener("touchstart", retryAfterGesture);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,7 +300,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="donate" className="scroll-mt-24 py-20">
+      <section aria-label="Our mission video" className="w-full bg-black">
+        <div className="relative">
+          <video
+            ref={missionVideoRef}
+            className="block h-auto w-full"
+            playsInline
+            preload="metadata"
+            controls={false}
+            onLoadedMetadata={() => {
+              const video = missionVideoRef.current;
+              if (!video) return;
+              if (video.currentTime < 1) video.currentTime = 1;
+            }}
+            onClick={() => {
+              const video = missionVideoRef.current;
+              if (!video) return;
+              const isAudible = !video.muted && video.volume > 0.01;
+              fadeVideoMute(video, isAudible);
+              if (isAudible) return;
+              setNeedsSoundTap(false);
+            }}
+            onPointerDown={(event) => {
+              // Keep global gesture listeners from racing this explicit toggle interaction.
+              event.stopPropagation();
+            }}
+            onTouchStart={(event) => {
+              event.stopPropagation();
+            }}
+          >
+            <source src="/Our_Mission_Video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          {needsSoundTap ? (
+            <div className="pointer-events-none absolute bottom-4 right-4 rounded-md bg-black/70 px-3 py-1.5 text-xs font-semibold text-white">
+              Tap video for sound
+            </div>
+          ) : null}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-warm via-warm/35 via-60% to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-background via-background/45 via-65% to-transparent" />
+        </div>
+      </section>
+
+      <section id="donate" className="scroll-mt-24 pt-40 pb-20">
         <div className="container mx-auto max-w-xl px-6 text-center">
           <h2 className="mb-4 font-heading text-3xl font-bold md:text-4xl">Make a Difference Today</h2>
           <p className="mb-8 font-body text-muted-foreground">
