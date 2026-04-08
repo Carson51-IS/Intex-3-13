@@ -122,12 +122,20 @@ export default function ResidentDetailPage() {
               )}
             </div>
           </div>
-          <Link
-            to={`/admin/residents/${id}/edit`}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground no-underline shadow-sm transition-opacity hover:opacity-90"
-          >
-            Edit Record
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/admin/residents"
+              className="shrink-0 text-sm font-semibold text-primary no-underline hover:underline"
+            >
+              ← Back to Caseload Inventory
+            </Link>
+            <Link
+              to={`/admin/residents/${id}/edit`}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground no-underline shadow-sm transition-opacity hover:opacity-90"
+            >
+              Edit Record
+            </Link>
+          </div>
         </div>
 
         {/* Tabs */}

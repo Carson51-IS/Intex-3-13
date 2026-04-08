@@ -180,12 +180,6 @@ export default function ResidentsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              to="/admin/donors"
-              className="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-[var(--card-shadow)] transition-colors hover:bg-muted"
-            >
-              Donors & contributions
-            </Link>
-            <Link
               to="/admin/residents/new"
               className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
             >
@@ -261,7 +255,7 @@ export default function ResidentsPage() {
                 {['Case No.', 'Code', 'Status', 'Risk Level', 'Category', 'Social Worker', 'Admitted', 'Actions'].map((h) => (
                   <th
                     key={h}
-                    className="sticky top-0 z-10 bg-muted/40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                   >
                     {h}
                   </th>

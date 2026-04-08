@@ -50,6 +50,22 @@ public class DonationsController : ControllerBase
                 d.CampaignName,
                 d.ChannelSource,
                 d.IsRecurring,
+                d.EstimatedValue,
+                d.ImpactUnit,
+                d.Notes,
+                allocations = d.Allocations
+                    .OrderByDescending(a => a.AllocationDate)
+                    .Select(a => new
+                    {
+                        a.AllocationId,
+                        a.SafehouseId,
+                        safehouseName = a.Safehouse.Name,
+                        a.ProgramArea,
+                        a.AmountAllocated,
+                        a.AllocationDate,
+                        a.AllocationNotes
+                    })
+                    .ToList(),
                 supporter = new { displayName = d.Supporter.DisplayName }
             })
             .ToListAsync();
@@ -77,6 +93,90 @@ public class DonationsController : ControllerBase
         _context.Donations.Add(donation);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = donation.DonationId }, donation);
+    }
+
+    [HttpPost("record")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> RecordContribution([FromBody] AdminRecordContributionDto dto)
+    {
+        var donationType = (dto.DonationType ?? string.Empty).Trim();
+        var allowedTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Monetary",
+            "InKind",
+            "Time",
+            "Skills",
+            "SocialMedia",
+        };
+        if (!allowedTypes.Contains(donationType))
+            return BadRequest(new { message = "Unsupported donation type." });
+
+        var supporterExists = await _context.Supporters.AnyAsync(s => s.SupporterId == dto.SupporterId);
+        if (!supporterExists)
+            return BadRequest(new { message = "Supporter not found." });
+
+        if (string.Equals(donationType, "Monetary", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!dto.Amount.HasValue || dto.Amount.Value <= 0)
+                return BadRequest(new { message = "Monetary contributions require amount > 0." });
+        }
+
+        if (dto.Amount.HasValue && dto.Amount.Value < 0)
+            return BadRequest(new { message = "Amount cannot be negative." });
+        if (dto.EstimatedValue.HasValue && dto.EstimatedValue.Value < 0)
+            return BadRequest(new { message = "Estimated value cannot be negative." });
+
+        var donation = new Donation
+        {
+            DonationId = (await _context.Donations.MaxAsync(d => (int?)d.DonationId) ?? 0) + 1,
+            SupporterId = dto.SupporterId,
+            DonationType = donationType,
+            DonationDate = dto.DonationDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            Amount = dto.Amount,
+            EstimatedValue = dto.EstimatedValue,
+            ImpactUnit = string.IsNullOrWhiteSpace(dto.ImpactUnit) ? null : dto.ImpactUnit.Trim(),
+            CurrencyCode = string.IsNullOrWhiteSpace(dto.CurrencyCode) ? "PHP" : dto.CurrencyCode.Trim().ToUpperInvariant(),
+            CampaignName = string.IsNullOrWhiteSpace(dto.CampaignName) ? null : dto.CampaignName.Trim(),
+            ChannelSource = string.IsNullOrWhiteSpace(dto.ChannelSource) ? "Admin Portal" : dto.ChannelSource.Trim(),
+            IsRecurring = dto.IsRecurring,
+            Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
+        };
+
+        _context.Donations.Add(donation);
+
+        if (dto.Allocations is { Count: > 0 })
+        {
+            var safehouseIds = dto.Allocations.Select(a => a.SafehouseId).Distinct().ToArray();
+            var existingSafehouseIds = await _context.Safehouses
+                .Where(s => safehouseIds.Contains(s.SafehouseId))
+                .Select(s => s.SafehouseId)
+                .ToListAsync();
+            if (existingSafehouseIds.Count != safehouseIds.Length)
+                return BadRequest(new { message = "One or more allocations reference an invalid safehouse." });
+
+            var nextAllocationId = (await _context.DonationAllocations.MaxAsync(a => (int?)a.AllocationId) ?? 0) + 1;
+            foreach (var alloc in dto.Allocations)
+            {
+                if (alloc.AmountAllocated <= 0)
+                    return BadRequest(new { message = "Allocation amount must be greater than zero." });
+                if (string.IsNullOrWhiteSpace(alloc.ProgramArea))
+                    return BadRequest(new { message = "Program area is required for allocations." });
+
+                _context.DonationAllocations.Add(new DonationAllocation
+                {
+                    AllocationId = nextAllocationId++,
+                    DonationId = donation.DonationId,
+                    SafehouseId = alloc.SafehouseId,
+                    ProgramArea = alloc.ProgramArea.Trim(),
+                    AmountAllocated = alloc.AmountAllocated,
+                    AllocationDate = alloc.AllocationDate ?? donation.DonationDate,
+                    AllocationNotes = string.IsNullOrWhiteSpace(alloc.AllocationNotes) ? null : alloc.AllocationNotes.Trim(),
+                });
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Contribution recorded.", donationId = donation.DonationId });
     }
 
     [HttpPut("{id}")]
@@ -207,4 +307,27 @@ public record DonorSubmitDto(
     string? DisplayName,
     string? FirstName,
     string? LastName
+);
+
+public record AdminRecordContributionDto(
+    int SupporterId,
+    string DonationType,
+    DateOnly? DonationDate,
+    decimal? Amount,
+    decimal? EstimatedValue,
+    string? ImpactUnit,
+    string? CurrencyCode,
+    string? CampaignName,
+    string? ChannelSource,
+    bool IsRecurring,
+    string? Notes,
+    List<AdminAllocationDto>? Allocations
+);
+
+public record AdminAllocationDto(
+    int SafehouseId,
+    string ProgramArea,
+    decimal AmountAllocated,
+    DateOnly? AllocationDate,
+    string? AllocationNotes
 );

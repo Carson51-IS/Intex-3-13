@@ -61,6 +61,35 @@ public class SupportersController : ControllerBase
             .OrderBy(s => s.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(s => new
+            {
+                s.SupporterId,
+                s.DisplayName,
+                s.SupporterType,
+                s.RelationshipType,
+                s.Email,
+                s.Phone,
+                s.Status,
+                s.Country,
+                s.Region,
+                s.FirstDonationDate,
+                s.CreatedAt,
+                lastDonationDate = _context.Donations
+                    .Where(d => d.SupporterId == s.SupporterId)
+                    .Select(d => (DateOnly?)d.DonationDate)
+                    .OrderByDescending(d => d)
+                    .FirstOrDefault(),
+                lastDonationAmount = _context.Donations
+                    .Where(d => d.SupporterId == s.SupporterId)
+                    .OrderByDescending(d => d.DonationDate)
+                    .ThenByDescending(d => d.DonationId)
+                    .Select(d => d.Amount ?? d.EstimatedValue)
+                    .FirstOrDefault(),
+                totalDonated = _context.Donations
+                    .Where(d => d.SupporterId == s.SupporterId)
+                    .Select(d => d.Amount ?? d.EstimatedValue ?? 0m)
+                    .Sum(),
+            })
             .ToListAsync();
 
         Response.Headers.Append("X-Total-Count", total.ToString());

@@ -15,6 +15,9 @@ interface Supporter {
   country: string;
   region: string;
   firstDonationDate: string | null;
+  lastDonationDate: string | null;
+  lastDonationAmount: number | null;
+  totalDonated: number;
   createdAt: string;
 }
 
@@ -28,11 +31,30 @@ interface Donation {
   campaignName: string | null;
   channelSource: string;
   isRecurring: boolean;
+  estimatedValue?: number | null;
+  impactUnit?: string | null;
+  notes?: string | null;
+  allocations?: Array<{
+    allocationId: number;
+    safehouseId: number;
+    safehouseName: string;
+    programArea: string;
+    amountAllocated: number;
+    allocationDate: string;
+    allocationNotes?: string | null;
+  }>;
   supporter?: { displayName: string };
 }
 
-const SUPPORTER_TYPES = ['Individual Donor', 'Corporate', 'Foundation', 'Church', 'Government', 'Volunteer', 'Skills Contributor', 'In-Kind Donor'];
+interface Safehouse {
+  safehouseId: number;
+  name: string;
+}
+
+const SUPPORTER_TYPES = ['Individual Donor', 'Corporate', 'Foundation', 'Church', 'Government', 'Volunteer', 'Skills Contributor', 'In-Kind Donor', 'Social Media Advocate'];
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Lapsed'];
+const CONTRIBUTION_TYPES = ['Monetary', 'InKind', 'Time', 'Skills', 'SocialMedia'];
+const PROGRAM_AREAS = ['Caring', 'Healing', 'Teaching', 'Reintegration', 'Operations', 'Outreach', 'Wellbeing', 'Education', 'Transport', 'Maintenance'];
 
 const formLabelCn = 'mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground';
 const formControlCn =
@@ -53,7 +75,9 @@ export default function DonorsPage() {
   const [donationsLoadingMore, setDonationsLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showContributionForm, setShowContributionForm] = useState(false);
   const [editingSupporter, setEditingSupporter] = useState<Supporter | null>(null);
+  const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
   const [supporterPage, setSupporterPage] = useState(1);
   const [donationPage, setDonationPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState('');
@@ -181,6 +205,10 @@ export default function DonorsPage() {
   }, [fetchDonations]);
 
   useEffect(() => {
+    api.get<Safehouse[]>('/safehouses').then(setSafehouses).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     setSupporters([]);
     setSupporterTotal(0);
     setSupportersLastBatchSize(0);
@@ -250,17 +278,30 @@ export default function DonorsPage() {
               Manage supporter profiles and track all contributions
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => { setError(''); setEditingSupporter(null); setShowForm(!showForm); }}
-            className={
-              showForm
-                ? 'inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted'
-                : 'inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90'
-            }
-          >
-            {showForm ? 'Cancel' : '+ Add Supporter'}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { setError(''); setEditingSupporter(null); setShowForm(!showForm); }}
+              className={
+                showForm
+                  ? 'inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted'
+                  : 'inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90'
+              }
+            >
+              {showForm ? 'Cancel' : '+ Add Supporter'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setError(''); setShowContributionForm(!showContributionForm); }}
+              className={
+                showContributionForm
+                  ? 'inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted'
+                  : 'inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90'
+              }
+            >
+              {showContributionForm ? 'Cancel Contribution' : '+ Record Contribution'}
+            </button>
+          </div>
         </div>
 
         {showForm && (
@@ -269,6 +310,22 @@ export default function DonorsPage() {
             initial={editingSupporter}
             onSuccess={() => { setError(''); setShowForm(false); setEditingSupporter(null); fetchSupporters(); }}
             onCancel={() => { setError(''); setShowForm(false); setEditingSupporter(null); }}
+          />
+        )}
+        {showContributionForm && (
+          <ContributionForm
+            supporters={supporters}
+            safehouses={safehouses}
+            onSuccess={() => {
+              setError('');
+              setShowContributionForm(false);
+              setDonationPage(1);
+              setDonations([]);
+              setDonationTotal(0);
+              setDonationsLastBatchSize(0);
+              fetchDonations();
+            }}
+            onCancel={() => setShowContributionForm(false)}
           />
         )}
 
@@ -318,7 +375,7 @@ export default function DonorsPage() {
               <table className="w-full min-w-[900px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b-2 bg-muted/40">
-                    {['Name', 'Type', 'Relationship', 'Email', 'Country', 'Status', 'First Donation', 'Actions'].map(h => (
+                    {['Name', 'Type', 'Relationship', 'Country', 'Status', 'Last Donation', 'Total Donated', 'Actions'].map(h => (
                       <th key={h} className={thCn}>{h}</th>
                     ))}
                   </tr>
@@ -334,12 +391,18 @@ export default function DonorsPage() {
                         <td className={`${tdCn} font-semibold text-foreground`}>{s.displayName}</td>
                         <td className={tdCn}><Badge text={s.supporterType} color="#805ad5" /></td>
                         <td className={tdCn}>{s.relationshipType}</td>
-                        <td className={`${tdCn} max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap`}>{s.email}</td>
                         <td className={tdCn}>{s.country || '—'}</td>
                         <td className={tdCn}>
                           <Badge text={s.status} color={s.status === 'Active' ? '#38a169' : '#718096'} />
                         </td>
-                        <td className={tdCn}>{s.firstDonationDate ? new Date(s.firstDonationDate).toLocaleDateString() : '—'}</td>
+                        <td className={tdCn}>
+                          {s.lastDonationDate
+                            ? `${new Date(s.lastDonationDate).toLocaleDateString()} (${formatAmountWithPreference(s.lastDonationAmount ?? 0, currencyPreference)})`
+                            : '—'}
+                        </td>
+                        <td className={`${tdCn} font-semibold text-success`}>
+                          {formatAmountWithPreference(s.totalDonated ?? 0, currencyPreference)}
+                        </td>
                         <td className={tdCn}>
                           <button
                             onClick={() => { setError(''); setEditingSupporter(s); setShowForm(true); window.scrollTo(0, 0); }}
@@ -372,19 +435,19 @@ export default function DonorsPage() {
             onScroll={handleDonationsScroll}
             className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]"
           >
-            <table className="w-full min-w-[820px] border-collapse text-sm">
+            <table className="w-full min-w-[980px] border-collapse text-sm">
               <thead>
                 <tr className="border-b-2 bg-muted/40">
-                  {['Date', 'Supporter', 'Type', 'Amount', 'Campaign', 'Channel', 'Recurring'].map(h => (
+                  {['Date', 'Supporter', 'Type', 'Amount/Value', 'Allocations', 'Campaign', 'Channel', 'Recurring'].map(h => (
                     <th key={h} className={thCn}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {donationsLoading ? (
-                  <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={8} className="p-12 text-center text-muted-foreground">Loading…</td></tr>
                 ) : donations.length === 0 ? (
-                  <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">No donations found.</td></tr>
+                  <tr><td colSpan={8} className="p-12 text-center text-muted-foreground">No donations found.</td></tr>
                 ) : (
                   donations.map((d, i) => (
                     <tr key={d.donationId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
@@ -392,7 +455,16 @@ export default function DonorsPage() {
                       <td className={`${tdCn} font-semibold`}>{d.supporter?.displayName ?? `Donor #${d.supporterId}`}</td>
                       <td className={tdCn}><Badge text={d.donationType} color="#2b6cb0" /></td>
                       <td className={`${tdCn} font-bold text-success`}>
-                        {d.amount != null ? formatAmountWithPreference(d.amount, currencyPreference) : 'In-Kind'}
+                        {d.amount != null
+                          ? formatAmountWithPreference(d.amount, currencyPreference)
+                          : d.estimatedValue != null
+                            ? `${formatAmountWithPreference(d.estimatedValue, currencyPreference)}${d.impactUnit ? ` (${d.impactUnit})` : ''}`
+                            : 'Non-monetary'}
+                      </td>
+                      <td className={`${tdCn} max-w-[240px]`}>
+                        {d.allocations && d.allocations.length > 0
+                          ? d.allocations.slice(0, 2).map((a) => `${a.safehouseName}: ${a.programArea}`).join(' | ')
+                          : '—'}
                       </td>
                       <td className={tdCn}>{d.campaignName ?? '—'}</td>
                       <td className={tdCn}>{d.channelSource}</td>
@@ -401,10 +473,10 @@ export default function DonorsPage() {
                   ))
                 )}
                 {donationsLoadingMore && (
-                  <tr><td colSpan={7} className="p-4 text-center text-xs text-muted-foreground">Loading more…</td></tr>
+                  <tr><td colSpan={8} className="p-4 text-center text-xs text-muted-foreground">Loading more…</td></tr>
                 )}
                 {!donationsLoading && !donationsLoadingMore && !donationsHasMore && donations.length > 0 && (
-                  <tr><td colSpan={7} className="p-4 text-center text-xs text-muted-foreground">End of results</td></tr>
+                  <tr><td colSpan={8} className="p-4 text-center text-xs text-muted-foreground">End of results</td></tr>
                 )}
               </tbody>
             </table>
@@ -540,6 +612,151 @@ function SupporterForm({ initial, onSuccess, onCancel }: {
   );
 }
 
+function ContributionForm({
+  supporters,
+  safehouses,
+  onSuccess,
+  onCancel,
+}: {
+  supporters: Supporter[];
+  safehouses: Safehouse[];
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState({
+    supporterId: supporters[0]?.supporterId?.toString() ?? '',
+    donationType: 'Monetary',
+    donationDate: '',
+    amount: '',
+    estimatedValue: '',
+    impactUnit: '',
+    campaignName: '',
+    channelSource: 'Admin Portal',
+    isRecurring: false,
+    notes: '',
+    safehouseId: safehouses[0]?.safehouseId?.toString() ?? '',
+    programArea: 'Caring',
+    amountAllocated: '',
+    allocationDate: '',
+    allocationNotes: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const requiresAmount = form.donationType === 'Monetary';
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!form.supporterId) return setError('Supporter is required.');
+    if (requiresAmount && (!form.amount || Number(form.amount) <= 0)) return setError('Amount must be greater than zero for monetary contributions.');
+    if (form.amount && Number(form.amount) < 0) return setError('Amount cannot be negative.');
+    if (form.estimatedValue && Number(form.estimatedValue) < 0) return setError('Estimated value cannot be negative.');
+
+    setSubmitting(true);
+    try {
+      const hasAllocation = !!form.safehouseId && !!form.programArea && !!form.amountAllocated;
+      const payload = {
+        supporterId: Number(form.supporterId),
+        donationType: form.donationType,
+        donationDate: form.donationDate || null,
+        amount: form.amount ? Number(form.amount) : null,
+        estimatedValue: form.estimatedValue ? Number(form.estimatedValue) : null,
+        impactUnit: form.impactUnit.trim() || null,
+        campaignName: form.campaignName.trim() || null,
+        channelSource: form.channelSource.trim() || null,
+        currencyCode: 'PHP',
+        isRecurring: form.isRecurring,
+        notes: form.notes.trim() || null,
+        allocations: hasAllocation
+          ? [{
+              safehouseId: Number(form.safehouseId),
+              programArea: form.programArea,
+              amountAllocated: Number(form.amountAllocated),
+              allocationDate: form.allocationDate || null,
+              allocationNotes: form.allocationNotes.trim() || null,
+            }]
+          : [],
+      };
+
+      await api.post('/donations/record', payload);
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to record contribution.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="mb-6 rounded-lg border border-border bg-card p-6 shadow-[var(--card-shadow)]">
+      <h3 className="mb-4 font-heading text-lg font-semibold text-foreground">Record Contribution</h3>
+      {error && <div className="mb-3 rounded-md border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>}
+      <div className="mb-3 grid gap-3 md:grid-cols-3">
+        <div>
+          <label className={formLabelCn}>Supporter*</label>
+          <select className={formSelectCn} value={form.supporterId} onChange={(e) => setForm((f) => ({ ...f, supporterId: e.target.value }))}>
+            <option value="">Select supporter</option>
+            {supporters.map((s) => <option key={s.supporterId} value={s.supporterId}>{s.displayName}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={formLabelCn}>Contribution Type*</label>
+          <select className={formSelectCn} value={form.donationType} onChange={(e) => setForm((f) => ({ ...f, donationType: e.target.value }))}>
+            {CONTRIBUTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <FormField label="Date" type="date" value={form.donationDate} onChange={(v) => setForm((f) => ({ ...f, donationDate: v }))} />
+      </div>
+      <div className="mb-3 grid gap-3 md:grid-cols-3">
+        <FormField label={requiresAmount ? 'Amount*' : 'Amount'} type="number" value={form.amount} onChange={(v) => setForm((f) => ({ ...f, amount: v }))} />
+        <FormField label="Estimated Value" type="number" value={form.estimatedValue} onChange={(v) => setForm((f) => ({ ...f, estimatedValue: v }))} />
+        <FormField label="Impact Unit (e.g., hours/items)" value={form.impactUnit} onChange={(v) => setForm((f) => ({ ...f, impactUnit: v }))} />
+      </div>
+      <div className="mb-3 grid gap-3 md:grid-cols-3">
+        <FormField label="Campaign" value={form.campaignName} onChange={(v) => setForm((f) => ({ ...f, campaignName: v }))} />
+        <FormField label="Channel" value={form.channelSource} onChange={(v) => setForm((f) => ({ ...f, channelSource: v }))} />
+        <label className="flex items-center gap-2 pt-6 text-sm text-foreground">
+          <input type="checkbox" checked={form.isRecurring} onChange={(e) => setForm((f) => ({ ...f, isRecurring: e.target.checked }))} />
+          Recurring
+        </label>
+      </div>
+      <div className="mb-3 rounded-md border border-border p-3">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Optional allocation (safehouse + program area)</p>
+        <div className="grid gap-3 md:grid-cols-4">
+          <div>
+            <label className={formLabelCn}>Safehouse</label>
+            <select className={formSelectCn} value={form.safehouseId} onChange={(e) => setForm((f) => ({ ...f, safehouseId: e.target.value }))}>
+              <option value="">None</option>
+              {safehouses.map((s) => <option key={s.safehouseId} value={s.safehouseId}>{s.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={formLabelCn}>Program Area</label>
+            <select className={formSelectCn} value={form.programArea} onChange={(e) => setForm((f) => ({ ...f, programArea: e.target.value }))}>
+              {PROGRAM_AREAS.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <FormField label="Allocated Amount" type="number" value={form.amountAllocated} onChange={(v) => setForm((f) => ({ ...f, amountAllocated: v }))} />
+          <FormField label="Allocation Date" type="date" value={form.allocationDate} onChange={(v) => setForm((f) => ({ ...f, allocationDate: v }))} />
+        </div>
+      </div>
+      <div className="mb-4">
+        <label className={formLabelCn}>Notes</label>
+        <textarea className={formControlCn} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2} />
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <button type="submit" disabled={submitting} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50">
+          {submitting ? 'Saving…' : 'Record Contribution'}
+        </button>
+        <button type="button" onClick={onCancel} className="rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function FormField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div>
@@ -573,5 +790,5 @@ function Badge({ text, color }: { text: string; color: string }) {
   );
 }
 
-const thCn = 'sticky top-0 z-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40';
+const thCn = 'sticky top-0 z-10 border-b border-border px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-card';
 const tdCn = 'px-4 py-3 align-middle text-foreground/85';
