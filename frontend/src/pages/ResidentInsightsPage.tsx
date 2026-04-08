@@ -26,6 +26,16 @@ export default function ResidentInsightsPage() {
           ML-powered resident analytics: reintegration readiness assessment and safehouse incident forecasting.
         </p>
 
+        <section className="mb-10 rounded-xl border border-info/30 bg-info/10 p-4 sm:p-6">
+          <h2 className="font-heading text-lg font-semibold text-info">How to read this page</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+            <li><strong>Predicted status</strong> is the most likely reintegration outcome based on the probability breakdown.</li>
+            <li><strong>Probability bars</strong> sum to 100% (hover segments to see exact percentages).</li>
+            <li><strong>Match</strong> compares the prediction to the current recorded status; mismatches are a review prompt, not an error.</li>
+            <li><strong>Incident forecasts</strong> are decision-support signals for staffing/safety planning, not guarantees.</li>
+          </ul>
+        </section>
+
         <div className="mb-10 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Object.entries(statusCounts).map(([status, count]) => (
             <div
@@ -60,14 +70,25 @@ export default function ResidentInsightsPage() {
             health scores, intervention plans, and behavioral incidents. These predictions support, but never replace,
             staff decision-making.
           </p>
+          <div className="mb-4 rounded-xl border bg-card p-4 text-sm text-muted-foreground card-shadow">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">How to read this table</div>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+              <li>Start with <strong>Predicted status (ML)</strong> to see the most likely program status.</li>
+              <li>In <strong>Top outcomes</strong>, check the runner-up and the <strong>gap</strong> to see how decisive the prediction is.</li>
+              <li>Compare to <strong>Current record</strong>. If it says <strong>Review</strong>, verify recent notes/updates.</li>
+            </ol>
+            <div className="mt-3 rounded-lg border bg-background px-3 py-2 text-xs text-muted-foreground">
+              <strong>Example:</strong> Completed 68% / In Progress 22% → likely nearing completion; if the current record isn’t Completed, flag for review.
+            </div>
+          </div>
           <div className="-mx-1 overflow-x-auto min-w-0 rounded-xl border bg-card card-shadow sm:mx-0">
             <table className="min-w-[680px] w-full border-collapse text-sm">
             <thead>
                 <tr className="border-b bg-muted/40">
                   <th className={thCn}>Resident ID</th>
-                  <th className={thCn}>Predicted Status</th>
-                  <th className={thCn}>Probability Breakdown</th>
-                  <th className={thCn}>Actual Status</th>
+                  <th className={thCn}>Predicted status (ML)</th>
+                  <th className={thCn}>Top outcomes</th>
+                  <th className={thCn}>Current record</th>
                   <th className={thCn}>Match</th>
               </tr>
             </thead>
@@ -79,7 +100,13 @@ export default function ResidentInsightsPage() {
                   { label: 'In Progress', value: r.pInProgress, color: statusColors['In Progress'] },
                   { label: 'Not Started', value: r.pNotStarted, color: statusColors['Not Started'] },
                   { label: 'On Hold', value: r.pOnHold, color: statusColors['On Hold'] },
-                ].filter(p => p.value > 0);
+                ]
+                  .slice()
+                  .sort((a, b) => b.value - a.value);
+
+                const primary = probs[0];
+                const runnerUp = probs[1];
+                const gapPct = primary && runnerUp ? Math.max(0, (primary.value - runnerUp.value) * 100) : 0;
 
                 return (
                     <tr key={r.residentId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
@@ -97,42 +124,42 @@ export default function ResidentInsightsPage() {
                       </span>
                     </td>
                       <td className={tdCn}>
-                        <div className="flex h-5 overflow-hidden rounded bg-muted">
-                        {probs.map((p) => (
-                          <div
-                            key={p.label}
-                            title={`${p.label}: ${(p.value * 100).toFixed(0)}%`}
-                            style={{
-                              width: `${p.value * 100}%`,
-                              backgroundColor: p.color,
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.65rem',
-                              color: 'white',
-                              fontWeight: 600,
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {p.value >= 0.15 ? `${(p.value * 100).toFixed(0)}%` : ''}
-                          </div>
-                        ))}
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-3">
-                        {probs.map(p => (
-                            <span key={p.label} className="text-xs text-muted-foreground">
-                            <span style={{
-                              display: 'inline-block',
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              backgroundColor: p.color,
-                              marginRight: '0.25rem',
-                            }} />
-                            {p.label}
-                          </span>
-                        ))}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {primary && (
+                            <span
+                              title={`${primary.label}: ${(primary.value * 100).toFixed(0)}%`}
+                              style={{
+                                padding: '0.2rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                backgroundColor: `${primary.color}20`,
+                                color: primary.color,
+                              }}
+                            >
+                              {primary.label} {(primary.value * 100).toFixed(0)}%
+                            </span>
+                          )}
+                          {runnerUp && (
+                            <span
+                              title={`${runnerUp.label}: ${(runnerUp.value * 100).toFixed(0)}%`}
+                              style={{
+                                padding: '0.2rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                backgroundColor: '#edf2f7',
+                                color: '#4a5568',
+                              }}
+                            >
+                              {runnerUp.label} {(runnerUp.value * 100).toFixed(0)}%
+                            </span>
+                          )}
+                          {primary && runnerUp && (
+                            <span className="text-xs text-muted-foreground">
+                              Gap: <strong className="text-foreground">{gapPct.toFixed(0)} pts</strong>
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className={tdCn}>
@@ -148,12 +175,17 @@ export default function ResidentInsightsPage() {
                       </span>
                     </td>
                       <td className={tdCn}>
-                      <span style={{
-                        fontSize: '1rem',
-                        color: isMatch ? '#38a169' : '#e53e3e',
+                      <span
+                        style={{
+                          padding: '0.2rem 0.75rem',
+                          borderRadius: '12px',
+                          fontSize: '0.8rem',
                           fontWeight: 700,
-                      }}>
-                        {isMatch ? 'Yes' : 'No'}
+                          backgroundColor: isMatch ? '#c6f6d5' : '#fed7d7',
+                          color: isMatch ? '#276749' : '#c53030',
+                        }}
+                      >
+                        {isMatch ? 'Aligned' : 'Review'}
                       </span>
                     </td>
                   </tr>
@@ -172,6 +204,23 @@ export default function ResidentInsightsPage() {
           Monthly incident volume predictions per safehouse using a Random Forest model.
           Forecasts help inform staffing decisions and proactive safety measures.
           </p>
+          <div className="mb-4 flex flex-col gap-2 rounded-lg border bg-card p-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold uppercase tracking-wide text-muted-foreground">Legend</span>
+              <span className="text-muted-foreground/70">•</span>
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" style={{ width: '10px', height: '10px', borderRadius: '999px', backgroundColor: '#dd6b20' }} />
+                Predicted incidents &gt; 0
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" style={{ width: '10px', height: '10px', borderRadius: '999px', backgroundColor: '#e2e8f0' }} />
+                0 predicted incidents
+              </span>
+            </div>
+            <div className="text-muted-foreground/80">
+              Scale: mini-bars are <strong>relative to each safehouse’s peak</strong>. Units shown as <strong>predicted incidents/month</strong>.
+            </div>
+          </div>
           <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {forecasts.map(f => {
             const isFlagged = f.maxPredicted > 0;
@@ -200,13 +249,13 @@ export default function ResidentInsightsPage() {
 
                   <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <div className="text-xs text-muted-foreground">Peak Forecast</div>
+                      <div className="text-xs text-muted-foreground">Peak Forecast (incidents/mo)</div>
                       <div style={{ color: isFlagged ? '#dd6b20' : '#38a169' }} className="text-xl font-bold">
                       {f.maxPredicted.toFixed(2)}
                       </div>
                     </div>
                   <div>
-                      <div className="text-xs text-muted-foreground">Avg Forecast</div>
+                      <div className="text-xs text-muted-foreground">Avg Forecast (incidents/mo)</div>
                       <div className="text-xl font-bold text-foreground">
                       {f.avgPredicted.toFixed(3)}
                       </div>

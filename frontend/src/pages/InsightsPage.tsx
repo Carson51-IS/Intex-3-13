@@ -84,6 +84,14 @@ export default function InsightsPage() {
               <p className="mb-6 text-sm text-muted-foreground md:text-base">
                 Our ML model analyzed historical post performance to identify the optimal times for high engagement on each platform.
               </p>
+              <div className="mb-6 rounded-xl border bg-card p-4 text-sm text-muted-foreground card-shadow">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">How to read this</div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+                  <li><strong>Platform accent colors</strong> identify the platform (not performance).</li>
+                  <li><strong>Engagement probability</strong> is the model’s estimate of a post being “high engagement”.</li>
+                  <li>In the table, the probability bar colors mean: <strong>green &gt; 60%</strong>, <strong>yellow 55–60%</strong>, <strong>blue &lt; 55%</strong>.</li>
+                </ul>
+              </div>
               <div className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {topEngagementByPlatform.map(({ platform, best, count }) => (
                   <div key={platform} className="min-w-0 min-w-0 rounded-xl border bg-card p-4 sm:p-5 card-shadow" style={{ borderTop: `4px solid ${platformColors[platform] ?? '#718096'}` }}>
@@ -209,6 +217,14 @@ export default function InsightsPage() {
               <p className="mb-6 text-sm text-muted-foreground md:text-base">
                 Our ML model predicts expected donation value attributable to social media posts, helping optimize posting strategy for fundraising.
               </p>
+              <div className="mb-6 rounded-xl border bg-card p-4 text-sm text-muted-foreground card-shadow">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">How to read this</div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+                  <li><strong>Platform accent colors</strong> identify the platform (not performance).</li>
+                  <li><strong>Predicted donation value</strong> is the model’s estimate of expected PHP donation value per post for that day/time window.</li>
+                  <li>Use this to <strong>prioritize posting windows</strong>, then pair it with campaign context and recent results.</li>
+                </ul>
+              </div>
               <div className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {topDonationByPlatform.map(({ platform, best, count }) => (
                   <div key={platform} className="min-w-0 min-w-0 rounded-xl border bg-card p-4 sm:p-5 card-shadow" style={{ borderTop: `4px solid ${platformColors[platform] ?? '#718096'}` }}>
