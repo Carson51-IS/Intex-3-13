@@ -3,6 +3,7 @@ using Npgsql;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -140,32 +141,33 @@ if (!string.IsNullOrEmpty(googleClientID) && !string.IsNullOrEmpty(googleClientS
         });
 }
 
-// Prefer Bearer when Authorization header is present; otherwise use the application cookie (Google / cookie sessions).
-const string policyAuthScheme = "HavenLight.AuthPolicy";
-builder.Services.AddAuthentication()
-    .AddPolicyScheme(policyAuthScheme, policyAuthScheme, options =>
-    {
-        options.ForwardDefaultSelector = context =>
-        {
-            var auth = context.Request.Headers.Authorization.ToString();
-            if (!string.IsNullOrEmpty(auth) &&
-                auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                return IdentityConstants.BearerScheme;
-            return IdentityConstants.ApplicationScheme;
-        };
-    });
+// Every [Authorize] must accept BOTH cookie (Google / external) and Bearer (email/password) auth.
+// Instead of a policy scheme (which has subtle forwarding issues with AddIdentityApiEndpoints),
+// we tell each authorization policy to try both schemes explicitly.
+string[] authSchemes = [IdentityConstants.ApplicationScheme, IdentityConstants.BearerScheme];
 
-builder.Services.PostConfigure<AuthenticationOptions>(options =>
-{
-    options.DefaultAuthenticateScheme = policyAuthScheme;
-});
-
-// AddIdentityApiEndpoints already registers Identity.Bearer (and cookies). Do not call AddBearerToken again — it throws "Scheme already exists: Identity.Bearer".
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(AuthPolicies.ManageCatalog, policy => policy.RequireRole(AuthRoles.Admin));
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("DonorOrAdmin", policy => policy.RequireRole("Admin", "Donor"));
+    // Default policy: any [Authorize] without a named policy tries both schemes.
+    options.DefaultPolicy = new AuthorizationPolicyBuilder(authSchemes)
+        .RequireAuthenticatedUser()
+        .Build();
+
+    options.AddPolicy(AuthPolicies.ManageCatalog, policy =>
+    {
+        policy.AddAuthenticationSchemes(authSchemes);
+        policy.RequireRole(AuthRoles.Admin);
+    });
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.AddAuthenticationSchemes(authSchemes);
+        policy.RequireRole("Admin");
+    });
+    options.AddPolicy("DonorOrAdmin", policy =>
+    {
+        policy.AddAuthenticationSchemes(authSchemes);
+        policy.RequireRole("Admin", "Donor");
+    });
 });
 
 // --- CORS ---

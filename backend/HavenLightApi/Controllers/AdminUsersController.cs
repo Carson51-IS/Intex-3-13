@@ -10,7 +10,7 @@ namespace HavenLightApi.Controllers;
 /// <summary>User CRUD under /api/admin/users — avoids collisions with Identity bearer endpoints mapped at /api/auth.</summary>
 [ApiController]
 [Route("api/admin/users")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class AdminUsersController(UserManager<ApplicationUser> userManager) : ControllerBase
 {
     /// <summary>Default seed admin (same email as AuthIdentityGenerator) — never deletable.</summary>
