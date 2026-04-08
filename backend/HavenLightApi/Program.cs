@@ -101,6 +101,20 @@ builder.Services.AddDbContext<HavenLightContext>(options =>
             "ConnectionStrings:DefaultConnection is not set. Configure it in appsettings, .env, or environment variables (see SEEDING.md).");
     }
 
+    // Local/dev safety: avoid hard crash when placeholder Postgres values are still in appsettings.
+    var hasPlaceholderPostgres =
+        conn.Contains("YOUR_PROJECT_REF", StringComparison.OrdinalIgnoreCase) ||
+        conn.Contains("YOUR_DATABASE_PASSWORD", StringComparison.OrdinalIgnoreCase) ||
+        conn.Contains("YOUR_SUPABASE_HOST", StringComparison.OrdinalIgnoreCase) ||
+        conn.Contains("YOUR_SUPABASE_PASSWORD", StringComparison.OrdinalIgnoreCase);
+    if (hasPlaceholderPostgres)
+    {
+        Console.WriteLine("[HavenLightApi] Placeholder DefaultConnection detected; falling back to local SQLite (HavenLight.local.sqlite).");
+        options.UseSqlite("Data Source=HavenLight.local.sqlite");
+        options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        return;
+    }
+
     var nb = new NpgsqlConnectionStringBuilder(conn);
     if (nb.Port == 6543)
         nb.MaxAutoPrepare = 0;

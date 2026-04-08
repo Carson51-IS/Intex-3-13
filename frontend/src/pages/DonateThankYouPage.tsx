@@ -1,10 +1,12 @@
 import confetti from 'canvas-confetti';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getAccountPreferences } from '../lib/accountPreferences';
 
 function parseAmount(raw: string | null): number {
   if (raw == null || raw === '') return 1000;
-  const n = Number.parseInt(raw, 10);
+  const n = Number.parseFloat(raw);
   if (!Number.isFinite(n) || n < 1) return 1000;
   return n;
 }
@@ -22,7 +24,24 @@ function burst(opts: Parameters<typeof confetti>[0]) {
 
 export default function DonateThankYouPage() {
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
   const amount = useMemo(() => parseAmount(searchParams.get('amount')), [searchParams]);
+  const formattedAmount = useMemo(
+    () =>
+      new Intl.NumberFormat(currencyPreference === 'USD' ? 'en-US' : 'en-PH', {
+        style: 'currency',
+        currency: currencyPreference,
+      }).format(amount),
+    [amount, currencyPreference],
+  );
+
+  useEffect(() => {
+    if (!user) return;
+    const fallbackName = user.userName?.trim() || user.email.split('@')[0] || user.email;
+    const prefs = getAccountPreferences(user.email, fallbackName);
+    setCurrencyPreference(prefs.currency);
+  }, [user]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -51,7 +70,7 @@ export default function DonateThankYouPage() {
         <div className="hero-gradient px-8 py-10 text-center text-primary-foreground">
           <h1 className="font-heading text-3xl font-bold md:text-4xl">Thank you for your generosity</h1>
           <p className="mt-3 text-lg text-primary-foreground/90">
-            Your gift of <span className="font-semibold">₱{amount.toLocaleString()}</span> will make a real difference.
+            Your gift of <span className="font-semibold">{formattedAmount}</span> will make a real difference.
           </p>
         </div>
         <div className="space-y-5 px-8 py-8 text-foreground">

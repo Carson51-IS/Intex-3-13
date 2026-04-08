@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatAmountWithPreference, getAccountPreferences } from '../lib/accountPreferences';
+import { useNavigate } from 'react-router-dom';
 
 interface Donation {
   donationId: number;
@@ -23,7 +24,7 @@ interface MyHistoryResponse {
   donations: Donation[];
 }
 
-const PRESET_AMOUNTS = [500, 1000, 2500, 5000];
+const PRESET_AMOUNTS = [25, 50, 100, 250];
 const CAMPAIGNS = [
   'General Fund',
   'Education Support',
@@ -34,6 +35,7 @@ const CAMPAIGNS = [
 ];
 
 export default function DonationsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [history, setHistory] = useState<MyHistoryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +73,14 @@ export default function DonationsPage() {
   }, [user]);
 
   const totalDonated = history?.donations.reduce((sum, d) => sum + (d.amount ?? 0), 0) ?? 0;
+  const currencyTag = currencyPreference === 'USD' ? '$' : '₱';
+  const formatEnteredAmount = (rawAmount: string) => {
+    const parsed = parseFloat(rawAmount || '0') || 0;
+    return new Intl.NumberFormat(currencyPreference === 'USD' ? 'en-US' : 'en-PH', {
+      style: 'currency',
+      currency: currencyPreference,
+    }).format(parsed);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -81,27 +91,7 @@ export default function DonationsPage() {
       setError('Please enter a valid donation amount greater than zero.');
       return;
     }
-    if (amount < 50) {
-      setError('Minimum donation amount is PHP 50.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const result = await api.post<{ message: string }>('/donations/submit', {
-        amount,
-        currencyCode: 'PHP',
-        campaignName: form.campaignName || null,
-        isRecurring: form.isRecurring,
-        notes: form.notes || null,
-      });
-      setSuccess(result.message || 'Thank you for your donation!');
-      setForm((prev) => ({ ...prev, amount: '', notes: '' }));
-      await fetchHistory();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Donation failed. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+    navigate(`/donate/confirm?amount=${encodeURIComponent(amount.toString())}`);
   };
 
   return (
@@ -144,12 +134,12 @@ export default function DonationsPage() {
         ) : null}
 
         <div className="mb-4">
-          <label className={labelCn}>Amount (PHP)</label>
+          <label className={labelCn}>Amount ({currencyPreference})</label>
           <div className="flex items-center gap-1">
-            <span className="rounded-l-md border border-border bg-muted px-2 py-2 text-sm text-muted-foreground">₱</span>
+            <span className="rounded-l-md border border-border bg-muted px-2 py-2 text-sm text-muted-foreground">{currencyTag}</span>
             <input
               type="number"
-              min={50}
+              min={0.01}
               step="0.01"
               value={form.amount}
               onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
@@ -170,7 +160,7 @@ export default function DonationsPage() {
                     : 'border-border bg-background text-muted-foreground hover:bg-muted'
                 }`}
               >
-                {formatAmountWithPreference(amt, currencyPreference)}
+                {formatEnteredAmount(amt.toString())}
               </button>
             ))}
           </div>
@@ -221,7 +211,7 @@ export default function DonationsPage() {
         >
           {submitting
             ? 'Processing…'
-            : `Donate ${formatAmountWithPreference(parseFloat(form.amount || '0') || 0, currencyPreference)}`}
+            : `Donate ${formatEnteredAmount(form.amount)}`}
         </button>
       </form>
 
