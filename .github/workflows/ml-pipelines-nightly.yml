@@ -1,0 +1,68 @@
+# Nightly: execute all ml-pipelines notebooks, export CSVs + frontend TypeScript, commit if changed.
+#
+# Schedule: 07:00 UTC daily (~12:00am US Mountain standard; adjust cron if you want a different local night).
+# Manual: Actions → "ML pipelines (nightly)" → Run workflow.
+#
+# Setup: default GITHUB_TOKEN needs permission to push to the default branch. If main is protected,
+# allow github-actions[bot] to push or use a PAT secret and git remote URL with embedded auth.
+#
+# Frontend hosting: this repo only auto-deploys the API on backend path changes. After commits here,
+# deploy the frontend through your usual process if the live site should show new predictions.
+name: ML pipelines (nightly)
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ml-pipelines-nightly
+  cancel-in-progress: false
+
+jobs:
+  run-ml-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: ml-pipelines/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r ml-pipelines/requirements.txt
+
+      - name: Run notebooks and export frontend ML data
+        run: python ml-pipelines/run_all.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and push if artifacts changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ml-outputs frontend/src/data/ml
+          if git diff --staged --quiet; then
+            echo "No changes to ML artifacts."
+          else
+            git commit -m "chore(ml): refresh model outputs [skip ci]"
+            git push
+          fi

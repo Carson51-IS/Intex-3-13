@@ -74,7 +74,7 @@ export const safehouseIncidentForecasts: SafehouseIncidentForecast[] = [
   { safehouseId: 7, monthStart: '2027-01', incidentCount: 0, incidentCountLag1: 0, actualNextMonth: 0, predictedNextMonth: 0, absError: 0 },
   { safehouseId: 8, monthStart: '2026-05', incidentCount: 0, incidentCountLag1: 1, actualNextMonth: 0, predictedNextMonth: 0.058, absError: 0.058 },
   { safehouseId: 8, monthStart: '2026-06', incidentCount: 0, incidentCountLag1: 0, actualNextMonth: 0, predictedNextMonth: 0, absError: 0 },
-  { safehouseId: 8, monthStart: '2026-07', incidentCount: 0, incidentCountLag1: 0, actualNextMonth: 0, predictedNextMonth: 0.030, absError: 0.030 },
+  { safehouseId: 8, monthStart: '2026-07', incidentCount: 0, incidentCountLag1: 0, actualNextMonth: 0, predictedNextMonth: 0.03, absError: 0.03 },
   { safehouseId: 8, monthStart: '2026-08', incidentCount: 0, incidentCountLag1: 0, actualNextMonth: 0, predictedNextMonth: 0.083, absError: 0.083 },
   { safehouseId: 8, monthStart: '2026-09', incidentCount: 0, incidentCountLag1: 0, actualNextMonth: 0, predictedNextMonth: 0.036, absError: 0.036 },
   { safehouseId: 8, monthStart: '2026-10', incidentCount: 0, incidentCountLag1: 0, actualNextMonth: 0, predictedNextMonth: 0.016, absError: 0.016 },
