@@ -70,21 +70,25 @@ export default function ResidentInsightsPage() {
             health scores, intervention plans, and behavioral incidents. These predictions support, but never replace,
             staff decision-making.
           </p>
-          <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-semibold uppercase tracking-wide text-muted-foreground">Legend</span>
-            <span className="text-muted-foreground/70">•</span>
-            <span>Stacked bar = probability distribution</span>
-            <span className="text-muted-foreground/70">•</span>
-            <span>Colors match the status labels</span>
+          <div className="mb-4 rounded-xl border bg-card p-4 text-sm text-muted-foreground card-shadow">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">How to read this table</div>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-relaxed text-foreground/80">
+              <li>Start with <strong>Predicted status (ML)</strong> to see the most likely program status.</li>
+              <li>In <strong>Top outcomes</strong>, check the runner-up and the <strong>gap</strong> to see how decisive the prediction is.</li>
+              <li>Compare to <strong>Current record</strong>. If it says <strong>Review</strong>, verify recent notes/updates.</li>
+            </ol>
+            <div className="mt-3 rounded-lg border bg-background px-3 py-2 text-xs text-muted-foreground">
+              <strong>Example:</strong> Completed 68% / In Progress 22% → likely nearing completion; if the current record isn’t Completed, flag for review.
+            </div>
           </div>
           <div className="-mx-1 overflow-x-auto min-w-0 rounded-xl border bg-card card-shadow sm:mx-0">
             <table className="min-w-[680px] w-full border-collapse text-sm">
             <thead>
                 <tr className="border-b bg-muted/40">
                   <th className={thCn}>Resident ID</th>
-                  <th className={thCn}>Predicted Status</th>
-                  <th className={thCn}>Probability Breakdown</th>
-                  <th className={thCn}>Actual Status</th>
+                  <th className={thCn}>Predicted status (ML)</th>
+                  <th className={thCn}>Top outcomes</th>
+                  <th className={thCn}>Current record</th>
                   <th className={thCn}>Match</th>
               </tr>
             </thead>
@@ -96,7 +100,13 @@ export default function ResidentInsightsPage() {
                   { label: 'In Progress', value: r.pInProgress, color: statusColors['In Progress'] },
                   { label: 'Not Started', value: r.pNotStarted, color: statusColors['Not Started'] },
                   { label: 'On Hold', value: r.pOnHold, color: statusColors['On Hold'] },
-                ].filter(p => p.value > 0);
+                ]
+                  .slice()
+                  .sort((a, b) => b.value - a.value);
+
+                const primary = probs[0];
+                const runnerUp = probs[1];
+                const gapPct = primary && runnerUp ? Math.max(0, (primary.value - runnerUp.value) * 100) : 0;
 
                 return (
                     <tr key={r.residentId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
@@ -114,42 +124,42 @@ export default function ResidentInsightsPage() {
                       </span>
                     </td>
                       <td className={tdCn}>
-                        <div className="flex h-5 overflow-hidden rounded bg-muted">
-                        {probs.map((p) => (
-                          <div
-                            key={p.label}
-                            title={`${p.label}: ${(p.value * 100).toFixed(0)}%`}
-                            style={{
-                              width: `${p.value * 100}%`,
-                              backgroundColor: p.color,
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.65rem',
-                              color: 'white',
-                              fontWeight: 600,
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {p.value >= 0.15 ? `${(p.value * 100).toFixed(0)}%` : ''}
-                          </div>
-                        ))}
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-3">
-                        {probs.map(p => (
-                            <span key={p.label} className="text-xs text-muted-foreground">
-                            <span style={{
-                              display: 'inline-block',
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              backgroundColor: p.color,
-                              marginRight: '0.25rem',
-                            }} />
-                            {p.label}
-                          </span>
-                        ))}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {primary && (
+                            <span
+                              title={`${primary.label}: ${(primary.value * 100).toFixed(0)}%`}
+                              style={{
+                                padding: '0.2rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                backgroundColor: `${primary.color}20`,
+                                color: primary.color,
+                              }}
+                            >
+                              {primary.label} {(primary.value * 100).toFixed(0)}%
+                            </span>
+                          )}
+                          {runnerUp && (
+                            <span
+                              title={`${runnerUp.label}: ${(runnerUp.value * 100).toFixed(0)}%`}
+                              style={{
+                                padding: '0.2rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                backgroundColor: '#edf2f7',
+                                color: '#4a5568',
+                              }}
+                            >
+                              {runnerUp.label} {(runnerUp.value * 100).toFixed(0)}%
+                            </span>
+                          )}
+                          {primary && runnerUp && (
+                            <span className="text-xs text-muted-foreground">
+                              Gap: <strong className="text-foreground">{gapPct.toFixed(0)} pts</strong>
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className={tdCn}>
@@ -165,12 +175,17 @@ export default function ResidentInsightsPage() {
                       </span>
                     </td>
                       <td className={tdCn}>
-                      <span style={{
-                        fontSize: '1rem',
-                        color: isMatch ? '#38a169' : '#e53e3e',
+                      <span
+                        style={{
+                          padding: '0.2rem 0.75rem',
+                          borderRadius: '12px',
+                          fontSize: '0.8rem',
                           fontWeight: 700,
-                      }}>
-                        {isMatch ? 'Yes' : 'No'}
+                          backgroundColor: isMatch ? '#c6f6d5' : '#fed7d7',
+                          color: isMatch ? '#276749' : '#c53030',
+                        }}
+                      >
+                        {isMatch ? 'Aligned' : 'Review'}
                       </span>
                     </td>
                   </tr>
