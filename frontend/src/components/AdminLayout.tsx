@@ -56,15 +56,15 @@ function toDisplayName(userNameOrEmail?: string, email?: string) {
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [profileImageDataUrl, setProfileImageDataUrl] = useState('');
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    // Use the same flow as the public navbar: clears token in localStorage and refreshes session.
+    navigate('/logout');
   };
   const email = user?.email ?? 'admin@havenlight.ph';
 
