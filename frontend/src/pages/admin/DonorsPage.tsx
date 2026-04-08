@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
@@ -45,8 +45,12 @@ export default function DonorsPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [supporterTotal, setSupporterTotal] = useState(0);
   const [donationTotal, setDonationTotal] = useState(0);
+  const [supportersLastBatchSize, setSupportersLastBatchSize] = useState(0);
+  const [donationsLastBatchSize, setDonationsLastBatchSize] = useState(0);
   const [supportersLoading, setSupportersLoading] = useState(true);
+  const [supportersLoadingMore, setSupportersLoadingMore] = useState(false);
   const [donationsLoading, setDonationsLoading] = useState(true);
+  const [donationsLoadingMore, setDonationsLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingSupporter, setEditingSupporter] = useState<Supporter | null>(null);
@@ -58,11 +62,28 @@ export default function DonorsPage() {
   const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
   const pageSize = 15;
   const supportersFetchId = useRef(0);
+  const donationsFetchId = useRef(0);
+  const supportersScrollRef = useRef<HTMLDivElement | null>(null);
+  const donationsScrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollThresholdPx = 240;
+
+  const supportersHasMore = supporterTotal > 0
+    ? supporters.length < supporterTotal
+    : supportersLastBatchSize === pageSize;
+  const donationsHasMore = donationTotal > 0
+    ? donations.length < donationTotal
+    : donationsLastBatchSize === pageSize;
+
+  const supportersQueryKey = useMemo(
+    () => JSON.stringify({ typeFilter, statusFilter, nameSearch: nameSearch.trim() }),
+    [typeFilter, statusFilter, nameSearch],
+  );
 
   const fetchSupporters = useCallback(async () => {
     const fetchId = ++supportersFetchId.current;
     setError('');
-    setSupportersLoading(true);
+    if (supporterPage === 1) setSupportersLoading(true);
+    else setSupportersLoadingMore(true);
     try {
       const base = getApiBase();
       if (!base) throw new Error('API URL is not configured.');
@@ -84,20 +105,34 @@ export default function DonorsPage() {
       }
       const raw = await response.text();
       if (fetchId !== supportersFetchId.current) return;
-      setSupporters(raw ? JSON.parse(raw) : []);
+      const nextPage = (raw ? (JSON.parse(raw) as Supporter[]) : []);
+      setSupportersLastBatchSize(nextPage.length);
+      setSupporters((prev) => {
+        if (supporterPage === 1) return nextPage;
+        if (nextPage.length === 0) return prev;
+        const seen = new Set(prev.map((p) => p.supporterId));
+        const merged = prev.slice();
+        for (const s of nextPage) {
+          if (!seen.has(s.supporterId)) merged.push(s);
+        }
+        return merged;
+      });
     } catch (err) {
       if (fetchId !== supportersFetchId.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load supporters');
     } finally {
       if (fetchId === supportersFetchId.current) {
         setSupportersLoading(false);
+        setSupportersLoadingMore(false);
       }
     }
   }, [supporterPage, typeFilter, statusFilter, nameSearch]);
 
   const fetchDonations = useCallback(async () => {
+    const fetchId = ++donationsFetchId.current;
     setError('');
-    setDonationsLoading(true);
+    if (donationPage === 1) setDonationsLoading(true);
+    else setDonationsLoadingMore(true);
     try {
       const base = getApiBase();
       if (!base) throw new Error('API URL is not configured.');
@@ -105,6 +140,7 @@ export default function DonorsPage() {
         cache: 'no-store',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
+      if (fetchId !== donationsFetchId.current) return;
       const total = response.headers.get('X-Total-Count');
       setDonationTotal(total ? parseInt(total, 10) : 0);
       if (!response.ok) {
@@ -112,11 +148,27 @@ export default function DonorsPage() {
         throw new Error(t || `Request failed: ${response.status}`);
       }
       const raw = await response.text();
-      setDonations(raw ? JSON.parse(raw) : []);
+      if (fetchId !== donationsFetchId.current) return;
+      const nextPage = (raw ? (JSON.parse(raw) as Donation[]) : []);
+      setDonationsLastBatchSize(nextPage.length);
+      setDonations((prev) => {
+        if (donationPage === 1) return nextPage;
+        if (nextPage.length === 0) return prev;
+        const seen = new Set(prev.map((p) => p.donationId));
+        const merged = prev.slice();
+        for (const d of nextPage) {
+          if (!seen.has(d.donationId)) merged.push(d);
+        }
+        return merged;
+      });
     } catch (err) {
+      if (fetchId !== donationsFetchId.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load donations');
     } finally {
-      setDonationsLoading(false);
+      if (fetchId === donationsFetchId.current) {
+        setDonationsLoading(false);
+        setDonationsLoadingMore(false);
+      }
     }
   }, [donationPage]);
 
@@ -129,6 +181,13 @@ export default function DonorsPage() {
   }, [fetchDonations]);
 
   useEffect(() => {
+    setSupporters([]);
+    setSupporterTotal(0);
+    setSupportersLastBatchSize(0);
+    setSupporterPage(1);
+  }, [supportersQueryKey]);
+
+  useEffect(() => {
     if (!user) return;
     const fallbackName = user.userName?.trim() || user.email.split('@')[0] || user.email;
     const prefs = getAccountPreferences(user.email, fallbackName);
@@ -139,17 +198,47 @@ export default function DonorsPage() {
     setError('');
     if (key === 'type') setTypeFilter(value);
     else setStatusFilter(value);
-    setSupporterPage(1);
   };
 
   const handleNameSearchChange = (value: string) => {
     setError('');
     setNameSearch(value);
-    setSupporterPage(1);
   };
 
-  const supporterTotalPages = Math.ceil(supporterTotal / pageSize);
-  const donationTotalPages = Math.ceil(donationTotal / pageSize);
+  const handleSupportersScroll = useCallback(() => {
+    const el = supportersScrollRef.current;
+    if (!el) return;
+    if (supportersLoading || supportersLoadingMore) return;
+    if (!supportersHasMore) return;
+    const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (remaining <= scrollThresholdPx) setSupporterPage((p) => p + 1);
+  }, [supportersLoading, supportersLoadingMore, supportersHasMore]);
+
+  const handleDonationsScroll = useCallback(() => {
+    const el = donationsScrollRef.current;
+    if (!el) return;
+    if (donationsLoading || donationsLoadingMore) return;
+    if (!donationsHasMore) return;
+    const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (remaining <= scrollThresholdPx) setDonationPage((p) => p + 1);
+  }, [donationsLoading, donationsLoadingMore, donationsHasMore]);
+
+  // If the current page doesn't fill the container, keep loading until it does or we're out.
+  useEffect(() => {
+    const el = supportersScrollRef.current;
+    if (!el) return;
+    if (supportersLoading || supportersLoadingMore) return;
+    if (!supportersHasMore) return;
+    if (el.scrollHeight <= el.clientHeight + 2) setSupporterPage((p) => p + 1);
+  }, [supportersLoading, supportersLoadingMore, supportersHasMore, supporters.length]);
+
+  useEffect(() => {
+    const el = donationsScrollRef.current;
+    if (!el) return;
+    if (donationsLoading || donationsLoadingMore) return;
+    if (!donationsHasMore) return;
+    if (el.scrollHeight <= el.clientHeight + 2) setDonationPage((p) => p + 1);
+  }, [donationsLoading, donationsLoadingMore, donationsHasMore, donations.length]);
 
   return (
     <AdminLayout>
@@ -221,7 +310,11 @@ export default function DonorsPage() {
               )}
             </div>
 
-            <div className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+            <div
+              ref={supportersScrollRef}
+              onScroll={handleSupportersScroll}
+              className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]"
+            >
               <table className="w-full min-w-[900px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b-2 bg-muted/40">
@@ -258,19 +351,15 @@ export default function DonorsPage() {
                       </tr>
                     ))
                   )}
+                  {supportersLoadingMore && (
+                    <tr><td colSpan={8} className="p-4 text-center text-xs text-muted-foreground">Loading more…</td></tr>
+                  )}
+                  {!supportersLoading && !supportersLoadingMore && !supportersHasMore && supporters.length > 0 && (
+                    <tr><td colSpan={8} className="p-4 text-center text-xs text-muted-foreground">End of results</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
-
-          {supporterTotalPages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <PaginationBtn label="← Prev" disabled={supporterPage <= 1} onClick={() => setSupporterPage((p) => p - 1)} />
-              <span className="px-2 text-sm text-muted-foreground">
-                Page {supporterPage} of {supporterTotalPages}
-              </span>
-              <PaginationBtn label="Next →" disabled={supporterPage >= supporterTotalPages} onClick={() => setSupporterPage((p) => p + 1)} />
-            </div>
-          )}
         </section>
 
         <section>
@@ -278,7 +367,11 @@ export default function DonorsPage() {
             Donations
             <span className="ml-2 text-sm font-normal text-muted-foreground">({donationTotal})</span>
           </h2>
-          <div className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+          <div
+            ref={donationsScrollRef}
+            onScroll={handleDonationsScroll}
+            className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]"
+          >
             <table className="w-full min-w-[820px] border-collapse text-sm">
               <thead>
                 <tr className="border-b-2 bg-muted/40">
@@ -307,19 +400,15 @@ export default function DonorsPage() {
                     </tr>
                   ))
                 )}
+                {donationsLoadingMore && (
+                  <tr><td colSpan={7} className="p-4 text-center text-xs text-muted-foreground">Loading more…</td></tr>
+                )}
+                {!donationsLoading && !donationsLoadingMore && !donationsHasMore && donations.length > 0 && (
+                  <tr><td colSpan={7} className="p-4 text-center text-xs text-muted-foreground">End of results</td></tr>
+                )}
               </tbody>
             </table>
           </div>
-
-          {donationTotalPages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <PaginationBtn label="← Prev" disabled={donationPage <= 1} onClick={() => setDonationPage((p) => p - 1)} />
-              <span className="px-2 text-sm text-muted-foreground">
-                Page {donationPage} of {donationTotalPages}
-              </span>
-              <PaginationBtn label="Next →" disabled={donationPage >= donationTotalPages} onClick={() => setDonationPage((p) => p + 1)} />
-            </div>
-          )}
         </section>
       </div>
     </AdminLayout>
@@ -481,19 +570,6 @@ function Badge({ text, color }: { text: string; color: string }) {
     <span style={{ backgroundColor: `${color}18`, color }} className="inline-block rounded-full px-2 py-1 text-xs font-semibold">
       {text}
     </span>
-  );
-}
-
-function PaginationBtn({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {label}
-    </button>
   );
 }
 

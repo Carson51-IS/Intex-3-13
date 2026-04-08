@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
@@ -49,10 +49,12 @@ export default function ResidentsPage() {
   const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastBatchSize, setLastBatchSize] = useState(0);
   const [error, setError] = useState('');
   const residentsFetchId = useRef(0);
 
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
+  const [page, setPage] = useState(1);
   const pageSize = 20;
   const statusFilter = searchParams.get('status') ?? '';
   const riskFilter = searchParams.get('riskLevel') ?? '';
@@ -60,9 +62,23 @@ export default function ResidentsPage() {
   const safehouseFilter = searchParams.get('safehouseId') ?? '';
   const caseNoFilter = searchParams.get('caseNo') ?? '';
 
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollThresholdPx = 240;
+
+  const filtersKey = useMemo(() => JSON.stringify({
+    status: statusFilter,
+    riskLevel: riskFilter,
+    category: categoryFilter,
+    safehouseId: safehouseFilter,
+    caseNo: caseNoFilter.trim(),
+  }), [statusFilter, riskFilter, categoryFilter, safehouseFilter, caseNoFilter]);
+
+  const hasMore = totalCount > 0 ? residents.length < totalCount : lastBatchSize === pageSize;
+
   const fetchResidents = useCallback(async () => {
     const fetchId = ++residentsFetchId.current;
-    setIsLoading(true);
+    setIsLoading(page === 1);
+    setIsLoadingMore(page !== 1);
     try {
       const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
       if (statusFilter) params.set('status', statusFilter);
@@ -89,13 +105,25 @@ export default function ResidentsPage() {
       }
       const raw = await response.text();
       if (fetchId !== residentsFetchId.current) return;
-      setResidents(raw ? JSON.parse(raw) : []);
+      const nextPage = raw ? (JSON.parse(raw) as Resident[]) : [];
+      setLastBatchSize(nextPage.length);
+      setResidents((prev) => {
+        if (page === 1) return nextPage;
+        if (nextPage.length === 0) return prev;
+        const seen = new Set(prev.map((p) => p.residentId));
+        const merged = prev.slice();
+        for (const r of nextPage) {
+          if (!seen.has(r.residentId)) merged.push(r);
+        }
+        return merged;
+      });
     } catch (err) {
       if (fetchId !== residentsFetchId.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load residents');
     } finally {
       if (fetchId === residentsFetchId.current) {
         setIsLoading(false);
+        setIsLoadingMore(false);
       }
     }
   }, [page, statusFilter, riskFilter, categoryFilter, safehouseFilter, caseNoFilter]);
@@ -104,6 +132,13 @@ export default function ResidentsPage() {
     fetchResidents();
     api.get<Safehouse[]>('/safehouses').then(setSafehouses).catch(() => {});
   }, [fetchResidents]);
+
+  useEffect(() => {
+    setResidents([]);
+    setTotalCount(0);
+    setLastBatchSize(0);
+    setPage(1);
+  }, [filtersKey]);
 
   const setFilter = (key: string, value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -118,7 +153,22 @@ export default function ResidentsPage() {
     setSearchParams(next);
   };
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (isLoading || isLoadingMore) return;
+    if (!hasMore) return;
+    const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (remaining <= scrollThresholdPx) setPage((p) => p + 1);
+  }, [isLoading, isLoadingMore, hasMore]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (isLoading || isLoadingMore) return;
+    if (!hasMore) return;
+    if (el.scrollHeight <= el.clientHeight + 2) setPage((p) => p + 1);
+  }, [isLoading, isLoadingMore, hasMore, residents.length]);
 
   return (
     <AdminLayout>
@@ -200,7 +250,11 @@ export default function ResidentsPage() {
         )}
 
         {/* Table */}
-        <div className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card shadow-[var(--card-shadow)]"
+        >
           <table className="w-full min-w-[920px] border-collapse text-sm">
             <thead>
               <tr className="border-b-2 bg-muted/40">
@@ -259,28 +313,23 @@ export default function ResidentsPage() {
                   </tr>
                 ))
               )}
+              {isLoadingMore && (
+                <tr>
+                  <td colSpan={8} className="p-4 text-center text-xs text-muted-foreground">
+                    Loading more…
+                  </td>
+                </tr>
+              )}
+              {!isLoading && !isLoadingMore && !hasMore && residents.length > 0 && (
+                <tr>
+                  <td colSpan={8} className="p-4 text-center text-xs text-muted-foreground">
+                    End of results
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-center gap-2">
-            <PaginationBtn
-              label="← Prev"
-              disabled={page <= 1}
-              onClick={() => setFilter('page', String(page - 1))}
-            />
-            <span className="px-2 text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <PaginationBtn
-              label="Next →"
-              disabled={page >= totalPages}
-              onClick={() => setFilter('page', String(page + 1))}
-            />
-          </div>
-        )}
       </div>
     </AdminLayout>
   );
@@ -328,15 +377,4 @@ function Badge({ text, color }: { text: string; color: string }) {
   );
 }
 
-function PaginationBtn({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {label}
-    </button>
-  );
-}
 const tdCn = 'px-4 py-3 align-middle text-foreground/85';
