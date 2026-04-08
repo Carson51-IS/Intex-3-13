@@ -32,6 +32,9 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history avoids shallow-clone issues when rebasing onto remote before push.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v6
         with:
@@ -66,5 +69,7 @@ jobs:
             echo "No changes to ML artifacts."
           else
             git commit -m "chore(ml): refresh model outputs [skip ci]"
-            git push
+            # Remote may have moved since checkout (e.g. another push); rebase then push.
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "${GITHUB_REF_NAME}"
           fi
