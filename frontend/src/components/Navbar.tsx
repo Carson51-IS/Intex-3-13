@@ -13,7 +13,9 @@ export default function Navbar() {
   const { user, isLoading, isAdmin, isDonor } = useAuth();
   const isRegularUser = Boolean(user && !isAdmin && !isDonor);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const mobileNavRef = useRef<HTMLDivElement | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [profileImageDataUrl, setProfileImageDataUrl] = useState('');
 
@@ -46,6 +48,25 @@ export default function Navbar() {
   }, [menuOpen]);
 
   useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (mobileNavRef.current && target && !mobileNavRef.current.contains(target)) {
+        setMobileNavOpen(false);
+      }
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileNavOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
     loadProfilePrefs();
   }, [user]);
 
@@ -72,7 +93,74 @@ export default function Navbar() {
         {isLoading ? (
           <span className="text-sm text-muted-foreground">Loading…</span>
         ) : (
-          <nav className="hidden items-center gap-8 font-body text-sm md:flex">
+          <>
+            <div className="md:hidden" ref={mobileNavRef}>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen((prev) => !prev)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground"
+                aria-label="Toggle navigation"
+                aria-expanded={mobileNavOpen}
+                aria-haspopup="menu"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" aria-hidden="true">
+                  <path d="M4 7h16M4 12h16M4 17h16" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+              {mobileNavOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-6 top-14 z-50 w-56 rounded-md border border-border bg-card p-2 shadow-lg"
+                >
+                  {!isRegularUser ? (
+                    <>
+                      <a href="/#mission" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">Mission</a>
+                      <a href="/#impact" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">Impact</a>
+                      <a href="/#how" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">How It Works</a>
+                      <a href="/#donate" onClick={() => setMobileNavOpen(false)} className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted">Donate</a>
+                    </>
+                  ) : (
+                    <Link
+                      to="/donations"
+                      onClick={() => setMobileNavOpen(false)}
+                      className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted"
+                    >
+                      Donations
+                    </Link>
+                  )}
+                  {!user ? (
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileNavOpen(false)}
+                      className="mt-1 block rounded bg-primary px-3 py-2 text-center text-sm font-semibold text-primary-foreground no-underline"
+                    >
+                      Login
+                    </Link>
+                  ) : (
+                    <div className="mt-2 border-t border-border pt-2">
+                      <Link
+                        to="/account-settings"
+                        onClick={() => setMobileNavOpen(false)}
+                        className="block rounded px-3 py-2 text-sm text-foreground no-underline hover:bg-muted"
+                      >
+                        Account settings
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMobileNavOpen(false);
+                          navigate('/logout');
+                        }}
+                        className="block w-full rounded px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+            <nav className="hidden items-center gap-8 font-body text-sm md:flex">
             {!isRegularUser ? (
               <>
                 <a href="/#mission" className="text-muted-foreground transition-colors hover:text-foreground">
@@ -169,7 +257,8 @@ export default function Navbar() {
                 </div>
               </div>
             )}
-          </nav>
+            </nav>
+          </>
         )}
       </div>
     </header>

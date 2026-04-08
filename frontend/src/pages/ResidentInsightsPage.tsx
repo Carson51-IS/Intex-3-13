@@ -14,36 +14,36 @@ export default function ResidentInsightsPage() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="mx-auto min-w-0 w-full max-w-6xl overflow-x-hidden break-words">
         <Link
           to="/admin/insights"
           className="mb-4 inline-block text-sm font-semibold text-primary no-underline hover:underline"
         >
           ← Back to ML-Powered Insights
         </Link>
-        <h1 className="font-heading text-3xl font-bold text-foreground">Resident Care Intelligence</h1>
+        <h1 className="font-heading text-2xl font-bold text-foreground md:text-3xl">Resident Care Intelligence</h1>
         <p className="mb-8 mt-2 text-sm text-muted-foreground md:text-base">
           ML-powered resident analytics: reintegration readiness assessment and safehouse incident forecasting.
         </p>
 
-        <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-10 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Object.entries(statusCounts).map(([status, count]) => (
             <div
               key={status}
-              className="rounded-xl border bg-card p-5 text-center card-shadow"
+              className="min-w-0 rounded-xl border bg-card p-5 text-center card-shadow"
               style={{ borderTop: `4px solid ${statusColors[status] ?? '#718096'}` }}
             >
-              <div style={{ color: statusColors[status] ?? '#718096' }} className="text-3xl font-bold">{count}</div>
+              <div style={{ color: statusColors[status] ?? '#718096' }} className="text-2xl font-bold sm:text-3xl">{count}</div>
               <div className="mt-1 text-sm text-muted-foreground">Predicted {status}</div>
             </div>
           ))}
           <div
-            className="rounded-xl border bg-card p-5 text-center card-shadow"
+            className="min-w-0 rounded-xl border bg-card p-5 text-center card-shadow"
             style={{ borderTop: `4px solid ${flaggedSafehouses.length > 0 ? '#dd6b20' : '#38a169'}` }}
           >
             <div
               style={{ color: flaggedSafehouses.length > 0 ? '#dd6b20' : '#38a169' }}
-              className="text-3xl font-bold"
+              className="text-2xl font-bold sm:text-3xl"
             >
               {flaggedSafehouses.length}
             </div>
@@ -52,7 +52,7 @@ export default function ResidentInsightsPage() {
         </div>
 
         <section className="mb-12">
-          <h2 className="mb-4 border-l-4 border-primary pl-3 font-heading text-2xl font-semibold text-foreground">
+          <h2 className="mb-4 border-l-4 border-primary pl-3 font-heading text-xl font-semibold text-foreground md:text-2xl">
           Reintegration Readiness Assessment
           </h2>
           <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -60,8 +60,8 @@ export default function ResidentInsightsPage() {
             health scores, intervention plans, and behavioral incidents. These predictions support, but never replace,
             staff decision-making.
           </p>
-          <div className="overflow-hidden rounded-xl border bg-card card-shadow">
-            <table className="w-full border-collapse text-sm">
+          <div className="-mx-1 overflow-x-auto min-w-0 rounded-xl border bg-card card-shadow sm:mx-0">
+            <table className="min-w-[680px] w-full border-collapse text-sm">
             <thead>
                 <tr className="border-b bg-muted/40">
                   <th className={thCn}>Resident ID</th>
@@ -165,24 +165,24 @@ export default function ResidentInsightsPage() {
         </section>
 
         <section>
-          <h2 className="mb-4 border-l-4 border-warning pl-3 font-heading text-2xl font-semibold text-foreground">
+          <h2 className="mb-4 border-l-4 border-warning pl-3 font-heading text-xl font-semibold text-foreground md:text-2xl">
           Safehouse Incident Forecast
           </h2>
           <p className="mb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
           Monthly incident volume predictions per safehouse using a Random Forest model.
           Forecasts help inform staffing decisions and proactive safety measures.
           </p>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {forecasts.map(f => {
             const isFlagged = f.maxPredicted > 0;
             const monthlyData = safehouseIncidentForecasts.filter(d => d.safehouseId === f.safehouseId);
             return (
                 <div
                   key={f.safehouseId}
-                  className="rounded-xl border bg-card p-6 card-shadow"
+                  className="min-w-0 min-w-0 rounded-xl border bg-card p-4 sm:p-6 card-shadow"
                   style={{ borderLeft: `4px solid ${isFlagged ? '#dd6b20' : '#38a169'}` }}
                 >
-                  <div className="mb-4 flex items-center justify-between">
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
                     <h3 className="font-heading text-lg font-semibold text-card-foreground">
                     Safehouse #{f.safehouseId}
                     </h3>
@@ -198,7 +198,7 @@ export default function ResidentInsightsPage() {
                   </span>
                   </div>
 
-                  <div className="mb-4 grid grid-cols-2 gap-3">
+                  <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <div className="text-xs text-muted-foreground">Peak Forecast</div>
                       <div style={{ color: isFlagged ? '#dd6b20' : '#38a169' }} className="text-xl font-bold">
@@ -241,7 +241,7 @@ export default function ResidentInsightsPage() {
           </div>
         </section>
 
-        <section className="mt-10 rounded-xl border border-info/30 bg-info/10 p-6">
+        <section className="mt-10 rounded-xl border border-info/30 bg-info/10 p-4 sm:p-6">
           <h3 className="mb-2 font-heading text-lg font-semibold text-info">Model Details</h3>
           <p className="m-0 text-sm leading-relaxed text-foreground/80">
           <strong>Reintegration Readiness:</strong> Decision Tree classifier (max depth 5) trained on counseling frequency,
