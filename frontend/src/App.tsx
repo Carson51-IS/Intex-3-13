@@ -16,6 +16,7 @@ import ResidentDetailPage from './pages/admin/ResidentDetailPage';
 import DonorsPage from './pages/admin/DonorsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import SettingsPage from './pages/admin/SettingsPage';
+import AdminAccountSettingsPage from './pages/admin/AdminAccountSettingsPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import InsightsHubPage from './pages/admin/InsightsHubPage';
 import SocialInsightsAdminPage from './pages/admin/SocialInsightsAdminPage';
@@ -71,6 +72,7 @@ const ADMIN_ROUTES: { path: string; element: ReactNode }[] = [
   { path: '/admin/insights', element: <InsightsHubPage /> },
   { path: '/admin/social-insights', element: <SocialInsightsAdminPage /> },
   { path: '/admin/settings', element: <SettingsPage /> },
+  { path: '/admin/account-settings', element: <AdminAccountSettingsPage /> },
   { path: '/admin/users', element: <UserManagementPage /> },
   { path: '/admin/donor-insights', element: <DonorInsightsPage /> },
   { path: '/admin/resident-insights', element: <ResidentInsightsPage /> },

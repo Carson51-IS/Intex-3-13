@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import AdminLayout from '../components/AdminLayout';
+import { useAuth } from '../context/AuthContext';
+import { formatAmountWithPreference, getAccountPreferences } from '../lib/accountPreferences';
 import { donorChurnPredictions } from '../data/ml/donorChurn';
 import { getLatestForecasts } from '../data/ml/safehouseIncidents';
 import { reintegrationPredictions } from '../data/ml/reintegrationReadiness';
@@ -21,14 +23,23 @@ const riskColors: Record<string, string> = {
 };
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [data, setData] = useState<AdminSummary | null>(null);
   const [error, setError] = useState('');
+  const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
 
   useEffect(() => {
     api.get<AdminSummary>('/dashboard/admin-summary')
       .then(setData)
       .catch((err) => setError(err.message));
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const fallbackName = user.userName?.trim() || user.email.split('@')[0] || user.email;
+    const prefs = getAccountPreferences(user.email, fallbackName);
+    setCurrencyPreference(prefs.currency);
+  }, [user]);
 
   const atRiskDonors = donorChurnPredictions.filter(d => d.pIsLapsed >= 0.5).length;
   const flaggedSafehouses = getLatestForecasts().filter(f => f.maxPredicted > 0).length;
@@ -57,7 +68,7 @@ export default function AdminDashboard() {
           />
           <KpiCard
             label="Donations (30 days)"
-            value={data ? `₱${data.recentDonationsTotal.toLocaleString()}` : '—'}
+            value={data ? formatAmountWithPreference(data.recentDonationsTotal, currencyPreference) : '—'}
             accent="text-success"
             icon="Donations"
           />

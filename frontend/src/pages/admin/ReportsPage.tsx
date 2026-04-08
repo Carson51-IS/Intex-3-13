@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
+import { useAuth } from '../../context/AuthContext';
+import { formatAmountWithPreference, getAccountPreferences } from '../../lib/accountPreferences';
 
 interface DonationTrend { label: string; total: number; count: number; }
 interface DonationType { type: string; count: number; total: number; }
@@ -22,6 +24,7 @@ interface ReintegrationStats {
 interface AdmissionTrend { label: string; count: number; }
 
 export default function ReportsPage() {
+  const { user } = useAuth();
   const [donationTrends, setDonationTrends] = useState<DonationTrend[]>([]);
   const [donationTypes, setDonationTypes] = useState<DonationType[]>([]);
   const [safehouses, setSafehouses] = useState<SafehousePerf[]>([]);
@@ -30,6 +33,7 @@ export default function ReportsPage() {
   const [admissions, setAdmissions] = useState<AdmissionTrend[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -58,6 +62,13 @@ export default function ReportsPage() {
     fetchAll();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    const fallbackName = user.userName?.trim() || user.email.split('@')[0] || user.email;
+    const prefs = getAccountPreferences(user.email, fallbackName);
+    setCurrencyPreference(prefs.currency);
+  }, [user]);
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -84,11 +95,21 @@ export default function ReportsPage() {
 
         <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
           {/* Donation Trends */}
-          <ReportCard title="Donation Trends (Last 12 Months)" subtitle={`Total: ₱${donationTrends.reduce((s, d) => s + d.total, 0).toLocaleString()}`}>
+          <ReportCard
+            title="Donation Trends (Last 12 Months)"
+            subtitle={`Total: ${formatAmountWithPreference(donationTrends.reduce((s, d) => s + d.total, 0), currencyPreference)}`}
+          >
             <BarChart
               data={donationTrends.map(d => ({ label: d.label.split(' ')[0], value: d.total }))}
               color="#38a169"
-              formatValue={(v) => `₱${(v / 1000).toFixed(0)}k`}
+              formatValue={(v) => {
+                if (currencyPreference === 'USD') {
+                  const usd = v / 56;
+                  if (usd >= 1000) return `$${(usd / 1000).toFixed(1)}k`;
+                  return `$${usd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+                }
+                return `₱${(v / 1000).toFixed(0)}k`;
+              }}
             />
           </ReportCard>
 
@@ -224,12 +245,20 @@ function BarChart({ data, color, formatValue }: { data: { label: string; value: 
     <div>
       <svg width="100%" height={chartHeight + 30} viewBox={`0 0 ${data.length * 44} ${chartHeight + 30}`} preserveAspectRatio="none">
         {data.map((d, i) => {
-          const barHeight = Math.max((d.value / max) * chartHeight, 2);
+          const barHeight = d.value <= 0 ? 0 : Math.max((d.value / max) * chartHeight, 2);
           const x = i * 44 + 4;
           const y = chartHeight - barHeight;
           return (
             <g key={i}>
-              <rect x={x} y={y} width={36} height={barHeight} fill={color} rx={3} opacity={0.85} />
+              <rect
+                x={x}
+                y={y}
+                width={36}
+                height={barHeight}
+                fill={color}
+                rx={3}
+                opacity={d.value <= 0 ? 0.2 : 0.85}
+              />
               <text x={x + 18} y={chartHeight + 14} textAnchor="middle" fontSize="9" fill="#a0aec0">{d.label}</text>
               {d.value > 0 && (
                 <text x={x + 18} y={Math.max(y - 4, 10)} textAnchor="middle" fontSize="8" fill={color} fontWeight="600">

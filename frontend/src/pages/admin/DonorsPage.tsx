@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api, getApiBase } from '../../api/client';
 import AdminLayout from '../../components/AdminLayout';
+import { useAuth } from '../../context/AuthContext';
+import { formatAmountWithPreference, getAccountPreferences } from '../../lib/accountPreferences';
 
 interface Supporter {
   supporterId: number;
@@ -38,6 +40,7 @@ const formControlCn =
 const formSelectCn = `${formControlCn} cursor-pointer`;
 
 export default function DonorsPage() {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<'supporters' | 'donations'>('supporters');
   const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -50,6 +53,7 @@ export default function DonorsPage() {
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
   const pageSize = 15;
 
   const fetchSupporters = useCallback(async () => {
@@ -107,6 +111,13 @@ export default function DonorsPage() {
     if (activeSection === 'supporters') fetchSupporters();
     else fetchDonations();
   }, [activeSection, fetchSupporters, fetchDonations]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fallbackName = user.userName?.trim() || user.email.split('@')[0] || user.email;
+    const prefs = getAccountPreferences(user.email, fallbackName);
+    setCurrencyPreference(prefs.currency);
+  }, [user]);
 
   const handleFilterChange = (key: 'type' | 'status', value: string) => {
     setError('');
@@ -258,7 +269,7 @@ export default function DonorsPage() {
                       <td className={`${tdCn} font-semibold`}>{d.supporter?.displayName ?? `Donor #${d.supporterId}`}</td>
                       <td className={tdCn}><Badge text={d.donationType} color="#2b6cb0" /></td>
                       <td className={`${tdCn} font-bold text-success`}>
-                        {d.amount != null ? `${d.currencyCode ?? '₱'} ${d.amount.toLocaleString()}` : 'In-Kind'}
+                        {d.amount != null ? formatAmountWithPreference(d.amount, currencyPreference) : 'In-Kind'}
                       </td>
                       <td className={tdCn}>{d.campaignName ?? '—'}</td>
                       <td className={tdCn}>{d.channelSource}</td>
