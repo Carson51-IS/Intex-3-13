@@ -29,6 +29,8 @@ import CookieConsentBannerView from './components/CookieConsentBannerView';
 import { CookieConsentProvider } from './context/CookieConsentContext';
 import DonateConfirmPage from './pages/DonateConfirmPage';
 import DonateThankYouPage from './pages/DonateThankYouPage';
+import DonationsPage from './pages/DonationsPage';
+import AccountSettingsPage from './pages/AccountSettingsPage';
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: string }) {
   const { user, isLoading } = useAuth();
@@ -136,6 +138,14 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/donations"
+            element={
+              <ProtectedRoute>
+                <DonationsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/impact" element={<ImpactPage />} />
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
@@ -146,6 +156,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <ManageMFA />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account-settings"
+            element={
+              <ProtectedRoute>
+                <AccountSettingsPage />
               </ProtectedRoute>
             }
           />

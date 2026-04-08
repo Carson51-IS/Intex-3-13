@@ -94,7 +94,16 @@ public class DonationsController : ControllerBase
         if (string.IsNullOrEmpty(email)) return Unauthorized();
 
         var supporter = await _context.Supporters
-            .FirstOrDefaultAsync(s => s.Email == email);
+            .Where(s => s.Email == email)
+            .Select(s => new
+            {
+                s.SupporterId,
+                s.DisplayName,
+                s.Email,
+                s.SupporterType,
+                s.FirstDonationDate,
+            })
+            .FirstOrDefaultAsync();
 
         if (supporter == null)
             return Ok(new { supporter = (object?)null, donations = Array.Empty<object>() });
@@ -102,6 +111,18 @@ public class DonationsController : ControllerBase
         var donations = await _context.Donations
             .Where(d => d.SupporterId == supporter.SupporterId)
             .OrderByDescending(d => d.DonationDate)
+            .Select(d => new
+            {
+                d.DonationId,
+                d.DonationType,
+                d.DonationDate,
+                d.Amount,
+                d.CurrencyCode,
+                d.CampaignName,
+                d.ChannelSource,
+                d.IsRecurring,
+                d.Notes,
+            })
             .ToListAsync();
 
         return Ok(new { supporter, donations });
@@ -143,6 +164,8 @@ public class DonationsController : ControllerBase
 
         var donation = new Donation
         {
+            // Seeded datasets can leave identity counters behind; assign next id defensively in local/dev.
+            DonationId = (await _context.Donations.MaxAsync(d => (int?)d.DonationId) ?? 0) + 1,
             SupporterId = supporter.SupporterId,
             DonationType = "Monetary",
             DonationDate = DateOnly.FromDateTime(DateTime.UtcNow),

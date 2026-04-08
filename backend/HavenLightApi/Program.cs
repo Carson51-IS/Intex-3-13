@@ -123,15 +123,15 @@ var corsRaw = builder.Configuration["Cors:AllowedOrigins"];
 string[] corsOrigins = string.IsNullOrWhiteSpace(corsRaw)
     ? ["http://localhost:3000", "http://localhost:5173"]
     : corsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-// No AllowCredentials: frontend uses Bearer tokens in headers only (no cookie auth). That avoids
-// stricter CORS + preflight behavior that can stall or fail cross-origin (e.g. Vercel → Azure).
+// Frontend uses cookie-based auth flows (Identity + external providers), so credentials must be allowed.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

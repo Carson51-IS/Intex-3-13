@@ -1,11 +1,61 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  ACCOUNT_PREFERENCES_UPDATED_EVENT,
+  getAccountPreferences,
+} from '../lib/accountPreferences';
 import havenLightLogoMark from '../assets/haven-light-logo-new.svg';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { user, isLoading, isAdmin, isDonor } = useAuth();
   const isRegularUser = Boolean(user && !isAdmin && !isDonor);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [profileImageDataUrl, setProfileImageDataUrl] = useState('');
+
+  const loadProfilePrefs = () => {
+    if (!user) return;
+    const defaultName = user.userName?.trim() || user.email.split('@')[0] || user.email;
+    const prefs = getAccountPreferences(user.email, defaultName);
+    setDisplayName(prefs.displayName);
+    setProfileImageDataUrl(prefs.profileImageDataUrl);
+  };
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (menuRef.current && target && !menuRef.current.contains(target)) {
+        setMenuOpen(false);
+      }
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    loadProfilePrefs();
+  }, [user]);
+
+  useEffect(() => {
+    const onPrefsUpdated = () => loadProfilePrefs();
+    window.addEventListener(ACCOUNT_PREFERENCES_UPDATED_EVENT, onPrefsUpdated);
+    window.addEventListener('focus', onPrefsUpdated);
+    return () => {
+      window.removeEventListener(ACCOUNT_PREFERENCES_UPDATED_EVENT, onPrefsUpdated);
+      window.removeEventListener('focus', onPrefsUpdated);
+    };
+  }, [user]);
 
   return (
     <header className="fixed top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -45,31 +95,76 @@ export default function Navbar() {
                 Login
               </Link>
             ) : (
-              <div className="flex items-center gap-3">
-                <Link
-                  to="/manage-mfa"
-                  className="hidden text-sm font-semibold text-primary no-underline transition-colors hover:underline sm:inline"
-                >
-                  MFA
-                </Link>
-                <div className="leading-tight text-right">
-                  <div className="text-sm font-semibold text-foreground">
-                    {user.userName?.trim() || user.email.split('@')[0] || user.email}
-                  </div>
-                  <div
-                    className="max-w-[220px] truncate text-xs text-muted-foreground"
-                    title={user.email}
+              <div className="flex items-center gap-6">
+                <div className="hidden items-center gap-5 sm:flex">
+                  <Link
+                    to="/donations"
+                    className="text-sm font-semibold text-primary no-underline transition-colors hover:underline"
                   >
-                    {user.email}
+                    Donations
+                  </Link>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="leading-tight text-right">
+                    <div className="text-sm font-semibold text-foreground">
+                      {displayName || user.userName?.trim() || user.email.split('@')[0] || user.email}
+                    </div>
+                    <div
+                      className="max-w-[220px] truncate text-xs text-muted-foreground"
+                      title={user.email}
+                    >
+                      {user.email}
+                    </div>
+                  </div>
+                  <div className="relative" ref={menuRef}>
+                    <button
+                      type="button"
+                      onClick={() => setMenuOpen((prev) => !prev)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary transition-colors hover:bg-primary/15"
+                      aria-label="Open account menu"
+                      aria-expanded={menuOpen}
+                      aria-haspopup="menu"
+                    >
+                      {profileImageDataUrl ? (
+                        <img
+                          src={profileImageDataUrl}
+                          alt="Account"
+                          className="h-9 w-9 rounded-full object-cover"
+                        />
+                      ) : (
+                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                          <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2c-3.71 0-6.75 2.44-6.75 5.44a.75.75 0 0 0 .75.75h12a.75.75 0 0 0 .75-.75C18.75 16.44 15.71 14 12 14Z" />
+                        </svg>
+                      )}
+                    </button>
+                    {menuOpen ? (
+                      <div
+                        role="menu"
+                        className="absolute right-0 top-11 z-50 w-44 rounded-md border border-border bg-card p-1 shadow-lg"
+                      >
+                        <Link
+                          to="/account-settings"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                          className="block rounded px-3 py-2 text-sm text-foreground no-underline transition-colors hover:bg-muted"
+                        >
+                          Account settings
+                        </Link>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            navigate('/logout');
+                          }}
+                          className="block w-full rounded px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                        >
+                          Log out
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/logout')}
-                  className="shrink-0 rounded-md border border-primary/25 bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
-                >
-                  Log out
-                </button>
               </div>
             )}
           </nav>

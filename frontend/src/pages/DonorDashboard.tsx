@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { formatAmountWithPreference, getAccountPreferences } from '../lib/accountPreferences';
 
 interface Donation {
   donationId: number;
@@ -49,6 +50,7 @@ export default function DonorDashboard() {
   const [impact, setImpact] = useState<PublicImpact | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
 
   const fetchHistory = async () => {
     try {
@@ -70,6 +72,13 @@ export default function DonorDashboard() {
     };
     init();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const fallbackName = user.userName?.trim() || user.email.split('@')[0] || user.email;
+    const prefs = getAccountPreferences(user.email, fallbackName);
+    setCurrencyPreference(prefs.currency);
+  }, [user]);
 
   const totalDonated = history?.donations.reduce((sum, d) => sum + (d.amount ?? 0), 0) ?? 0;
 
@@ -104,7 +113,7 @@ export default function DonorDashboard() {
             My Total Contributions
           </div>
           <div className="text-4xl font-bold text-success">
-            ₱{totalDonated.toLocaleString()}
+            {formatAmountWithPreference(totalDonated, currencyPreference)}
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
             Across {history?.donations.length ?? 0} donation{(history?.donations.length ?? 0) !== 1 ? 's' : ''}
@@ -167,7 +176,7 @@ export default function DonorDashboard() {
                 <tr key={d.donationId} className={`border-b ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
                   <td className="px-4 py-3 text-foreground">{new Date(d.donationDate).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
                   <td className="px-4 py-3 font-semibold text-success">
-                    {d.amount != null ? `${d.currencyCode ?? '₱'} ${d.amount.toLocaleString()}` : '—'}
+                    {d.amount != null ? formatAmountWithPreference(d.amount, currencyPreference) : '—'}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{d.campaignName ?? 'General Fund'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{d.channelSource}</td>
