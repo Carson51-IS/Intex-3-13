@@ -245,9 +245,6 @@ export default function LandingPage() {
           </div>
           <div className="mx-auto mt-10 max-w-3xl p-2 text-center">
             <h3 className="font-heading text-2xl font-semibold text-foreground">Explore the Impact Dashboard</h3>
-            <p className="mt-2 text-sm text-muted-foreground md:text-base">
-              View donor-facing, anonymized insights on outcomes, progress, and how resources are used.
-            </p>
             <Link
               to="/impact"
               className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground no-underline transition-opacity hover:opacity-90"
