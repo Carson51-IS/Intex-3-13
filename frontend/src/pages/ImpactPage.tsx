@@ -24,6 +24,10 @@ export default function ImpactPage() {
   if (error) return <div className="p-8 text-destructive">Error: {error}</div>;
   if (!data) return <div className="p-8 text-muted-foreground">Loading impact data...</div>;
 
+  const snapshotSummary = data.latestSnapshot
+    ? stripAnonymizedAggregateReportLine(data.latestSnapshot.summaryText)
+    : '';
+
   const outcomes = [
     { label: 'Residents in education programs', value: 87 },
     { label: 'Cases with active counseling', value: 79 },
@@ -100,16 +104,28 @@ export default function ImpactPage() {
       {data.latestSnapshot && (
         <section className="mx-auto w-full max-w-4xl px-6 pb-10 text-center">
           <h2 className="font-heading text-2xl font-semibold text-foreground">{data.latestSnapshot.headline}</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
-            {data.latestSnapshot.summaryText}
-          </p>
-          <p className="mt-4 text-xs text-muted-foreground">
+          {snapshotSummary ? (
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
+              {snapshotSummary}
+            </p>
+          ) : null}
+          <p className={`text-xs text-muted-foreground ${snapshotSummary ? 'mt-4' : 'mt-3'}`}>
             Privacy note: all metrics are shown in aggregate form and do not expose resident-level personal data.
           </p>
         </section>
       )}
     </div>
   );
+}
+
+/** Removes seeded "Anonymized aggregate report: …" lines from snapshot copy. */
+function stripAnonymizedAggregateReportLine(text: string): string {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !/^Anonymized aggregate report:/i.test(line))
+    .join('\n')
+    .trim();
 }
 
 function StatCard({ label, value, accent }: { label: string; value: number; accent: string }) {
