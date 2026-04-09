@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatAmountWithPreference, getAccountPreferences } from '../lib/accountPreferences';
 import { useNavigate } from 'react-router-dom';
+import type { DonateConfirmLocationState } from './DonateConfirmPage';
 
 interface Donation {
   donationId: number;
@@ -24,7 +25,7 @@ interface MyHistoryResponse {
   donations: Donation[];
 }
 
-const PRESET_AMOUNTS = [25, 50, 100, 250];
+const PRESET_AMOUNTS = [50, 100, 250, 500];
 const CAMPAIGNS = [
   'General Fund',
   'Education Support',
@@ -90,7 +91,22 @@ export default function DonationsPage() {
       setError('Please enter a valid donation amount greater than zero.');
       return;
     }
-    navigate(`/donate/confirm?amount=${encodeURIComponent(amount.toString())}`);
+    const minAmount = currencyPreference === 'PHP' ? 50 : 1;
+    if (amount < minAmount) {
+      setError(
+        currencyPreference === 'PHP'
+          ? 'Minimum donation amount is ₱50.'
+          : 'Minimum donation amount is $1.',
+      );
+      return;
+    }
+    const state: DonateConfirmLocationState = {
+      amount,
+      campaignName: form.campaignName,
+      isRecurring: form.isRecurring,
+      notes: form.notes.trim() || undefined,
+    };
+    navigate(`/donate/confirm?amount=${encodeURIComponent(amount.toString())}`, { state });
   };
 
   return (
@@ -138,7 +154,7 @@ export default function DonationsPage() {
             <span className="rounded-l-md border border-border bg-muted px-2 py-2 text-sm text-muted-foreground">{currencyTag}</span>
             <input
               type="number"
-              min={0.01}
+              min={currencyPreference === 'PHP' ? 50 : 1}
               step="0.01"
               value={form.amount}
               onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}

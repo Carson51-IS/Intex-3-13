@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { getAccountPreferences } from '../lib/accountPreferences';
+
+export interface DonateConfirmLocationState {
+  amount?: number;
+  campaignName?: string;
+  isRecurring?: boolean;
+  notes?: string;
+}
 
 function parseAmount(raw: string | null): number {
   if (raw == null || raw === '') return 1000;
@@ -12,11 +20,25 @@ function parseAmount(raw: string | null): number {
 
 export default function DonateConfirmPage() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currencyPreference, setCurrencyPreference] = useState<'PHP' | 'USD'>('PHP');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const amount = useMemo(() => parseAmount(searchParams.get('amount')), [searchParams]);
+  const state = location.state as DonateConfirmLocationState | null;
+
+  const amount = useMemo(() => {
+    const fromState = state?.amount;
+    if (fromState != null && Number.isFinite(fromState) && fromState > 0) return fromState;
+    return parseAmount(searchParams.get('amount'));
+  }, [state, searchParams]);
+
+  const campaignName = state?.campaignName?.trim() || 'General Fund';
+  const isRecurring = state?.isRecurring ?? false;
+  const notes = state?.notes?.trim() || null;
+
   const formattedAmount = useMemo(
     () =>
       new Intl.NumberFormat(currencyPreference === 'USD' ? 'en-US' : 'en-PH', {
@@ -33,8 +55,24 @@ export default function DonateConfirmPage() {
     setCurrencyPreference(prefs.currency);
   }, [user]);
 
-  const confirm = () => {
-    navigate(`/donate/thank-you?amount=${amount}`);
+  const confirm = async () => {
+    setError('');
+    setSubmitting(true);
+    try {
+      await api.post<{ message: string }>('/donations/submit', {
+        amount,
+        currencyCode: currencyPreference,
+        campaignName: campaignName || null,
+        isRecurring,
+        notes,
+        displayName: user?.userName?.trim() || undefined,
+      });
+      navigate(`/donate/thank-you?amount=${encodeURIComponent(amount.toString())}`, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not record your donation. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -44,6 +82,11 @@ export default function DonateConfirmPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Signed in as <span className="font-medium text-foreground">{user?.email}</span>
         </p>
+        {error ? (
+          <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
         <p className="mt-6 text-foreground">
           You are about to donate{' '}
           <span className="font-heading text-2xl font-bold text-primary">{formattedAmount}</span> to Haven
@@ -61,10 +104,11 @@ export default function DonateConfirmPage() {
           </Link>
           <button
             type="button"
-            onClick={confirm}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            onClick={() => void confirm()}
+            disabled={submitting}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Confirm donation
+            {submitting ? 'Processing…' : 'Confirm donation'}
           </button>
         </div>
       </div>
