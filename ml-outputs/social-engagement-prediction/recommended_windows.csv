@@ -1,5 +1,5 @@
 platform,day_of_week,post_hour,p_high_engagement
-YouTube,Wednesday,9,0.7356479000446005
+YouTube,Wednesday,9,0.7356479000446003
 TikTok,Wednesday,20,0.7196766024630675
 YouTube,Saturday,15,0.6777584315983163
 YouTube,Monday,17,0.6501554797534388
@@ -21,6 +21,6 @@ Twitter,Sunday,19,0.5631494647023545
 Instagram,Friday,17,0.5621212774014378
 TikTok,Friday,23,0.5591162888128777
 Facebook,Saturday,19,0.5585716401796325
-TikTok,Thursday,11,0.5572774540981357
+TikTok,Thursday,11,0.5572774540981358
 Twitter,Friday,23,0.5481823677616787
 Twitter,Saturday,9,0.547059534649542
